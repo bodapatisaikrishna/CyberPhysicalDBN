@@ -1,0 +1,33 @@
+# Data — never commit dataset files (CLAUDE.md code standards)
+data/*
+!data/.gitkeep
+
+# Results — raw per-run CSVs stay local; summaries are committed
+results/*.csv
+results/**/*.csv
+!results/summaries/
+!results/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Environments
+.venv/
+venv/
+env/
+
+# Model checkpoints
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+checkpoints/
+
+# OS
+.DS_Store
