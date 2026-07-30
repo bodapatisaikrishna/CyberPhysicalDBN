@@ -1,0 +1,25 @@
+# Base experiment config. No magic numbers in source (CLAUDE.md code standards) —
+# every numerical component reads its parameters from here or an override.
+
+# Global seed. Must be applied explicitly to numpy, torch, random, and
+# PYTHONHASHSEED (CLAUDE.md code standards: "Seeds set explicitly and logged").
+seed: 42
+
+discretization:
+  # Uniformization discretization parameter m (Cerotti et al. Eq. 3, Sec. III-E):
+  #   Delta_t = 1 / (m * sum_i(1 / T_bar_i))
+  # Reference validation table (CLAUDE.md Phase 1 gate) uses m in {1/3, 1}.
+  # m=1.0 here is a DEFAULT TO BE SWEPT in Phase 1, not a measured/chosen value.
+  m: 1.0
+
+simulation:
+  # Discrete-time horizon T (slices) for DBN rollout / twin simulation.
+  # Placeholder default for scaffolding; to be set per-experiment once the
+  # attack graph and twin timing are implemented (Phase 0-1).
+  horizon_T: 100
+
+paths:
+  data_dir: "data"
+  results_dir: "results"
+  figures_dir: "results/figures"
+  logs_dir: "results/logs"
