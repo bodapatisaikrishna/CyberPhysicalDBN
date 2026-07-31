@@ -1,0 +1,244 @@
+"""Tests for uniformization and CPT construction (Cerotti et al. Eq. 3, Tables 1-3)."""
+
+from __future__ import annotations
+
+import itertools
+
+import numpy as np
+import pytest
+
+from src.attack_graph.graph import build_attack_graph
+from src.dbn.compiler import ANTERIOR, ULTERIOR, compile_to_2tbn
+from src.dbn.parameterization import (
+    attach_cpds,
+    build_attack_step_cpt,
+    collect_uniformization_ttcs,
+    compute_delta_t,
+    compute_ps,
+    precondition_parents,
+)
+
+# Paper experiment settings (Cerotti et al. Sec. IV).
+PAPER_M = 1.0
+PAPER_P_POS = 1e-4
+PAPER_P_NEG = 1e-4
+
+
+@pytest.fixture
+def ag():
+    return build_attack_graph()
+
+
+def _column(cpd, evidence_states: tuple[int, ...]) -> np.ndarray:
+    """Column of `cpd` for a given assignment, indexed by evidence order."""
+    n_evidence = len(evidence_states)
+    index = 0
+    for state in evidence_states:
+        index = index * 2 + state
+    assert cpd.get_values().shape[1] == 2**n_evidence
+    return cpd.get_values()[:, index]
+
+
+class TestUniformization:
+    def test_delta_t_and_ps_hand_computed(self):
+        """Two concurrent steps, T_bar = {2, 4}, m = 1.
+
+        By hand:
+            sum(1/T_bar) = 1/2 + 1/4 = 3/4
+            delta_t      = 1 / (1 * 3/4) = 4/3
+            p_a          = (4/3) / 2 = 2/3
+            p_b          = (4/3) / 4 = 1/3
+        """
+        ttcs = {"a": 2.0, "b": 4.0}
+        delta_t = compute_delta_t(ttcs, m=1.0)
+
+        assert delta_t == pytest.approx(4.0 / 3.0)
+        assert compute_ps(2.0, delta_t) == pytest.approx(2.0 / 3.0)
+        assert compute_ps(4.0, delta_t) == pytest.approx(1.0 / 3.0)
+
+    def test_m_scales_delta_t_inversely(self):
+        ttcs = {"a": 2.0, "b": 4.0}
+        assert compute_delta_t(ttcs, m=2.0) == pytest.approx(
+            compute_delta_t(ttcs, m=1.0) / 2.0
+        )
+
+    def test_delta_t_from_paper_ttcs(self, ag):
+        """Full Table 3 TTC set at m = 1.
+
+        By hand, summing 1/T_bar over the eleven timed steps:
+            3 x (1 / (1/3))  = 9            [UnsecCred1, UnsecCred2, UnsecCred]
+            2 x (1 / (1/2))  = 4            [ModAuthProc1, ModAuthProc]
+            1/2 + 1/2 + 1/2  = 3/2          [MITM, ModifyProgram, Masquerade]
+            1/15 + 1/40 + 1/50 = 67/600     [SpoofRepMsg, UnauthCommand, ModCtrlLogic]
+        Total = 8767/600, so delta_t = 600/8767.
+        """
+        ttcs = collect_uniformization_ttcs(ag)
+        assert len(ttcs) == 11
+
+        delta_t = compute_delta_t(ttcs, m=PAPER_M)
+        assert delta_t == pytest.approx(600.0 / 8767.0)
+
+    def test_rejects_nonpositive_inputs(self):
+        with pytest.raises(ValueError):
+            compute_delta_t({"a": 2.0}, m=0.0)
+        with pytest.raises(ValueError):
+            compute_delta_t({"a": 0.0}, m=1.0)
+        with pytest.raises(ValueError):
+            compute_delta_t({}, m=1.0)
+        with pytest.raises(ValueError):
+            compute_ps(0.0, 1.0)
+
+
+class TestTable1:
+    """The attack-step CPT must reproduce Cerotti et al. Table 1 exactly."""
+
+    def test_spoofrepmsg_matches_table_1(self, ag):
+        delta_t = compute_delta_t(collect_uniformization_ttcs(ag), m=PAPER_M)
+        p_srm = compute_ps(float(ag.nodes["SpoofRepMsg"]["ttc"]), delta_t)
+        assert p_srm == pytest.approx(40.0 / 8767.0)
+
+        cpd = build_attack_step_cpt("SpoofRepMsg", ["MITM"], p_srm, ag)
+
+        assert cpd.variables == [
+            ("SpoofRepMsg", ULTERIOR),
+            ("MITM", ANTERIOR),
+            ("SpoofRepMsg", ANTERIOR),
+        ]
+
+        # Columns ordered (MITM(t-1), SpoofRepMsg(t-1)); rows are
+        # SpoofRepMsg(t) = 0 then 1. This is Table 1's eight rows.
+        expected = np.array(
+            [
+                [1.0, 1.0, 1.0 - p_srm, 0.0],
+                [0.0, 0.0, p_srm, 1.0],
+            ]
+        )
+        np.testing.assert_allclose(cpd.get_values(), expected)
+
+    def test_rows_1_to_4_precondition_unsatisfied(self, ag):
+        """MITM inactive forces SpoofRepMsg to 0, even when it was active."""
+        cpd = build_attack_step_cpt("SpoofRepMsg", ["MITM"], 0.25, ag)
+
+        np.testing.assert_allclose(_column(cpd, (0, 0)), [1.0, 0.0])
+        np.testing.assert_allclose(_column(cpd, (0, 1)), [1.0, 0.0])
+
+    def test_rows_5_to_6_bernoulli(self, ag):
+        cpd = build_attack_step_cpt("SpoofRepMsg", ["MITM"], 0.25, ag)
+        np.testing.assert_allclose(_column(cpd, (1, 0)), [0.75, 0.25])
+
+    def test_rows_7_to_8_persistence(self, ag):
+        cpd = build_attack_step_cpt("SpoofRepMsg", ["MITM"], 0.25, ag)
+        np.testing.assert_allclose(_column(cpd, (1, 1)), [0.0, 1.0])
+
+
+class TestMultiParentGeneralization:
+    """UnauthCommand is the real two-parent case: MITM and Masquerade."""
+
+    def test_unauthcommand_has_two_parents(self, ag):
+        assert precondition_parents(ag, "UnauthCommand") == ["MITM", "Masquerade"]
+
+    def test_two_parent_cpt_structure(self, ag):
+        p_s = 0.25
+        parents = precondition_parents(ag, "UnauthCommand")
+        cpd = build_attack_step_cpt("UnauthCommand", parents, p_s, ag)
+
+        assert cpd.get_values().shape == (2, 8)
+
+        for mitm, masq, self_prev in itertools.product([0, 1], repeat=3):
+            column = _column(cpd, (mitm, masq, self_prev))
+            precondition_met = bool(mitm or masq)
+
+            if not precondition_met:
+                # Precondition-false outranks self-persistence: forced to 0
+                # even when the node was already active.
+                expected_active = 0.0
+            elif self_prev:
+                expected_active = 1.0
+            else:
+                expected_active = p_s
+
+            assert column[1] == pytest.approx(expected_active), (
+                f"MITM={mitm} Masquerade={masq} self={self_prev}"
+            )
+            assert column[0] == pytest.approx(1.0 - expected_active)
+
+    def test_root_node_precondition_vacuously_satisfied(self, ag):
+        """Roots have no parents and must still be able to activate."""
+        assert precondition_parents(ag, "UnsecCred1") == []
+
+        cpd = build_attack_step_cpt("UnsecCred1", [], 0.25, ag)
+
+        assert cpd.get_values().shape == (2, 2)
+        np.testing.assert_allclose(_column(cpd, (0,)), [0.75, 0.25])
+        np.testing.assert_allclose(_column(cpd, (1,)), [0.0, 1.0])
+
+
+class TestCompiledModel:
+    def test_canonical_form_no_anterior_intra_slice_arcs(self, ag):
+        dbn = compile_to_2tbn(ag)
+        anterior_intra = [
+            (u, v) for u, v in dbn.edges() if u[1] == ANTERIOR and v[1] == ANTERIOR
+        ]
+        assert anterior_intra == []
+
+    def test_analytics_are_untimed(self, ag):
+        """No self-loop and no anterior-layer copy for analytic nodes."""
+        dbn = compile_to_2tbn(ag)
+        analytics = [
+            n for n, d in ag.nodes(data=True) if d["node_type"] == "analytic"
+        ]
+        for name in analytics:
+            assert not ag.has_edge(name, name)
+            assert (name, ANTERIOR) not in dbn.nodes()
+
+    def test_attack_steps_have_temporal_arc(self, ag):
+        dbn = compile_to_2tbn(ag)
+        persistent = [n for n, d in ag.nodes(data=True) if d["self_loop"]]
+        assert len(persistent) == 13
+        for name in persistent:
+            assert dbn.has_edge((name, ANTERIOR), (name, ULTERIOR))
+
+    def test_mitm_depends_on_credaccess_within_slice(self, ag):
+        """CredAccess is untimed, so MITM sees it at t, not t-1."""
+        dbn = compile_to_2tbn(ag)
+        assert dbn.has_edge(("CredAccess", ULTERIOR), ("MITM", ULTERIOR))
+        assert not dbn.has_edge(("CredAccess", ANTERIOR), ("MITM", ULTERIOR))
+
+    def test_every_cpd_normalized(self, ag):
+        """Every generated CPT's columns sum to 1."""
+        dbn = attach_cpds(
+            compile_to_2tbn(ag), ag, m=PAPER_M, p_pos=PAPER_P_POS, p_neg=PAPER_P_NEG
+        )
+        cpds = dbn.get_cpds()
+        assert len(cpds) == ag.number_of_nodes()
+
+        for cpd in cpds:
+            column_sums = cpd.get_values().sum(axis=0)
+            np.testing.assert_allclose(
+                column_sums, np.ones_like(column_sums), err_msg=str(cpd.variable)
+            )
+
+    def test_gate_cpds_are_deterministic(self, ag):
+        dbn = attach_cpds(
+            compile_to_2tbn(ag), ag, m=PAPER_M, p_pos=PAPER_P_POS, p_neg=PAPER_P_NEG
+        )
+
+        cred = dbn.get_cpds(("CredAccess", ULTERIOR))
+        # AND over two parents: only the all-active column activates.
+        np.testing.assert_allclose(cred.get_values()[1], [0.0, 0.0, 0.0, 1.0])
+
+        unstable = dbn.get_cpds(("UnstablePS", ULTERIOR))
+        # OR over three parents: only the all-inactive column stays inactive.
+        np.testing.assert_allclose(
+            unstable.get_values()[1], [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+        )
+
+    def test_analytic_cpd_matches_table_2(self, ag):
+        dbn = attach_cpds(
+            compile_to_2tbn(ag), ag, m=PAPER_M, p_pos=PAPER_P_POS, p_neg=PAPER_P_NEG
+        )
+        cpd = dbn.get_cpds(("FileAccess", ULTERIOR))
+        np.testing.assert_allclose(
+            cpd.get_values(),
+            [[1.0 - PAPER_P_POS, PAPER_P_NEG], [PAPER_P_POS, 1.0 - PAPER_P_NEG]],
+        )
