@@ -2,10 +2,15 @@
 data/*
 !data/.gitkeep
 
-# Results — raw per-run CSVs stay local; summaries are committed
+# Results — raw per-run CSVs stay local; summaries are committed.
+# The re-include for summaries must come AFTER the broad ignores and must
+# name the FILES, not just the directory: `!results/summaries/` alone only
+# re-includes the directory, and `results/**/*.csv` still matches the CSVs
+# inside it, so summaries were being silently ignored.
 results/*.csv
 results/**/*.csv
 !results/summaries/
+!results/summaries/*.csv
 !results/.gitkeep
 
 # Python

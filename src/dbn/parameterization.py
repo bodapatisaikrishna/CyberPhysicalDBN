@@ -131,6 +131,157 @@ def build_attack_step_cpt(
     )
 
 
+def build_reaction_cpt(
+    node: str,
+    parents: list[str],
+    success_prob: float,
+    ag: nx.DiGraph,
+) -> TabularCPD:
+    """CPT of a control-centre reaction (CorrReact, WrongLogicExec).
+
+    Reactions are NOT attack steps and do not use Table 1's persistence rule.
+    Cerotti et al. Sec. IV: they "are reactions of the control center ... the
+    parameters we choose for these nodes reflect the efficacy of these
+    defenses; we allow CorrReact to succeed with probability 0.7 and
+    WrongLogicExec with probability 0.8", and Table 3 lists both with a
+    completion time of 0 -- they resolve within a slice rather than racing to
+    complete, exactly like the AND/OR gates.
+
+    So the rule is simply:
+
+        P(active) = success_prob   if the precondition holds
+        P(active) = 0              otherwise
+
+    with NO dependence on the node's own previous state. Applying Table 1's
+    persistence rule here instead (already-active forces 1) would make the
+    reaction converge to 1 as its precondition saturates, which contradicts
+    the paper's own Fig. 5a: CorrReact plateaus at exactly 0.7 there, and
+    tracks 0.7 x P(SpoofRepMsg) to three decimals at t=20, 30, 50 and 200.
+    That reading also reproduces the paper's stated Scenario 2 value of
+    exactly 0.7 for CorrReact once MeasureCoherence forces SpoofRepMsg to 1.
+
+    Structurally this makes a reaction behave exactly like an AND/OR gate: a
+    TTC of 0 means it resolves within the slice rather than over time, so it
+    carries no self-loop and reads its parent at the SAME slice. That is what
+    lets CorrReact reach 0.7 at the very slice MeasureCoherence forces
+    SpoofRepMsg to 1, matching the paper's Scenario 2 description of both
+    changing at t=31 together. Note a tension with Fig. 2, which draws
+    self-loops on both reaction nodes and lists them inside BK-clusters;
+    Table 3's TTC=0 and the numerical evidence above are treated as decisive
+    over the drawn arc, and this is flagged in LAB_NOTEBOOK.md rather than
+    resolved silently.
+    """
+    ordered_parents = sorted(parents)
+    evidence: list[DBNNode] = [
+        (parent, _parent_slice(ag, parent, node)) for parent in ordered_parents
+    ]
+
+    prob_inactive: list[float] = []
+    prob_active: list[float] = []
+    for states in itertools.product([0, 1], repeat=len(ordered_parents)):
+        precondition_met = any(states) if ordered_parents else True
+        p_activate = success_prob if precondition_met else 0.0
+        prob_inactive.append(1.0 - p_activate)
+        prob_active.append(p_activate)
+
+    return TabularCPD(
+        (node, ULTERIOR),
+        2,
+        [prob_inactive, prob_active],
+        evidence=evidence,
+        evidence_card=[2] * len(evidence),
+    )
+
+
+def build_latch_cpt(node: str, precondition: str, ag: nx.DiGraph) -> TabularCPD:
+    """CPT of a reaction's auxiliary latch (see graph.build_attack_graph).
+
+    Deterministic: the latch is 1 once its precondition has held at least once.
+
+        latch(t) = 1  iff  latch(t-1) = 1  or  precondition(t-1) = 1
+
+    This carries the extra slice of memory that lets the accompanying reaction
+    fire only on its FIRST opportunity -- a t-2 dependency a 2TBN cannot
+    express in the reaction node alone.
+    """
+    evidence: list[DBNNode] = [
+        (precondition, _parent_slice(ag, precondition, node)),
+        (node, ANTERIOR),
+    ]
+
+    prob_inactive: list[float] = []
+    prob_active: list[float] = []
+    for precondition_state, self_previously_latched in itertools.product([0, 1], repeat=2):
+        latched = bool(precondition_state or self_previously_latched)
+        prob_inactive.append(0.0 if latched else 1.0)
+        prob_active.append(1.0 if latched else 0.0)
+
+    return TabularCPD(
+        (node, ULTERIOR),
+        2,
+        [prob_inactive, prob_active],
+        evidence=evidence,
+        evidence_card=[2, 2],
+    )
+
+
+def build_latched_reaction_cpt(
+    node: str,
+    precondition: str,
+    latch: str,
+    success_prob: float,
+    ag: nx.DiGraph,
+) -> TabularCPD:
+    """CPT of a one-shot latched reaction (Cerotti et al. Sec. IV, 0.7 / 0.8).
+
+    The control centre gets exactly ONE chance to react, in the slice where its
+    precondition first holds, succeeding with `success_prob`; that outcome then
+    persists. Rules, in precedence order:
+
+      1. already reacted            -> 1  (persistence)
+      2. precondition not yet held  -> 0
+      3. latch already set          -> 0  (the one chance has been used, and
+                                           rule 1 did not fire, so it failed)
+      4. otherwise (first chance)   -> success_prob
+
+    The marginal is therefore success_prob * P(precondition ever held), which
+    plateaus at exactly 0.7 for CorrReact (matching Fig. 5a) while carrying
+    state across slices (so FF's independence assumption incurs a permanent
+    error, matching Fig. 6c's non-converging divergence).
+
+    Evidence order is (latch, precondition, self), all at the anterior layer.
+    """
+    evidence: list[DBNNode] = [
+        (latch, ANTERIOR),
+        (precondition, _parent_slice(ag, precondition, node)),
+        (node, ANTERIOR),
+    ]
+
+    prob_inactive: list[float] = []
+    prob_active: list[float] = []
+    for latch_set, precondition_state, self_previously_active in itertools.product(
+        [0, 1], repeat=3
+    ):
+        if self_previously_active:
+            p_activate = 1.0
+        elif not precondition_state:
+            p_activate = 0.0
+        elif latch_set:
+            p_activate = 0.0
+        else:
+            p_activate = success_prob
+        prob_inactive.append(1.0 - p_activate)
+        prob_active.append(p_activate)
+
+    return TabularCPD(
+        (node, ULTERIOR),
+        2,
+        [prob_inactive, prob_active],
+        evidence=evidence,
+        evidence_card=[2, 2, 2],
+    )
+
+
 def build_analytic_cpt(
     node: str,
     parent: str,
@@ -197,6 +348,7 @@ def attach_cpds(
     m: float,
     p_pos: float,
     p_neg: float,
+    delta_t_override: float | None = None,
 ) -> DiscreteBayesianNetwork:
     """Build and attach every ulterior-layer CPD.
 
@@ -205,8 +357,25 @@ def attach_cpds(
     distribution. Inventing one would violate CLAUDE.md rule 1. The model is
     therefore not check_model()-valid yet; that is deferred to the inference
     phase, where the prior becomes an explicit, logged configuration choice.
+
+    delta_t_override, when given, replaces compute_delta_t(collect_
+    uniformization_ttcs(ag), m) outright and m is not used. This is not a
+    correction to Eq. 3 -- compute_delta_t is unit-tested against hand
+    arithmetic and is correct as a formula. It is a documented uncertainty
+    in what collect_uniformization_ttcs should sum over for THIS paper's
+    specific graph: summing all 11 timed attack-step TTCs gives a delta_t
+    about 4x smaller than the value Table 5 (Cerotti et al.) itself publishes,
+    consistently across all six of Table 5's m values, and the exact TTC
+    subset that reproduces Table 5's number could not be uniquely determined
+    from Sec. III-E's text (see LAB_NOTEBOOK.md, 2026-07-31 entry). Passing
+    delta_t_override=166.13/600 reproduces Table 5's m=1 row directly rather
+    than guessing at which subset to change collect_uniformization_ttcs to.
     """
-    delta_t = compute_delta_t(collect_uniformization_ttcs(ag), m)
+    delta_t = (
+        delta_t_override
+        if delta_t_override is not None
+        else compute_delta_t(collect_uniformization_ttcs(ag), m)
+    )
 
     cpds: list[TabularCPD] = []
     for node, data in ag.nodes(data=True):
@@ -217,10 +386,22 @@ def attach_cpds(
             cpds.append(build_analytic_cpt(node, parent, p_pos, p_neg, ag))
         elif data["gate"] is not None:
             cpds.append(build_gate_cpt(node, parents, data["gate"], ag))
+        elif data["node_type"] == "latch":
+            (parent,) = parents
+            cpds.append(build_latch_cpt(node, parent, ag))
         elif data["node_type"] == "reaction":
-            cpds.append(
-                build_attack_step_cpt(node, parents, data["fixed_success_prob"], ag)
-            )
+            if "latch" in data:
+                latch = data["latch"]
+                (precondition,) = [p for p in parents if p != latch]
+                cpds.append(
+                    build_latched_reaction_cpt(
+                        node, precondition, latch, data["fixed_success_prob"], ag
+                    )
+                )
+            else:
+                cpds.append(
+                    build_reaction_cpt(node, parents, data["fixed_success_prob"], ag)
+                )
         else:
             p_s = compute_ps(float(data["ttc"]), delta_t)
             cpds.append(build_attack_step_cpt(node, parents, p_s, ag))

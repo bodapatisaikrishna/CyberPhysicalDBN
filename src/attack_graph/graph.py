@@ -13,7 +13,7 @@ from typing import Any, Literal
 
 import networkx as nx
 
-NodeType = Literal["attack_step", "analytic", "reaction", "goal"]
+NodeType = Literal["attack_step", "analytic", "reaction", "goal", "latch"]
 GateType = Literal["AND", "OR"]
 EdgeType = Literal["precondition", "triggers_analytic"]
 
@@ -104,11 +104,21 @@ _NODE_DEFS: dict[str, dict[str, Any]] = {
     ),
     # --- Control-centre reactions. Not attack steps (paper Sec. IV): their
     # probabilities express defence efficacy and are given directly, not
-    # derived from a TTC via uniformization. ---
+    # derived from a TTC via uniformization.
+    #
+    # self_loop=False, matching Table 3's TTC of 0: like the AND/OR gates,
+    # a reaction resolves within the slice rather than racing to complete,
+    # so it neither persists nor crosses a slice boundary. Fig. 2 does draw
+    # self-loops on these two nodes and its caption lists them inside
+    # BK-clusters, which points the other way -- see build_reaction_cpt and
+    # LAB_NOTEBOOK.md (2026-07-31) for why the numerical evidence (Fig. 5a
+    # has CorrReact plateau at exactly 0.7, tracking 0.7 x P(SpoofRepMsg))
+    # is treated as decisive here. This is a documented deviation from the
+    # drawn figure, not an oversight. ---
     "CorrReact": {
         "node_type": "reaction",
         "ttc": None,
-        "self_loop": True,
+        "self_loop": False,
         "gate": None,
         "mitre_matrix": None,
         "mitre_tactic": None,
@@ -118,7 +128,7 @@ _NODE_DEFS: dict[str, dict[str, Any]] = {
     "WrongLogicExec": {
         "node_type": "reaction",
         "ttc": None,
-        "self_loop": True,
+        "self_loop": False,
         "gate": None,
         "mitre_matrix": None,
         "mitre_tactic": None,
@@ -176,7 +186,15 @@ _TRIGGERS_ANALYTIC_EDGES: list[tuple[str, str]] = [
 ]
 
 
-def build_attack_graph() -> nx.DiGraph:
+ReactionMode = Literal["memoryless", "latched"]
+
+# Suffix for the auxiliary latch node accompanying each reaction in "latched"
+# mode. Kept as a constant so downstream code can identify latches without
+# string-matching a literal.
+LATCH_SUFFIX = "__Seen"
+
+
+def build_attack_graph(reaction_mode: ReactionMode = "memoryless") -> nx.DiGraph:
     """Build the attack graph of Cerotti et al. Figure 2.
 
     Nodes carry name, node_type, mitre_technique_id, mitre_matrix, mitre_tactic,
@@ -189,6 +207,29 @@ def build_attack_graph() -> nx.DiGraph:
 
     inter_slice is derived here rather than in the compiler: an edge crosses a
     time slice exactly when both of its endpoints persist, i.e. both self-loop.
+
+    reaction_mode selects between two readings of the control-centre reactions
+    (CorrReact, WrongLogicExec) that the source paper's own figures disagree on
+    (see LAB_NOTEBOOK.md 2026-07-31):
+
+      "memoryless" -- a reaction is redrawn every slice from its precondition,
+          so its marginal is p_fixed * P(precondition). Plateaus at exactly 0.7
+          for CorrReact, reproducing Fig. 5a, but carries no state, so FF and
+          EX converge and KL(EX||FF) decays to 0 -- contradicting Fig. 6c,
+          which states the FF divergence "is not able to converge to the exact
+          solution (it stabilizes just below 0.12)".
+
+      "latched" -- the control centre gets exactly ONE chance to react, at the
+          moment the precondition first holds, succeeding with p_fixed; that
+          outcome then persists. Also plateaus at p_fixed (Fig. 5a) but carries
+          state across slices, so FF's independence assumption produces a
+          permanent error (Fig. 6c, Fig. 8a).
+
+    "latched" requires an auxiliary latch node per reaction and is therefore a
+    structural addition not drawn in Fig. 2. It is needed because the one-shot
+    condition is "precondition holds now AND did not hold last slice", i.e. a
+    dependency on t-2, which a 2TBN's Markov-order-1 transition model cannot
+    express without carrying that extra slice of memory in a node.
     """
     graph = nx.DiGraph()
 
@@ -201,7 +242,10 @@ def build_attack_graph() -> nx.DiGraph:
     for source, target in _TRIGGERS_ANALYTIC_EDGES:
         graph.add_edge(source, target, edge_type="triggers_analytic")
 
-    for name, attrs in _NODE_DEFS.items():
+    if reaction_mode == "latched":
+        _apply_latched_reactions(graph)
+
+    for name, attrs in graph.nodes(data=True):
         if attrs["self_loop"]:
             graph.add_edge(name, name, edge_type="precondition")
 
@@ -211,6 +255,50 @@ def build_attack_graph() -> nx.DiGraph:
         )
 
     return graph
+
+
+def _apply_latched_reactions(graph: nx.DiGraph) -> None:
+    """Convert each reaction into a one-shot latched reaction, in place.
+
+    For a reaction R with precondition P, adds `R__Seen`: a persistent node
+    that latches to 1 once P has held, and makes R itself persistent with
+    parents {P, R__Seen}. R can then only fire in the single slice where P
+    holds but R__Seen has not yet latched.
+    """
+    reactions = [n for n, d in graph.nodes(data=True) if d["node_type"] == "reaction"]
+
+    for reaction in reactions:
+        parents = [
+            p
+            for p in graph.predecessors(reaction)
+            if graph.edges[p, reaction]["edge_type"] == "precondition" and p != reaction
+        ]
+        if len(parents) != 1:
+            raise ValueError(
+                f"latched reaction {reaction!r} expects exactly one precondition, "
+                f"got {parents}"
+            )
+        (precondition,) = parents
+
+        latch = f"{reaction}{LATCH_SUFFIX}"
+        graph.add_node(
+            latch,
+            name=latch,
+            mitre_technique_id=None,
+            node_type="latch",
+            ttc=None,
+            self_loop=True,
+            gate=None,
+            mitre_matrix=None,
+            mitre_tactic=None,
+            mitre_technique=None,
+            latch_for=reaction,
+        )
+        graph.add_edge(precondition, latch, edge_type="precondition")
+        graph.add_edge(latch, reaction, edge_type="precondition")
+
+        graph.nodes[reaction]["self_loop"] = True
+        graph.nodes[reaction]["latch"] = latch
 
 
 def undetermined_fields() -> dict[str, str]:
