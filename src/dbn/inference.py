@@ -9,7 +9,7 @@ First, `parameterization.attach_cpds`'s transition CPTs (tested 18/18 last
 session) are reused completely unmodified as the one source of truth for
 transition probabilities. Second, and more important: it was tempting to assume
 each ulterior interface node's value depends only on anterior-layer parents,
-making the 13 interface nodes conditionally independent given a fixed anterior
+making the interface nodes conditionally independent given a fixed anterior
 assignment. That is false for MITM: its only parent is CredAccess, which does
 not self-loop, so CredAccess(t) -> MITM(t) is intra-slice
 (see compiler.compile_to_2tbn and
@@ -43,7 +43,7 @@ BeliefState = dict[frozenset[str], np.ndarray]
 
 
 def _interface_nodes(ag: nx.DiGraph) -> list[str]:
-    """The 13 self-looping (persistent) nodes -- the only ones whose value
+    """The self-looping (persistent) nodes -- the only ones whose value
     crosses a time slice, and so the only ones a filtering approximation needs
     to track jointly or independently between steps."""
     return sorted(n for n, d in ag.nodes(data=True) if d["self_loop"])
@@ -115,12 +115,12 @@ def _cluster_prior_node(cluster: frozenset[str]) -> tuple[str, int]:
 class DBNInference:
     """Clustered forward filter over the Cerotti et al. attack-graph 2TBN.
 
-    `clustering` partitions the 13 interface nodes into mutually-independent
+    `clustering` partitions the interface nodes into mutually-independent
     blocks (Cerotti et al.'s BK-clusters). A block of size 1 is a plain
     independent-marginal prior. A block of size k>1 is represented as one
     auxiliary categorical node of 2^k states plus k deterministic decoder CPDs
     (bit i of the state index -> the i-th node in sorted(cluster), i=0 most
-    significant) -- this is how EX's single 13-node, 8192-state cluster is
+    significant) -- this is how EX's single all-interface-node cluster is
     represented, and it generalizes to any future intermediate clustering (e.g.
     CL) without a different code path.
     """
