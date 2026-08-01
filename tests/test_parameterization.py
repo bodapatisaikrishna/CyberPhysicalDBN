@@ -12,6 +12,8 @@ from src.dbn.compiler import ANTERIOR, ULTERIOR, compile_to_2tbn
 from src.dbn.parameterization import (
     attach_cpds,
     build_attack_step_cpt,
+    build_latch_cpt,
+    build_latched_reaction_cpt,
     collect_uniformization_ttcs,
     compute_delta_t,
     compute_ps,
@@ -192,11 +194,23 @@ class TestCompiledModel:
             assert (name, ANTERIOR) not in dbn.nodes()
 
     def test_attack_steps_have_temporal_arc(self, ag):
+        """The 11 attack steps persist; nothing else does.
+
+        Reactions and gates carry TTC=0 in Table 3 -- they resolve within a
+        slice rather than racing to complete -- so they get no temporal arc.
+        """
         dbn = compile_to_2tbn(ag)
         persistent = [n for n, d in ag.nodes(data=True) if d["self_loop"]]
-        assert len(persistent) == 13
+        assert len(persistent) == 11
+        assert all(ag.nodes[n]["node_type"] == "attack_step" for n in persistent)
+        assert all(ag.nodes[n]["gate"] is None for n in persistent)
         for name in persistent:
             assert dbn.has_edge((name, ANTERIOR), (name, ULTERIOR))
+
+    def test_reactions_are_untimed(self, ag):
+        for name in ["CorrReact", "WrongLogicExec"]:
+            assert not ag.nodes[name]["self_loop"]
+            assert not ag.has_edge(name, name)
 
     def test_mitm_depends_on_credaccess_within_slice(self, ag):
         """CredAccess is untimed, so MITM sees it at t, not t-1."""
@@ -242,3 +256,82 @@ class TestCompiledModel:
             cpd.get_values(),
             [[1.0 - PAPER_P_POS, PAPER_P_NEG], [PAPER_P_POS, 1.0 - PAPER_P_NEG]],
         )
+
+
+class TestLatchedReactions:
+    """One-shot latched reactions (graph.build_attack_graph reaction_mode).
+
+    The paper's own figures disagree on reaction semantics: Fig. 5a's flat-0.7
+    plateau requires no memory, while Fig. 6c's non-converging KL requires
+    memory. The latched reading satisfies both -- it plateaus at exactly the
+    fixed success probability while carrying state across slices. See
+    LAB_NOTEBOOK.md 2026-07-31.
+    """
+
+    @pytest.fixture
+    def latched_ag(self):
+        return build_attack_graph(reaction_mode="latched")
+
+    def test_adds_one_latch_per_reaction(self, latched_ag):
+        latches = [
+            n for n, d in latched_ag.nodes(data=True) if d["node_type"] == "latch"
+        ]
+        assert sorted(latches) == ["CorrReact__Seen", "WrongLogicExec__Seen"]
+        assert latched_ag.number_of_nodes() == 25  # 23 + 2 latches
+
+    def test_reactions_become_persistent(self, latched_ag):
+        for reaction in ["CorrReact", "WrongLogicExec"]:
+            assert latched_ag.nodes[reaction]["self_loop"] is True
+            assert latched_ag.nodes[reaction]["latch"] == f"{reaction}__Seen"
+
+    def test_memoryless_mode_is_unchanged_default(self):
+        default_ag = build_attack_graph()
+        assert default_ag.number_of_nodes() == 23
+        assert not any(
+            d["node_type"] == "latch" for _, d in default_ag.nodes(data=True)
+        )
+        for reaction in ["CorrReact", "WrongLogicExec"]:
+            assert default_ag.nodes[reaction]["self_loop"] is False
+
+    def test_latch_cpt_is_deterministic_or(self, latched_ag):
+        cpd = build_latch_cpt("CorrReact__Seen", "SpoofRepMsg", latched_ag)
+        # columns ordered (SpoofRepMsg(t-1), self(t-1))
+        np.testing.assert_allclose(cpd.get_values()[1], [0.0, 1.0, 1.0, 1.0])
+
+    def test_latched_reaction_fires_only_on_first_chance(self, latched_ag):
+        p = 0.7
+        cpd = build_latched_reaction_cpt(
+            "CorrReact", "SpoofRepMsg", "CorrReact__Seen", p, latched_ag
+        )
+        active = cpd.get_values()[1]
+
+        for i, (latch, precondition, self_prev) in enumerate(
+            itertools.product([0, 1], repeat=3)
+        ):
+            if self_prev:
+                expected = 1.0  # persistence
+            elif not precondition:
+                expected = 0.0  # precondition never held
+            elif latch:
+                expected = 0.0  # the one chance was used and failed
+            else:
+                expected = p  # first and only chance
+            assert active[i] == pytest.approx(expected), (
+                f"latch={latch} precondition={precondition} self={self_prev}"
+            )
+
+        np.testing.assert_allclose(cpd.get_values().sum(axis=0), np.ones(8))
+
+    def test_all_latched_cpds_normalized(self, latched_ag):
+        dbn = attach_cpds(
+            compile_to_2tbn(latched_ag),
+            latched_ag,
+            m=PAPER_M,
+            p_pos=PAPER_P_POS,
+            p_neg=PAPER_P_NEG,
+        )
+        cpds = dbn.get_cpds()
+        assert len(cpds) == latched_ag.number_of_nodes()
+        for cpd in cpds:
+            sums = cpd.get_values().sum(axis=0)
+            np.testing.assert_allclose(sums, np.ones_like(sums), err_msg=str(cpd.variable))

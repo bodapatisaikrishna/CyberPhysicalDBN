@@ -1,0 +1,4 @@
+scenario,reaction_mode,node,m_kl,argmax_t_units,final_kl,paper_reference,git_sha,seed,m,delta_t,max_slices
+scenario1,latched,UnstablePS,0.2920268567932957,8.3065,0.005882819237631608,peak ~2e-2 around t~40-50,1abbf37f6dbde522e8b2bfeb285a24fbb1b46ff3,42,1.0,0.2768833333333333,250
+scenario1,latched,CorrReact,0.1256083074636437,8.860266666666666,0.06944301118566068,"stabilizes just below 0.12, does NOT converge to 0",1abbf37f6dbde522e8b2bfeb285a24fbb1b46ff3,42,1.0,0.2768833333333333,250
+scenario1,latched,MITM,0.007506508568165107,1.9381833333333331,-7.888999957460012e-16,"peak ~1.8e-2 early (t~10), decays to ~0",1abbf37f6dbde522e8b2bfeb285a24fbb1b46ff3,42,1.0,0.2768833333333333,250
