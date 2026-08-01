@@ -690,3 +690,165 @@ point, and reported before this decision was made, not glossed over to reach
 it.
 
 Proceeding to commit this session's work and to Phase 2 planning.
+
+---
+
+## 2026-08-01 Experiment: digital twin, open loop (exp03)
+
+**Hypothesis.** I expect the twin to run end to end producing traces that
+satisfy the structural invariants by construction (precondition ordering,
+analytic attribution, measurable physical effect), and I expect its
+twin-driven posteriors to reach the same terminal state as the paper's
+scripted Scenario 2 but on a SUBSTANTIALLY FASTER timeline.
+
+Falsifiable timing prediction, computed from Table 3's TTCs by Monte Carlo
+(200k draws) BEFORE running anything -- this is arithmetic from published
+config values, not a result:
+
+| analytic | twin mean | Table 4 | Table 4's percentile in the twin distribution |
+|---|---|---|---|
+| FileAccess | 1.00 | 8 | ~100th (P(X>8) ~ 4e-9) |
+| FileIntegrity | 1.00 | 9 | ~100th |
+| MeasureCoherence | 18.31 | 31 | 84th |
+| CommandCoherence | 42.39 | 52 | 71st |
+
+I expect this divergence and do NOT intend to close it. Fig. 7's own caption
+reads "second scenario with a slow attack and randomized times", so Table 4 is
+explicitly not a typical draw. The sharp, genuinely interesting part of the
+prediction is the ASYMMETRY: the two late analytics (31, 52) are plausible
+draws from the twin (84th/71st percentile), while the two early ones (8, 9)
+are essentially impossible under the paper's own Table 3 TTCs. If that holds,
+Scenario 2's credential-theft timing is not reconcilable with the TTCs that
+parameterize the very same model -- a finding about the source, not about my
+implementation. Tuning firing delays to hit Table 4 would be fitting to a
+target (CLAUDE.md rule 3) and is explicitly not being done.
+
+Second pre-registered prediction: a systematic +delta_t/2 ~ 0.14 time-unit
+discretization offset per step (continuous completion time mapped to
+ceil(t/delta_t)), accumulating along chains to ~0.4 for the 3-stage UnsecCred.
+Small, one-directional, and expected -- logging it now so it is not later
+mistaken for a bug. The underlying means are unbiased (Geometric with
+p = delta_t/T_bar has mean T_bar time units); only slice-boundary rounding
+shifts.
+
+**Instability threshold.** 0.90 / 1.10 pu, read at runtime from
+`net.bus.min_vm_pu` / `max_vm_pu`. This is NOT a value I chose: it is
+case33bw's own declaration, and it coincides with EN 50160's +/-10% band for
+European distribution networks (the paper's setting is Italian, CEI 0-16).
+A test asserts the limits come from the network rather than from a literal.
+Measured headroom at the nominal ladder level (0.8 MW/DER): vmin 0.9611,
+vmax 1.0000 -- comfortable on both sides; the destabilising level (3.0 MW/DER)
+gives vmax 1.1311, a real violation.
+
+**Stated limitation, up front.** The twin samples attack delays from the
+continuous-time law the DBN's CPTs discretize, and samples analytics from the
+DBN's own Table-2 likelihood with the DBN's own p_pos/p_neg. Agreement between
+twin-driven and scripted posteriors is therefore close to guaranteed by
+construction. **exp03 is a plumbing validation and an envelope measurement, not
+evidence that the DBN models reality.** The `deterministic` delay-law arm
+exists precisely to make that honest: it measures degradation when the twin's
+law is NOT the DBN's.
+
+**Result: GATE PASSED.** 64/64 twin tests; 47/47 Sessions 1-2 tests still green.
+All five invariants pass: (a) precondition ordering clean across 40 replicates
+(2 arms x 20), (b) analytic attribution exact, (c) physical effect measurable
+(nominal vmax 1.0000 -> compromised 1.2336 against a 1.10 limit), (d) posterior
+rises over the horizon, (e) evidence-stream scope guard holds.
+
+Stage-0 ladder sweep (now with logged provenance, `exp03_grid_sweep_*.csv`),
+DERs derived at buses {17, 32}:
+
+| p_mw/DER | vmin | vmax | n_violated | unstable |
+|---|---|---|---|---|
+| 0.0 | 0.9131 | 1.0000 | 0 | no |
+| 0.8 | 0.9611 | 1.0000 | 0 | no |
+| 2.0 | 0.9837 | 1.0699 | 0 | no |
+| 3.0 | 0.9893 | 1.1311 | 3 | YES |
+| 5.0 | 0.9961 | 1.2336 | 13 | YES |
+
+**Prediction 1 (timing) held, and the ASYMMETRY held in the sharp form.**
+Measured median raising times (exponential arm, 20 replicates) vs Table 4:
+
+| analytic | twin median | twin p10-p90 | Table 4 | Table 4 inside p10-p90? |
+|---|---|---|---|---|
+| FileAccess | 0.97 | 0.55-1.69 | 8 | **NO** (far above) |
+| FileIntegrity | 0.97 | 0.28-1.97 | 9 | **NO** (far above) |
+| MeasureCoherence | 11.49 | 5.43-34.67 | 31 | **yes** |
+| CommandCoherence | 33.64 | 6.65-131.69 | 52 | **yes** |
+
+Predicted medians were 1.00 / 1.00 / 18.31 / 42.39; measured 0.97 / 0.97 /
+11.49 / 33.64 (medians run below means, as expected for right-skewed sums of
+exponentials). The two LATE analytics' Table 4 values are ordinary draws from
+the twin; the two EARLY ones are not reachable under the paper's own Table 3
+TTCs.
+
+**Prediction 2 (discretization offset) held exactly.** Every deterministic-arm
+raising time equals ceil(t/delta_t)*delta_t to within 0.01: 1.0 -> 1.11,
+18.0 -> 18.27, 43.0 -> 43.19, 2.0 -> 2.22. Offsets 0.11-0.27, bounded by
+delta_t = 0.277 as predicted. The deterministic arm also reproduced the
+precondition arithmetic exactly (UnsecCred 3x1/3 = 1, MITM +2 = 3,
+SpoofRepMsg +15 = 18, UnauthCommand min(3,4)+40 = 43).
+
+**The most informative measurement, which max|diff| had obscured.** Comparing
+the scripted Scenario 2 curve against the twin's p10-p90 envelope slice by
+slice:
+
+| node | scripted inside envelope | below p10 | above p90 |
+|---|---|---|---|
+| UnstablePS | 87.7% | 12.3% | **0.0%** |
+| CorrReact | 89.0% | 11.0% | **0.0%** |
+| MITM | 84.9% | 15.1% | **0.0%** |
+
+The scripted scenario is inside the twin's distribution ~85-89% of the time,
+and every single out-of-envelope slice is BELOW p10 -- never above. A
+perfectly one-directional deviation. `max |diff|` (0.53-0.98) had made this
+look like disagreement; it is not, it is a pure time shift with matching
+shapes and identical plateau values (CorrReact plateaus at exactly 0.7 in both;
+all three nodes reach identical terminal values).
+
+**Open-loop baseline for Session 4** (`open_loop_lag_slices`, reported as a
+descriptive statistic, NOT claimed as detection lead time and NOT claim C1):
+
+| arm | median first-unstable slice | threshold | P(UnstablePS) crossing | lag |
+|---|---|---|---|---|
+| exponential | 44 | 0.50 | 38 | **-6** |
+| exponential | 44 | 0.90 | 118 | +74 |
+| exponential | 44 | 0.99 | 125 | +82 |
+| deterministic | 66 | 0.50 | 66 | 0 |
+| deterministic | 66 | 0.90 | 156 | +90 |
+
+The threshold dominates the sign of the lag: at 0.5 the posterior crosses at or
+before physical instability, at 0.9+ it trails by 74-90 slices. Sweeping rather
+than picking a threshold was the right call -- a single choice would have
+determined the headline number.
+
+**Interpretation.** The twin reproduces the paper's Scenario-2 posterior SHAPES
+and terminal values while running systematically faster, and the paper's own
+Fig. 7 caption explains why: "second scenario with a slow attack and randomized
+times". The one-directional envelope result quantifies that caption -- Table 4
+is a slow draw, not a typical one. The genuinely new finding is the asymmetry:
+Scenario 2's credential-theft times (t=8, 9) are not reachable under the Table 3
+TTCs that parameterize the same model (twin p90 = 1.69 and 1.97), while its
+later times (31, 52) are ordinary draws. So the early part of the paper's
+scripted timeline is not reconcilable with its own TTCs; the later part is.
+Nothing was tuned to close this.
+
+**Surprised?** yes, on one point. I expected `max |diff|` to be the headline
+comparison and it was actively misleading -- 0.53-0.98 reads as gross
+disagreement, when the envelope analysis shows 85-89% containment with
+zero one-sided violations. Checked by computing the envelope coverage directly
+rather than trusting the summary scalar, which is the same lesson as the
+2026-07-31 M_KL/two-hump correction: a max-over-t statistic does not
+characterise a curve. Also mildly surprised the 0.5-threshold lag came out
+NEGATIVE (posterior leads physics by 6 slices); that is a real open-loop
+baseline worth beating in Session 4, not an artifact -- the posterior responds
+to analytics that fire when the attack step completes, whereas instability
+requires the control centre to then act on spoofed data.
+
+**Stated limitation, restated.** Under the exponential arm the twin draws from
+the DBN's own law and the DBN's own Table-2 likelihood, so agreement is close
+to guaranteed. The deterministic arm is the honest control: it shifts every
+raising time later (1.11/1.11/18.27/43.19 vs 0.97/0.97/11.49/33.64) and moves
+the first-unstable slice from 44 to 66, yet the posterior still reaches the
+same terminal values -- i.e. the DBN is robust to this particular
+misspecification, which is a (weak) result rather than a tautology.

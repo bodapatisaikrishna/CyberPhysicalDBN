@@ -1,0 +1,124 @@
+# Digital twin configuration (CLAUDE.md layer [0]).
+#
+# Rule followed throughout this file: any quantity the source paper does NOT
+# publish is a config knob with a comment stating why its default is what it
+# is. Quantities the paper DOES publish are read from the attack graph or the
+# pandapower network at runtime and deliberately do NOT appear here, so they
+# cannot drift out of sync with their source:
+#   - TTCs                     -> ag.nodes[n]["ttc"]              (Table 3)
+#   - reaction probabilities   -> ag.nodes[n]["fixed_success_prob"] (Sec. IV)
+#   - voltage limits           -> net.bus.min_vm_pu / max_vm_pu   (case33bw)
+#   - delta_t, horizon         -> experiments/exp01 timebase      (Table 5)
+
+grid:
+  # Baran & Wu 33-bus radial distribution feeder. Chosen because it is the
+  # canonical DER-hosting distribution test feeder in the 20-40 bus range and
+  # it ships its own voltage limits; no pandapower network ships 20-40 buses
+  # with DERs already attached.
+  network: "case33bw"
+
+  # DER placement is DERIVED, not hand-picked: the top-N in-service leaf buses
+  # by Dijkstra impedance distance from the slack bus. On case33bw this yields
+  # {17, 32} under both impedance and hop-count weighting (17 at 14.68 ohm,
+  # 32 at 8.65 ohm; next candidates 21 at 4.16 and 24 at 3.49). Placing DERs
+  # at the electrically weakest points is where they most affect voltage,
+  # which is what makes the physical consequence measurable at all.
+  # NOTE: the 5 Baran-Wu tie lines ship out-of-service (normal radial
+  # operation); the rule must consider in-service lines only or there are no
+  # leaves at all.
+  der_placement_rule: "top_n_leaf_buses_by_z_ohm_from_slack"
+  n_der: 2
+
+  # Control-centre dispatch ladder, in MW per DER. These are NOT arbitrary:
+  # they are the sweep points measured by experiments/exp03_twin_open_loop.py
+  # stage 0, which writes results/exp03_grid_sweep_<timestamp>.csv on every
+  # run so the values here always have a logged provenance trail.
+  # The control centre climbs this ladder in response to (possibly spoofed)
+  # undervoltage reports, so the destabilising level is REACHED BY CONTROL
+  # LOGIC rather than asserted as "the attack value".
+  p_mw_levels: [0.0, 0.8, 2.0, 3.0, 5.0]
+  nominal_level_index: 1        # 0.8 MW: measured comfortable on both limits
+
+  # A power flow with no feasible steady-state solution is instability. This
+  # is a modelling choice, not a paper value -- the paper's UnstablePS node is
+  # binary with no stated physical criterion.
+  nonconvergence_is_unstable: true
+
+comms:
+  # Transport delay is NOT MODELLED. CLAUDE.md explicitly rejects a real
+  # IEC 61850/MMS protocol stack ("Abstract communication as SimPy events"),
+  # and this project makes no claim about protocol-level timing, so any
+  # nonzero default would be an invented number. The knob exists only so a
+  # deliberate sensitivity study can vary it and log the result.
+  latency_time_units: 0.0
+
+control_centre:
+  # How often the control centre polls measurements and may issue a setpoint,
+  # in time units (1 time unit = 10 min, the paper's own Table 3/Table 4 unit).
+  # The paper gives no control-loop period. 1.0 is chosen as "the control loop
+  # runs at the same granularity the paper reports everything else in" -- a
+  # defensible convention, not a measurement.
+  dispatch_period_time_units: 1.0
+
+attacker:
+  # exponential | deterministic
+  #
+  # "exponential": delay ~ Exp(mean = that step's TTC). This is not an
+  # aesthetic choice. Cerotti et al. Sec. III-E derives the CPTs by
+  # uniformization, which approximates an EXPONENTIAL continuous-time variable
+  # by a geometric discrete one; exponential sampling is therefore the
+  # continuous-time law the DBN's CPTs are a discretization OF. It also makes
+  # UnsecCred's three 1/3 stages an Erlang(3) with mean 1 and ModAuthProc's
+  # two 1/2 stages an Erlang(2) with mean 1, matching the paper's own
+  # description of them as 3- and 2-stage tactics.
+  #
+  # "deterministic": delay = TTC exactly. This is the MISSPECIFICATION ARM.
+  # Under "exponential" the twin samples from the DBN's own law and its
+  # analytics from the DBN's own likelihood, so agreement is close to
+  # guaranteed and exp03 would be a self-consistency check rather than a
+  # result. The deterministic arm measures how much posterior accuracy
+  # degrades when the twin's law is NOT the DBN's.
+  delay_law: "exponential"
+
+  # All four attack-graph roots launch at t=0, matching the paper's Scenarios
+  # 1 and 2 where every process is available from the start. Listed explicitly
+  # so a future ablation can disable branches for free.
+  enabled_roots: ["UnsecCred1", "ModAuthProc1", "ModCtrlLogic", "ModifyProgram"]
+
+analytics:
+  # zero | exponential | deterministic
+  #
+  # "zero" is NOT a measured value and NOT a guess. It is Cerotti et al.'s own
+  # structural assumption transcribed into the twin: analytics are UNTIMED
+  # intra-slice children of their technique parent (Sec. III-A, Table 2), i.e.
+  # P(analytic=1 | parent=1) = 1 - p_neg within the same slice. The paper
+  # reports no detection latency anywhere, so any nonzero default would be
+  # fabricated (CLAUDE.md rule 1). The knob exists only so a future
+  # sensitivity study can vary it deliberately and log the result.
+  firing_delay_law: "zero"
+  firing_delay_mean_time_units: 0.0   # must stay 0.0 while law is "zero"
+
+  # Table 2 false positive / false negative rates. Same values exp01 used, so
+  # twin-generated evidence is directly comparable with the scripted scenario.
+  # NOTE (limitation, not a validation): using the DBN's own error rates makes
+  # the twin's analytic layer self-consistent with the DBN by construction.
+  p_pos: 1.0e-4
+  p_neg: 1.0e-4
+
+experiment:
+  # Number of seeded twin replicates. A single stochastic draw cannot
+  # distinguish "the twin is wrong" from "this draw was unlucky", so exp03
+  # reports a posterior envelope over replicates plus one representative run.
+  n_replicates: 20
+
+  # Posterior thresholds at which P(UnstablePS) counts as "detected". Swept
+  # rather than picked: a single threshold would be an invented number doing
+  # load-bearing work in a reported statistic.
+  detection_thresholds: [0.5, 0.9, 0.99]
+
+  # Which reaction reading to use for the headline comparison. "memoryless"
+  # matches exp01's Fig. 7 reproduction, so the twin-vs-scripted comparison is
+  # apples-to-apples. See LAB_NOTEBOOK.md 2026-07-31: the twin's reactions are
+  # inherently one-shot (continuous time has no "redrawn every slice"), which
+  # is independent structural support for the "latched" reading.
+  reaction_mode: "memoryless"
