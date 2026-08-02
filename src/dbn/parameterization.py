@@ -282,6 +282,28 @@ def build_latched_reaction_cpt(
     )
 
 
+def analytic_error_rates(ag: nx.DiGraph, node: str, p_pos: float, p_neg: float) -> tuple[float, float]:
+    """(p_pos, p_neg) for `node`, using its per-node SensorModel if it has one.
+
+    Shared by `build_analytic_cpt` (here) and `src/twin/runner.py::discretize`'s
+    graph-structure inspection, so the one place a node's error rates are
+    declared (`ag.nodes[node]["sensor_model"]`, set in
+    `src.attack_graph.graph.build_attack_graph`) is the only place they can be
+    read from -- the CPT and the twin's own bookkeeping cannot drift apart.
+
+    All 8 Session-1 analytics have `sensor_model=None` and fall through to the
+    passed-in global rates unchanged, so this is a no-op for them: existing
+    CPTs stay byte-identical. A voltage measurement (Session 4's PhysLocalDER/
+    PhysWideArea) is not a 1e-4-false-positive cyber detector -- see
+    LAB_NOTEBOOK.md 2026-08-01 on why a_pos/a_neg there encode model mismatch,
+    not sensor noise, and must be measured rather than reused from Table 2.
+    """
+    sensor_model = ag.nodes[node].get("sensor_model")
+    if sensor_model is None:
+        return p_pos, p_neg
+    return sensor_model.p_pos, sensor_model.p_neg
+
+
 def build_analytic_cpt(
     node: str,
     parent: str,
@@ -294,8 +316,11 @@ def build_analytic_cpt(
     Analytics are untimed: no self-loop, no temporal arc, so the CPT depends
     only on its technique parent within the same slice. p_pos is the false
     positive rate (alarm with no attack step), p_neg the false negative rate
-    (attack step goes undetected).
+    (attack step goes undetected) -- unless `node` carries a per-node
+    SensorModel override (`analytic_error_rates`), in which case its own
+    rates are used instead of the two passed in.
     """
+    p_pos, p_neg = analytic_error_rates(ag, node, p_pos, p_neg)
     evidence: list[DBNNode] = [(parent, _parent_slice(ag, parent, node))]
     return TabularCPD(
         (node, ULTERIOR),

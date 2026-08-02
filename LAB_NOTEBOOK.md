@@ -852,3 +852,259 @@ raising time later (1.11/1.11/18.27/43.19 vs 0.97/0.97/11.49/33.64) and moves
 the first-unstable slice from 44 to 66, yet the posterior still reaches the
 same terminal values -- i.e. the DBN is robust to this particular
 misspecification, which is a (weak) result rather than a tautology.
+
+---
+
+## 2026-08-01 Experiment: exp04, closing the physical loop (claim C1)
+
+**Hypothesis / pre-registration.** Written before any code per protocol. Two
+orientation-only explorations (not logged, not under the harness — see the
+CLAUDE.md-rule-2/4 note below) converged on two structural findings that shape
+every decision in this session:
+
+**M1 — physical consequence is entirely gated on CorrReact.** In the
+Session-3 twin, `UnauthCommand` and `WrongLogicExec` completing has zero
+physical effect on their own: both are in-transit message rewrites, and the
+control centre only ever sends a setpoint command after `CorrReact`'s 0.7
+Bernoulli succeeds. In ~30% of runs the attack graph fully completes and
+asserts `UnstablePS`, while the grid never leaves nominal. This is the source
+of the calibration signal C1 needs.
+
+**M2 — the precursor window is exactly zero, not short.** Both DERs report in
+the same SimPy instant and the control centre climbs the dispatch ladder once
+per message (2 rungs/tick), so intermediate voltage states exist as `GridState`
+objects but span zero wall-clock time and are invisible to the zero-order-hold
+discretizer. On the 722-slice DBN grid, `vm_pu_max` is observable only as one
+of {1.0, 1.131096, 1.233635} -- nominal, first-violation, or saturated. No
+threshold strictly between 1.00 and 1.10 can buy lead time in the twin as
+originally built.
+
+**Twin fidelity fixes (decided independent of C1, justified by the source
+paper's own figures):**
+1. `WrongLogicExec` now *forces* its DER's setpoint directly, independent of
+   command traffic (Fig. 3: "commands received will now be filtered by
+   malicious software that decides which to execute") -- not merely a
+   narrowed rewrite hook, which would rarely fire since no command flows
+   without CorrReact. This converts the CorrReact-fails runs from "no physical
+   consequence at all" into a genuine LOCALIZED violation. That benefit was
+   not the reason for the fix -- Fig. 3 alone justifies it -- and is recorded
+   as a bonus, not retrofitted as the justification.
+2. `WrongLogicExec` targets exactly one DER: `select_der_buses(net, n_der)[0]`,
+   the existing derived impedance-distance ranking's rank-0 entry. The rule is
+   stated; the specific bus number is not hardcoded anywhere.
+3. `UnauthCommand`/`CorrReact` remain all-DER (Fig. 1, MMS channel / control
+   centre commanding on false data) -- unchanged from Session 3.
+
+**The two physical evidence nodes and their CPTs.** Both are ordinary Cerotti
+Table-2 analytics; `build_analytic_cpt` is reused unmodified via a per-node
+sensor-rate lookup, so all 8 existing analytics keep byte-identical CPTs.
+
+```
+PhysLocalDER | WrongLogicExec              PhysWideArea | UnstablePS
+               WLE=0      WLE=1                           UPS=0      UPS=1
+ P(=0)      1-a_pos      a_neg              P(=0)      1-b_pos      b_neg
+ P(=1)        a_pos    1-a_neg              P(=1)        b_pos    1-b_neg
+```
+
+Why each parent: `WrongLogicExec` (post-fix) is the only single-device path in
+Fig. 2 -- a violation confined to one DER's zone can only arise from it.
+`UnstablePS` is the OR gate itself; a violation spanning both zones requires
+both DERs driven high, i.e. requires the goal. The two are path-discriminating,
+not redundant -- a widespread violation with `WrongLogicExec` inactive is only
+explicable via the all-DER path.
+
+**a_neg/b_neg are not sensor noise -- they absorb model mismatch.** The twin's
+`consequence.classify` is a deterministic function of `GridState`; there is no
+measurement noise to speak of. What these rates encode is the gap between what
+the attack graph asserts and what the grid measures (M1). `b_neg` in
+particular is expected to be large (order 0.3-0.5 at the run level) because
+~30% of the time `UnstablePS` is asserted while the grid stays nominal. This
+is why the cyber analytics' 1e-4 would be the wrong number here: it is a
+detector false-positive rate, and conflating it with model-mismatch would
+manufacture false confidence in the physical channel. Rates are measured
+empirically in exp04 stage 1 on a seed set disjoint from evaluation
+(`SeedSequence(seed).spawn(2)`); 1e-4 and a swept grid are reported as named
+sensitivity arms, never the primary.
+
+**Zone derivation** (`src/twin/consequence.py::build_zone_map`, fed by
+`src/twin/grid.py::voltage_sensitivity`): perturb each DER's setpoint by delta,
+re-solve, take the per-bus sensitivity share; zone(d) = buses where d's share
+exceeds a dominance threshold tau. tau = 2/3 is the midpoint of the measured
+invariance interval (identical zone labels for tau in [0.55, 0.70]) --
+logged as a stage-0 sweep in exp04, not asserted.
+
+**Directional hypotheses (no magnitudes, per protocol):**
+- H1 (calibration): closed-loop ECE/Brier improve vs open-loop, driven by the
+  CorrReact-fails runs where the AG asserts UnstablePS and the grid stays
+  nominal or only locally violates.
+- H2 (lead time, high theta): closed-loop reduces the magnitude of negative
+  lead at high detection thresholds.
+- H3 (lead time, low theta): no improvement, possibly a regression --
+  PhysWideArea=0 can suppress P(UnstablePS) in the pre-instability window of
+  runs that do eventually destabilize, delaying an early cyber-only crossing.
+- H4 (pre-registered null): the primary (at-limit) detection band produces
+  lead-time statistics with zero achievable early-warning margin, because the
+  elevated-but-legal state has zero duration (M2). Falsifiable only by the
+  rate-limited secondary arm.
+- H5 (fusion sanity): if closed-loop is statistically indistinguishable from
+  a `physical_only` arm (the raw physical bit treated as a degenerate
+  posterior, no DBN fusion), C1's fusion claim is unsupported regardless of
+  metric deltas.
+
+**Two decisions that could look like tuning-to-win, and why they aren't:**
+- A rate-limited control centre (one setpoint change per dispatch period, real
+  ADMS practice) runs as a clearly-labelled SECONDARY arm alongside the
+  zero-precursor primary. It is the only twin change that could produce a
+  non-null lead time, and it affects both open-loop and closed-loop equally
+  (it delays t_instability for both), so it cannot bias the open-vs-closed
+  comparison even though it changes the absolute numbers.
+- The declared voltage limit (0.90/1.10, read from the network) is the ONLY
+  threshold used to define instability ground truth, in every arm, always.
+  A sub-limit detection band is a property of the SENSOR (legitimate to sweep,
+  reported as a curve, never a chosen point) and never touches the ground
+  truth it is being scored against.
+
+**Stop rule:** exp04's validation gate tests correctness invariants only
+(no UNCLASSIFIED slices, cyber-evidence identity between arms, grid_unstable
+== exceeds_limit, etc.) -- never whether C1 won. If H1-H5 come out null, that
+is the result, reported with its uncertainty, not re-tuned.
+
+**CLAUDE.md rule-2/4 note on M1/M2/M3:** the numbers above (30 seeds, ~30%
+CorrReact-failure rate, tau invariance interval) came from ad-hoc,
+unlogged exploration and are stated here as ORIENTATION for the hypotheses
+only. They are not experimental results and must not be cited as such. exp04
+stages 0-2 re-derive the equivalent numbers through the logged harness
+(git SHA, seed, config) before anything is reported as a finding.
+
+**Result:** Ran `experiments/exp04_closed_loop_c1.py` (git SHA logged per-run,
+seed 42, 30 eval scenarios from `eval_root`, 20 characterization scenarios
+from a disjoint `char_root`, both spawned from `SeedSequence(42).spawn(2)`).
+GATE PASSED: zero UNCLASSIFIED physical observations across all 30 scenarios
+(722 slices each); open-arm posteriors identical between the 23-node and
+25-node graphs to 2.22e-16 (barren-node invariant confirmed, not assumed);
+`record.grid_unstable == obs.exceeds_limit` held at every slice; cyber
+evidence bit-identical between open_loop and closed_loop by construction.
+Stage 0's fresh tau sweep (0.51 to 0.90, step 0.01) found the invariant band
+containing the configured tau=2/3 is **[0.65, 0.68)** at delta_p_mw=0.5 --
+narrower than, and shifted from, the ad-hoc [0.55, 0.70] this entry's
+orientation section guessed; superseded by this logged sweep
+(`results/exp04_zones_20260802T042212Z.csv`).
+
+Stage 1 measured sensor rates on the disjoint char_root (n=20,
+`results/exp04_sensor_char_20260802T042212Z.csv`): a_pos=0.0041, a_neg=0.595,
+b_pos=0.0, b_neg=0.396. As predicted, a_pos/b_pos (false alarms) are near
+zero -- the grid essentially never spuriously looks like a localized or
+wide-area violation when nothing is driving it -- while a_neg/b_neg (missed
+physical corroboration of an attack-graph-asserted step) are large, ~40-60%,
+confirming these encode model mismatch (M1: CorrReact-only completions),
+not sensor noise.
+
+Stage 2/3 results (`results/exp04_lead_time_*.csv`,
+`results/exp04_calibration_*.csv`), full theta grid 0.05-0.99:
+
+- **Lead time is threshold-dependent, not a uniform win.** At theta <= 0.31,
+  open_loop and closed_loop are bit-for-bit identical (same detection
+  outcome for all 30 scenarios) -- physical evidence does not move an
+  already-easy low-confidence detection earlier. At theta in [0.51, 0.61],
+  closed_loop's median lead is WORSE than open_loop's (0 vs 3 slices) -- a
+  small, real, reproducible regression. At theta >= 0.71, closed_loop
+  clearly wins and the gap grows with theta: at theta=0.99, closed_loop's
+  median lead stays at 0 while open_loop's collapses to -28 (p10 -232);
+  under the rate-limited secondary arm (n=10) the same pattern is far more
+  pronounced -- closed_loop median 0 vs open_loop median -117 (p10 -537) at
+  theta=0.99. The rate-limited arm does not merely confirm the primary
+  arm's null-precursor caveat (H4); it shows the SAME direction of effect,
+  amplified, meaning H4's predicted null is falsified in the sense that a
+  real closed-loop lead-time advantage is visible even without rate-limiting,
+  concentrated at high confidence thresholds rather than at early/loose ones.
+- **physical_only (H5, fusion sanity) clearly underperforms both fused
+  arms**: 5/30 scenarios MISSED entirely (16.7% miss rate vs 0% for
+  open/closed), ECE=0.134, Brier Skill Score = -0.29 (worse than a
+  base-rate-constant predictor). The raw PhysWideArea bit only fires on a
+  true widespread violation, so it structurally cannot detect the
+  CorrReact-only path that produces ~30-60% of `UnstablePS` completions
+  (M1). This supports C1's FUSION claim specifically: physical evidence
+  alone is a worse detector than physical evidence fused with cyber
+  evidence, not merely a redundant restatement of it.
+- **Calibration favors closed-loop, but not decisively on every metric.**
+  Brier: open 0.0629 vs closed 0.0558. Brier Skill Score: open +0.396 vs
+  closed +0.464. Both consistently favor closed-loop, modestly. ECE(10,
+  uniform): open 0.0585 [95% CI 0.028, 0.085] vs closed 0.0575 [0.021,
+  0.088] (n_runs=30, run-level bootstrap) -- closed's point estimate is
+  lower but the two CIs overlap heavily, so ECE alone cannot separate the
+  arms at this sample size.
+- **Flagged, not accepted at face value:** the deliberately mis-specified
+  `closed_loop_sensitivity_1e4` arm (physical sensors assumed to have the
+  cyber analytics' 1e-4 error rate, 40-100x smaller than the stage-1
+  measured a_neg/b_neg) scored BEST of all four arms on every calibration
+  metric (ECE 0.0326, Brier 0.0277, BSS +0.734). This is almost certainly
+  overconfidence being rewarded by the aggregate metric on this sample --
+  an assumed-near-perfect physical sensor produces sharp, decisive
+  posterior swings that happen to land right often enough in this data to
+  look "well calibrated" -- not evidence that 1e-4 is the right rate to
+  use. Recorded as a finding requiring follow-up, not used as a
+  recommendation.
+
+**Interpretation:** C1 gets PARTIAL, threshold-dependent support -- neither a
+clean win nor a null. Reported plainly per the task instruction, not tuned
+toward either outcome. Two pieces of evidence are the most load-bearing:
+
+1. The high-threshold lead-time result (closed-loop stays near-zero lead
+   while open-loop's degrades sharply negative as theta -> 0.99, confirmed
+   independently in both the primary and rate-limited arms) is real and
+   mechanistically sensible: at very high confidence thresholds, cyber-only
+   evidence alone struggles to push P(UnstablePS) that high before
+   instability has already happened for a while, whereas a wide-area
+   physical observation is direct, high-precision evidence (b_pos ~ 0) that
+   can push the posterior over a high bar quickly once the grid actually
+   is violated. This is H2, and it held.
+2. physical_only's clear underperformance relative to closed_loop (16.7%
+   miss rate, negative BSS) shows the closed-loop improvement is a genuine
+   FUSION effect, not just "physical evidence is a better detector than
+   cyber evidence" -- H5's stated falsification condition (closed_loop no
+   better than physical_only) did not occur.
+
+Against that, the mid-threshold (0.51-0.61) regression is real and NOT
+explained by this run alone -- H3's proposed mechanism (PhysWideArea=0
+suppressing the posterior in the pre-instability window) is plausible but
+unverified; distinguishing it from another cause would need per-scenario
+posterior-trajectory inspection, which this aggregate run did not do. The
+ECE result is the weakest of the calibration metrics: Brier/BSS favor
+closed-loop consistently, but ECE's own uncertainty (wide, overlapping
+bootstrap CIs at n_runs=30) means the calibration claim rests more on
+Brier/BSS than on ECE specifically, and a paper claiming "closed-loop
+calibrates better" would need to say so with ECE's CI honestly attached,
+not just the point estimate.
+
+Net: C1 is supported in the specific regime of high-confidence detection
+and physical-fusion (vs. physical-alone), not supported (mildly
+contradicted) in the mid-confidence regime, and calibration support is
+real but metric-dependent. This is exactly the kind of result CLAUDE.md
+asked to be reported honestly rather than summarized as "C1 confirmed."
+
+**Surprised?** yes, three times.
+1. That there was a REGRESSION at mid-threshold at all -- the pre-registered
+   hypotheses allowed for "no improvement" (H4) but the actual measured
+   pattern is a dip below open-loop performance in a specific theta band,
+   not just a flat null. Checked: this is not a units/sign bug -- the
+   dip is bounded (median lead 0 vs 3, a 3-slice difference) and
+   symmetric with the low-theta tie and the high-theta reversal, i.e. it
+   looks like a real crossover, not corrupted data. Not root-caused
+   further within this run's scope.
+2. That the rate-limited secondary arm showed the SAME direction of effect
+   as the primary (zero-precursor) arm, only larger, rather than being the
+   only arm where any effect appeared at all (which is what the
+   zero-duration-precursor argument in M2 predicted). Checked the twin's
+   rate-limiting logic against `tests/test_twin.py::
+   test_rate_limited_dispatch_climbs_at_most_one_rung_per_period`, which
+   passes -- the mechanism is doing what it says.
+3. That the deliberately-wrong `sensitivity_1e4` arm outscored the
+   measured-rate primary arm on every calibration metric. Checked that
+   `analytic_error_rates`'s per-node `SensorModel` override is actually
+   being applied to the measured-rate graph (`tests/test_parameterization.py::
+   TestPhysicalEvidenceNodes::test_overridden_sensor_model_produces_hand_written_cpt`
+   passes, and the printed a_pos/a_neg/b_pos/b_neg differ visibly between the
+   two graphs in the run log) -- the wiring is correct; the result itself
+   is flagged above as likely an overconfidence artifact, not investigated
+   further this session (CLAUDE.md rule 6: this would be a new analysis,
+   not a fix, and is out of this session's scope).

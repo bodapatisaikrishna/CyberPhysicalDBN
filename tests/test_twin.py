@@ -25,13 +25,17 @@ from src.dbn.inference import (
     _interface_nodes,
     fully_factorized_clustering,
 )
+from src.attack_graph.graph import PHYS_LOCAL_DER, PHYS_WIDE_AREA
 from src.twin.attacker import AttackerConfig, DelayLaw
+from src.twin.comms import force_device_setpoint
+from src.twin.consequence import build_zone_map
 from src.twin.grid import (
     ActionOrigin,
     ControlAction,
     GridConfig,
     GridModel,
     select_der_buses,
+    voltage_sensitivity,
 )
 from src.twin.runner import (
     ContinuousTrace,
@@ -342,14 +346,23 @@ class TestDiscretizationBoundary:
             assert set(evidence) == set(observed)
             assert all(v in (0, 1) for v in evidence.values())
 
-    def test_evidence_stream_rejects_non_analytics(self, ag):
-        """Session-4 scope guard: physical state must not reach the DBN yet."""
+    def test_evidence_stream_scope_guard_admits_only_declared_observables(self, ag):
+        """Session-4: this pin REPLACES test_evidence_stream_rejects_non_analytics
+        (the guard moved to `observable_names = analytic_names + physical_names`,
+        it did not disappear). `UnstablePS` itself and raw `GridState` fields
+        stay rejected unconditionally; a trace discretized with no `zones`
+        (this fixture's `ag` is the cyber-only, 23-node graph) has
+        `physical_names == ()`, so the open-loop arm cannot leak physical
+        evidence even if asked."""
         trace = _run_twin(ag, seed=7)
         discrete = discretize(trace, ag, DELTA_T, 50, np.random.default_rng(2), 1e-4, 1e-4)
+        assert discrete.physical_names == ()
         with pytest.raises(ValueError, match="analytic"):
             discrete.evidence_stream(["FileAccess", "UnstablePS"])
         with pytest.raises(ValueError, match="analytic"):
             discrete.evidence_stream(["vm_pu_min"])
+        with pytest.raises(ValueError, match="analytic"):
+            discrete.evidence_stream(["PhysLocalDER"])
 
     def test_evidence_stream_drives_the_dbn(self, ag):
         """End-to-end through DBNInference.run, checking the 1-based key contract."""
@@ -383,6 +396,112 @@ class TestDiscretizationBoundary:
             )
             sigma = ttc / np.sqrt(n)  # Exp(mean=ttc) has sd == mean
             assert abs(samples.mean() - ttc) <= 5 * sigma
+
+
+@pytest.fixture(scope="module")
+def ag_physical():
+    return build_attack_graph(physical_evidence=True)
+
+
+@pytest.fixture(scope="module")
+def zones():
+    model = GridModel()
+    sensitivity = voltage_sensitivity(model, delta_p_mw=0.5)
+    der_buses = dict(zip(model.der_ids, model.der_buses))
+    return build_zone_map(sensitivity, dominance_tau=2 / 3, delta_p_mw=0.5, der_buses=der_buses)
+
+
+class TestClosedLoopPhysicalEvidence:
+    """Session 4: physical deviation as measured, wired evidence (claim C1)."""
+
+    def test_physical_evidence_requires_zones(self, ag_physical):
+        """A graph that declares physical nodes but gets no zones must raise,
+        never silently emit 0 -- discretize()'s own stated invariant."""
+        trace = _run_twin(ag_physical, seed=9)
+        with pytest.raises(ValueError, match="zones"):
+            discretize(trace, ag_physical, DELTA_T, 20, np.random.default_rng(0), 1e-4, 1e-4)
+
+    def test_cyber_analytics_bit_identical_with_and_without_physical_evidence(
+        self, ag, ag_physical, zones
+    ):
+        """The structural fact the open/closed pairing in exp04 depends on:
+        physical bits consume ZERO rng draws, so adding them (and the zones
+        needed to compute them) must not shift a single cyber-analytic bit,
+        given the same rng seed."""
+        trace = _run_twin(ag_physical, seed=10)
+        open_loop = discretize(trace, ag, DELTA_T, 150, np.random.default_rng(42), 1e-4, 1e-4)
+        closed_loop = discretize(
+            trace, ag_physical, DELTA_T, 150, np.random.default_rng(42), 1e-4, 1e-4, zones=zones
+        )
+        assert [r.analytics for r in open_loop.records] == [r.analytics for r in closed_loop.records]
+        assert [r.ground_truth for r in open_loop.records] == [
+            r.ground_truth for r in closed_loop.records
+        ]
+
+    def test_grid_unstable_matches_measured_exceeds_limit(self, ag_physical, zones):
+        """record.grid_unstable == obs.exceeds_limit must hold unconditionally
+        (consequence.py's fixed bug: NEVER hardcode True for a non-converged
+        solve)."""
+        trace = _run_twin(ag_physical, seed=11)
+        discrete = discretize(
+            trace, ag_physical, DELTA_T, 200, np.random.default_rng(1), 1e-4, 1e-4, zones=zones
+        )
+        for record in discrete.records:
+            assert record.physical is not None
+            assert record.grid_unstable == record.physical.exceeds_limit
+
+    def test_physical_evidence_omitted_when_grid_state_unsolved(self, ag_physical, zones):
+        """A synthetic trace with no grid solves at all: `grid_state_at`
+        returns None for every slice, so PHYS_LOCAL_DER/PHYS_WIDE_AREA must be
+        OMITTED (sparse), never coerced to 0 -- distinct from a real 0/0
+        'nominal' observation."""
+        empty_trace = ContinuousTrace(horizon_time_units=10.0)
+        discrete = discretize(
+            empty_trace, ag_physical, DELTA_T, 5, np.random.default_rng(0), 1e-4, 1e-4, zones=zones
+        )
+        stream = discrete.evidence_stream([PHYS_LOCAL_DER, PHYS_WIDE_AREA])
+        for slice_index, evidence in stream.items():
+            assert evidence == {}, f"slice {slice_index} should have no physical evidence"
+
+    def test_rate_limited_dispatch_climbs_at_most_one_rung_per_period(self, ag):
+        """Session-4 secondary sensitivity arm: with rate_limited_dispatch=True,
+        both DERs reporting in the same instant must not climb 2 rungs within
+        one dispatch period (M2: they do by default, since each of the 2
+        MEASUREMENT messages independently triggers a climb)."""
+        levels = list(GridConfig().p_mw_levels)
+        trace = _run_twin(
+            ag,
+            seed=20,
+            horizon=80.0,
+            attacker=AttackerConfig(delay_law=DelayLaw.DETERMINISTIC),
+            dispatch_period_time_units=1.0,
+            rate_limited_dispatch=True,
+        )
+        der_id = trace.grid_solves[0][1].setpoints_mw and next(
+            iter(trace.grid_solves[0][1].setpoints_mw)
+        )
+        level_indices = [
+            levels.index(round(state.setpoints_mw[der_id], 6))
+            for _, state in trace.grid_solves
+            if round(state.setpoints_mw[der_id], 6) in levels
+        ]
+        jumps = [b - a for a, b in zip(level_indices, level_indices[1:])]
+        assert all(j <= 1 for j in jumps), f"rate-limited arm climbed >1 rung at once: {jumps}"
+        # Non-vacuous: at least one climb must have happened in this scenario.
+        assert any(j == 1 for j in jumps)
+
+    def test_force_device_setpoint_affects_only_its_target_der(self):
+        grid = GridModel()
+        other_der = grid.der_ids[1]
+        before = grid.current_setpoints()[other_der]
+
+        build = force_device_setpoint(grid.der_ids[0], grid.max_p_mw)
+        action = build(0.0, ("WrongLogicExec",))
+        grid.apply_control_action(action)
+
+        after = grid.current_setpoints()
+        assert after[grid.der_ids[0]] == pytest.approx(grid.max_p_mw)
+        assert after[other_der] == pytest.approx(before)
 
 
 class TestTimebasePin:

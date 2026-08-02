@@ -105,6 +105,37 @@ analytics:
   p_pos: 1.0e-4
   p_neg: 1.0e-4
 
+physical:
+  # DER setpoint perturbation for src/twin/grid.py::voltage_sensitivity(), used
+  # to derive DER-to-bus zones (src/twin/consequence.py::build_zone_map).
+  # Not a measured quantity -- a linearization step size, chosen small
+  # relative to the dispatch ladder's own spacing (0.8-2.0 MW between rungs).
+  delta_p_mw: 0.5
+
+  # Dominance-share threshold for zone membership. 2/3 by convention (a bus
+  # "belongs" to the DER responsible for at least twice the next DER's
+  # influence on it). exp04 stage 0 freshly re-derives and LOGS the tau
+  # interval over which zone membership is invariant at this delta_p_mw
+  # (tests/test_consequence.py already pins it at [0.6457, 0.6884) on
+  # case33bw) -- this default is not asserted without that logged check.
+  dominance_tau: 0.6666666666666666
+
+  # Stage-0 confirmation sweep range for the tau-invariance check (start,
+  # stop, step), swept exhaustively rather than at a few hand-picked points.
+  tau_sweep_start: 0.51
+  tau_sweep_stop: 0.90
+  tau_sweep_step: 0.01
+
+  # Sensitivity arm: physical sensor rates AS IF they were the same 1e-4
+  # cyber-analytic rate from Table 2. Pre-registered as wrong (LAB_NOTEBOOK.md
+  # 2026-08-01): a_neg/b_neg encode model mismatch between the attack graph's
+  # assertion and the grid's measurement, not sensor noise, so 1e-4 is
+  # expected to badly under-state them. Reported as a named, labeled arm
+  # against the measured (stage-1-characterized) primary rates -- never used
+  # in place of measurement.
+  sensitivity_p_pos: 1.0e-4
+  sensitivity_p_neg: 1.0e-4
+
 experiment:
   # Number of seeded twin replicates. A single stochastic draw cannot
   # distinguish "the twin is wrong" from "this draw was unlucky", so exp03
@@ -122,3 +153,8 @@ experiment:
   # inherently one-shot (continuous time has no "redrawn every slice"), which
   # is independent structural support for the "latched" reading.
   reaction_mode: "memoryless"
+
+  # exp04 (claim C1): minimum scenario count per arm, per the task's explicit
+  # instruction -- "Minimum 30 scenario runs with distinct seeds; report mean
+  # and spread, not a single run."
+  n_scenarios_c1: 30

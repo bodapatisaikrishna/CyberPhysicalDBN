@@ -260,3 +260,42 @@ class GridModel:
                 "grid state is stale; call solve() after apply_control_action()"
             )
         return self._state.unstable
+
+
+def voltage_sensitivity(
+    model: GridModel, delta_p_mw: float
+) -> dict[str, dict[int, float]]:
+    """Linearized dV_b/dP_d (pu/MW) about the nominal dispatch, per DER.
+
+    Answers "whose injection moves this bus" from the network topology alone,
+    with no reference to any attack trajectory -- this is what lets
+    `consequence.build_zone_map` derive DER-to-bus zones rather than having
+    them hardcoded.
+
+    Does not mutate `model`: solves are performed on fresh `GridModel(
+    model.config)` instances, one per DER, each with that DER's setpoint
+    perturbed by `delta_p_mw` from nominal.
+    """
+    if delta_p_mw <= 0:
+        raise ValueError(f"delta_p_mw must be positive, got {delta_p_mw}")
+
+    baseline = GridModel(model.config)
+    v0 = baseline.solve(0.0)
+    if not v0.converged:
+        raise RuntimeError("baseline (nominal dispatch) solve did not converge")
+
+    sensitivity: dict[str, dict[int, float]] = {}
+    for der_id in model.der_ids:
+        perturbed = GridModel(model.config)
+        nominal_p = perturbed.current_setpoints()[der_id]
+        perturbed.apply_control_action(
+            ControlAction(der_id, nominal_p + delta_p_mw, ActionOrigin.OPERATOR, 0.0)
+        )
+        v_d = perturbed.solve(0.0)
+        if not v_d.converged:
+            raise RuntimeError(f"perturbed solve for {der_id!r} did not converge")
+
+        sensitivity[der_id] = {
+            bus: (v_d.vm_pu[bus] - v0.vm_pu[bus]) / delta_p_mw for bus in v0.vm_pu
+        }
+    return sensitivity

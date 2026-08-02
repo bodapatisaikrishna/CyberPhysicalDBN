@@ -7,11 +7,13 @@ import itertools
 import numpy as np
 import pytest
 
-from src.attack_graph.graph import build_attack_graph
+from src.attack_graph.graph import PHYS_LOCAL_DER, PHYS_WIDE_AREA, SensorModel, build_attack_graph
 from src.dbn.compiler import ANTERIOR, ULTERIOR, compile_to_2tbn
 from src.dbn.parameterization import (
+    analytic_error_rates,
     attach_cpds,
     build_attack_step_cpt,
+    build_analytic_cpt,
     build_latch_cpt,
     build_latched_reaction_cpt,
     collect_uniformization_ttcs,
@@ -335,3 +337,103 @@ class TestLatchedReactions:
         for cpd in cpds:
             sums = cpd.get_values().sum(axis=0)
             np.testing.assert_allclose(sums, np.ones_like(sums), err_msg=str(cpd.variable))
+
+
+class TestPhysicalEvidenceNodes:
+    """Session 4 (LAB_NOTEBOOK.md 2026-08-01): PhysLocalDER/PhysWideArea are
+    ordinary analytics distinguished only by observable_kind and an optional
+    SensorModel override, threaded through analytic_error_rates. The whole
+    point is that the 8 existing cyber analytics must not move by a single
+    bit when these are added."""
+
+    @pytest.fixture
+    def physical_ag(self):
+        return build_attack_graph(physical_evidence=True)
+
+    def test_rejects_sensor_models_without_physical_evidence(self):
+        with pytest.raises(ValueError):
+            build_attack_graph(
+                sensor_models={PHYS_LOCAL_DER: SensorModel(0.1, 0.1, "test")}
+            )
+
+    def test_sensor_model_requires_nonempty_source(self):
+        with pytest.raises(ValueError):
+            SensorModel(0.1, 0.1, "")
+
+    def test_node_counts_across_reaction_mode_and_physical_evidence_axes(self):
+        assert build_attack_graph().number_of_nodes() == 23
+        assert build_attack_graph(physical_evidence=True).number_of_nodes() == 25
+        assert build_attack_graph(reaction_mode="latched").number_of_nodes() == 25
+        assert (
+            build_attack_graph(reaction_mode="latched", physical_evidence=True).number_of_nodes()
+            == 27
+        )
+
+    def test_physical_nodes_have_declared_single_parent_edges(self, physical_ag):
+        assert list(physical_ag.predecessors(PHYS_LOCAL_DER)) == ["WrongLogicExec"]
+        assert list(physical_ag.predecessors(PHYS_WIDE_AREA)) == ["UnstablePS"]
+        for node in (PHYS_LOCAL_DER, PHYS_WIDE_AREA):
+            assert physical_ag.nodes[node]["node_type"] == "analytic"
+            assert physical_ag.nodes[node]["observable_kind"] == "physical"
+            assert physical_ag.nodes[node]["self_loop"] is False
+            assert physical_ag.nodes[node]["mitre_technique"] is None
+
+    def test_analytic_error_rates_no_override_passes_through_global(self, physical_ag):
+        """No SensorModel attached -> the global rates flow through unchanged."""
+        assert analytic_error_rates(physical_ag, "FileAccess", 1e-4, 1e-4) == (1e-4, 1e-4)
+        assert analytic_error_rates(physical_ag, PHYS_LOCAL_DER, 1e-4, 1e-4) == (1e-4, 1e-4)
+
+    def test_analytic_error_rates_override_takes_precedence(self):
+        ag = build_attack_graph(
+            physical_evidence=True,
+            sensor_models={PHYS_WIDE_AREA: SensorModel(0.35, 0.4, "hand-written test override")},
+        )
+        assert analytic_error_rates(ag, PHYS_WIDE_AREA, 1e-4, 1e-4) == (0.35, 0.4)
+        # The other physical node and all cyber analytics are unaffected.
+        assert analytic_error_rates(ag, PHYS_LOCAL_DER, 1e-4, 1e-4) == (1e-4, 1e-4)
+        assert analytic_error_rates(ag, "FileAccess", 1e-4, 1e-4) == (1e-4, 1e-4)
+
+    def test_overridden_sensor_model_produces_hand_written_cpt(self):
+        ag = build_attack_graph(
+            physical_evidence=True,
+            sensor_models={PHYS_WIDE_AREA: SensorModel(0.35, 0.4, "hand-written test override")},
+        )
+        cpd = build_analytic_cpt(PHYS_WIDE_AREA, "UnstablePS", 1e-4, 1e-4, ag)
+        # P(PhysWideArea=1 | UnstablePS=0) = p_pos = 0.35
+        # P(PhysWideArea=1 | UnstablePS=1) = 1 - p_neg = 0.6
+        np.testing.assert_allclose(cpd.get_values(), [[0.65, 0.4], [0.35, 0.6]])
+
+    def test_existing_eight_analytics_byte_identical_with_physical_evidence_added(self):
+        """The regression this module exists to prevent: adding the two
+        physical nodes must not perturb any of the 8 Session-1 analytic CPDs."""
+        cyber_ag = build_attack_graph()
+        physical_ag = build_attack_graph(physical_evidence=True)
+        cyber_names = [
+            n for n, d in cyber_ag.nodes(data=True) if d["node_type"] == "analytic"
+        ]
+        assert len(cyber_names) == 8
+
+        dbn_cyber = attach_cpds(
+            compile_to_2tbn(cyber_ag), cyber_ag, m=PAPER_M, p_pos=PAPER_P_POS, p_neg=PAPER_P_NEG
+        )
+        dbn_physical = attach_cpds(
+            compile_to_2tbn(physical_ag),
+            physical_ag,
+            m=PAPER_M,
+            p_pos=PAPER_P_POS,
+            p_neg=PAPER_P_NEG,
+        )
+        for name in cyber_names:
+            a = dbn_cyber.get_cpds((name, ULTERIOR)).get_values()
+            b = dbn_physical.get_cpds((name, ULTERIOR)).get_values()
+            np.testing.assert_array_equal(a, b, err_msg=name)
+
+    def test_total_cpd_count_with_physical_evidence(self, physical_ag):
+        dbn = attach_cpds(
+            compile_to_2tbn(physical_ag),
+            physical_ag,
+            m=PAPER_M,
+            p_pos=PAPER_P_POS,
+            p_neg=PAPER_P_NEG,
+        )
+        assert len(dbn.get_cpds()) == 25

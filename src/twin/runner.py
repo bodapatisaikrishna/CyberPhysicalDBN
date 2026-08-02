@@ -38,11 +38,12 @@ from src.twin.comms import (
     Message,
     MessageType,
     PayloadCategory,
+    force_device_setpoint,
     mitm_intercept,
-    modified_control_logic,
     spoof_reporting_message,
     unauthorized_command,
 )
+from src.twin.consequence import PHYSICAL_OBSERVERS, PhysicalObservation, ZoneMap, classify
 from src.twin.grid import ActionOrigin, ControlAction, GridConfig, GridModel, GridState
 
 CONTROL_CENTRE = "ControlCentre"
@@ -59,6 +60,14 @@ class TwinConfig:
     # lower limit" so the control centre's reaction is unambiguous; the actual
     # number is derived from the grid's own limits at runtime, not typed here.
     spoof_margin_pu: float = 0.05
+    # Session 4 secondary sensitivity arm (user-confirmed, LAB_NOTEBOOK.md
+    # 2026-08-01): when True, the control centre climbs at most one dispatch-
+    # ladder rung per dispatch_period_time_units, matching real ADMS practice,
+    # instead of one rung per DER MEASUREMENT message received in that period
+    # (both DERs report in the same SimPy instant by default, so the primary
+    # arm climbs 2 rungs/tick -- M2). Affects both open- and closed-loop arms
+    # identically, so it cannot bias the open-vs-closed comparison.
+    rate_limited_dispatch: bool = False
 
 
 @dataclass
@@ -99,36 +108,61 @@ class SliceRecord:
     false_negatives: frozenset[str]
     grid: GridState | None
     grid_unstable: bool
+    physical: PhysicalObservation | None = None  # None iff discretize() had no zones
 
 
 @dataclass
 class DiscreteTrace:
     records: list[SliceRecord]
-    analytic_names: tuple[str, ...]
+    analytic_names: tuple[str, ...]  # cyber-only -- unchanged meaning from Session 3
+    physical_names: tuple[str, ...] = ()  # empty iff discretize() had no zones
+
+    @property
+    def observable_names(self) -> tuple[str, ...]:
+        return self.analytic_names + self.physical_names
 
     def evidence_stream(self, observed: Sequence[str]) -> dict[int, dict[str, int]]:
-        """Dense evidence stream for `DBNInference.run`.
+        """Evidence stream for `DBNInference.run`.
 
-        SCOPE GUARD: only analytic nodes may be observed. Feeding physical
-        state into the DBN is Session 4 (claim C1); rejecting non-analytics
-        here makes closing the loop early impossible rather than merely
-        discouraged.
+        SCOPE GUARD, relaxed from Session 3, not removed: only names in
+        `observable_names` may be observed. Three invariants this still
+        enforces: `UnstablePS` itself is always rejected (feeding the goal
+        back as its own evidence would make C1 circular); raw `GridState`
+        fields (e.g. "vm_pu_min") are always rejected (they must go through
+        `consequence.classify`, which is what defines "measured instability",
+        or the whole point of task 2 is bypassed); and a trace discretized
+        with `zones=None` has `physical_names=()`, so the OPEN-LOOP arm is
+        mechanically unable to leak physical evidence -- Session 3's guard
+        stays in full force there, it is not weakened globally.
 
-        Emits an explicit 0 at EVERY slice for every observed analytic --
-        never a missing key. `DBNInference.run` treats a missing slice as NO
-        evidence, not as zero, so a sparse stream would silently mean
-        something different.
+        Cyber analytics are DENSE: an explicit 0/1 at every slice, never a
+        missing key (a missing SLICE means no evidence to `DBNInference.run`,
+        not zero). Physical observables are SPARSE where unobserved: the key
+        is OMITTED for a slice where `PHYSICAL_OBSERVERS[name]` returns None
+        (no solve yet, or non-converged -- geography undefined). This is a
+        second, different meaning of "missing" -- missing NODE within a
+        present slice's evidence dict -- which `DBNInference.step` already
+        handles correctly (an omitted node is queried, not conditioned), so
+        no change to `src/dbn/inference.py` was needed.
         """
-        unknown = [n for n in observed if n not in self.analytic_names]
+        unknown = [n for n in observed if n not in self.observable_names]
         if unknown:
             raise ValueError(
-                f"evidence may only come from analytic nodes; got {unknown}. "
-                "Physical feedback into the DBN is Session 4 (claim C1)."
+                f"evidence may only come from analytic or physical observable "
+                f"nodes; got {unknown}. allowed={sorted(self.observable_names)}"
             )
-        return {
-            record.slice_index: {name: record.analytics[name] for name in observed}
-            for record in self.records
-        }
+        stream: dict[int, dict[str, int]] = {}
+        for record in self.records:
+            entry: dict[str, int] = {}
+            for name in observed:
+                if name in self.analytic_names:
+                    entry[name] = record.analytics[name]
+                else:
+                    value = PHYSICAL_OBSERVERS[name](record.physical)
+                    if value is not None:
+                        entry[name] = value
+            stream[record.slice_index] = entry
+        return stream
 
 
 # --- layer A: the simulation ------------------------------------------------
@@ -155,6 +189,7 @@ class TwinRunner:
         self._der_ids = tuple(self.grid.der_ids)
         self._level_index = config.grid.nominal_level_index
         self._corr_react_done = False
+        self._last_climb_at: float | None = None
 
         self.attacker = ScriptedAttacker(
             self.env,
@@ -180,9 +215,18 @@ class TwinRunner:
                 "UnauthCommand", unauthorized_command(self._der_ids, top)
             )
         elif node == "WrongLogicExec":
-            self.bus.register_manipulation(
-                "WrongLogicExec", modified_control_logic(self._der_ids, top)
-            )
+            # Session 4 fidelity fix (LAB_NOTEBOOK.md 2026-08-01, M1): forces
+            # its DER's setpoint DIRECTLY, bypassing message transport, so the
+            # consequence no longer depends on a command happening to be in
+            # flight. Targets der_ids[0] -- the rank-0 entry of the same
+            # impedance-distance ranking select_der_buses already derives;
+            # the RULE is fixed, not the bus number.
+            target_der = self._der_ids[0]
+            build = force_device_setpoint(target_der, top)
+            action = build(t_units, ("WrongLogicExec",))
+            self.grid.apply_control_action(action)
+            state = self.grid.solve(t_units)
+            self.trace.grid_solves.append((t_units, state))
         elif node == "CorrReact":
             # The control centre reacts CORRECTLY to data that is wrong. Its
             # reaction raises DER injection to fix an apparent undervoltage,
@@ -219,8 +263,13 @@ class TwinRunner:
             message = yield inbox.get()
             reported = float(message.payload.get("vm_pu_min", 1.0))
             if reported < self.grid.limits.min_vm_pu and self._corr_react_done:
+                if self.config.rate_limited_dispatch and self._last_climb_at is not None:
+                    since_last_climb = float(self.env.now) - self._last_climb_at
+                    if since_last_climb < self.config.dispatch_period_time_units - 1e-9:
+                        continue
                 if self._level_index < len(levels) - 1:
                     self._level_index += 1
+                    self._last_climb_at = float(self.env.now)
                     for der_id in self._der_ids:
                         self.bus.send(
                             Message(
@@ -282,23 +331,48 @@ def discretize(
     rng: np.random.Generator,
     p_pos: float,
     p_neg: float,
+    *,
+    zones: ZoneMap | None = None,
+    prealarm_max_vm_pu: float | None = None,
 ) -> DiscreteTrace:
     """Map a continuous trace onto the DBN's slice grid. Pure w.r.t. `trace`.
 
-    Analytics are sampled HERE, not in continuous time. A false-positive RATE
-    is meaningless without a clock, and the DBN's clock is the slice; sampling
-    per slice is literally forward-sampling Cerotti et al. Table 2. It also
-    reproduces exp01's resolved evidence semantics (dense, 0 before / 1 at and
-    after the trigger) as an emergent consequence rather than a rule.
+    CYBER analytics are sampled HERE, not in continuous time. A false-positive
+    RATE is meaningless without a clock, and the DBN's clock is the slice;
+    sampling per slice is literally forward-sampling Cerotti et al. Table 2.
+    It also reproduces exp01's resolved evidence semantics (dense, 0 before /
+    1 at and after the trigger) as an emergent consequence rather than a rule.
+
+    PHYSICAL analytics (Session 4) are NOT sampled from `ground_truth` -- that
+    would defeat the entire point of `consequence.classify` and make UnstablePS
+    an assertion again, not a measurement. They are computed once per slice
+    from the grid via `classify(...)`, deterministically, consuming NO calls
+    to `rng`: this is what makes cyber-analytic realizations bit-identical
+    whether or not `zones` is given, which is what makes the open/closed-loop
+    pairing in exp04 exact rather than merely similar.
+
+    Raises if the graph declares physical evidence nodes but `zones` is not
+    given -- physical evidence must never be silently emitted as 0.
     """
     simulated = [
         n
         for n, d in ag.nodes(data=True)
         if d["node_type"] in ("attack_step", "reaction", "goal")
     ]
+    all_analytics = [(n, d) for n, d in ag.nodes(data=True) if d["node_type"] == "analytic"]
     analytics = tuple(
-        sorted(n for n, d in ag.nodes(data=True) if d["node_type"] == "analytic")
+        sorted(n for n, d in all_analytics if d.get("observable_kind", "cyber") == "cyber")
     )
+    physical_analytics = tuple(
+        sorted(n for n, d in all_analytics if d.get("observable_kind") == "physical")
+    )
+    if physical_analytics and zones is None:
+        raise ValueError(
+            f"graph declares physical evidence nodes {physical_analytics} but no "
+            "zones were provided to discretize(); physical evidence must come "
+            "from consequence.classify(), never silently emitted as 0"
+        )
+
     trigger_parent = {
         analytic: next(
             p
@@ -334,6 +408,11 @@ def discretize(
                     false_positives.add(analytic)
 
         grid_state = trace.grid_state_at(t_units)
+        physical_obs = (
+            classify(grid_state, zones, prealarm_max_vm_pu=prealarm_max_vm_pu)
+            if zones is not None
+            else None
+        )
         records.append(
             SliceRecord(
                 slice_index=slice_index,
@@ -343,11 +422,18 @@ def discretize(
                 false_positives=frozenset(false_positives),
                 false_negatives=frozenset(false_negatives),
                 grid=grid_state,
-                grid_unstable=bool(grid_state.unstable) if grid_state else False,
+                grid_unstable=(
+                    physical_obs.exceeds_limit
+                    if physical_obs is not None
+                    else (bool(grid_state.unstable) if grid_state else False)
+                ),
+                physical=physical_obs,
             )
         )
 
-    return DiscreteTrace(records=records, analytic_names=analytics)
+    return DiscreteTrace(
+        records=records, analytic_names=analytics, physical_names=physical_analytics
+    )
 
 
 # --- invariant validation (shared by tests and the experiment gate) ---------
