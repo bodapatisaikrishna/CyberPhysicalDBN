@@ -13,8 +13,9 @@ The manipulations correspond one-to-one with attack-graph steps:
                   and is the precondition that makes the next two reachable
   SpoofRepMsg     rewrites a MEASUREMENT so the control centre's view is false
   UnauthCommand   injects a COMMAND the control centre never issued
-  ModCtrlLogic /  DER-side logic modification: an arriving SETPOINT is executed
-  WrongLogicExec  as something other than what was sent
+  WrongLogicExec  forces its DER's setpoint DIRECTLY, bypassing message
+                  transport entirely (Session 4 fidelity fix -- see
+                  `force_device_setpoint` below)
 """
 
 from __future__ import annotations
@@ -26,7 +27,7 @@ from typing import Mapping
 
 import simpy
 
-from src.twin.grid import ActionOrigin
+from src.twin.grid import ActionOrigin, ControlAction
 
 
 class MessageType(Enum):
@@ -193,25 +194,28 @@ def unauthorized_command(der_ids: tuple[str, ...], p_mw: float) -> Manipulation:
     return hook
 
 
-def modified_control_logic(der_ids: tuple[str, ...], p_mw: float) -> Manipulation:
-    """ModCtrlLogic/WrongLogicExec: the DER executes something other than what was sent.
+def force_device_setpoint(der_id: str, p_mw: float) -> Callable[[float, tuple[str, ...]], ControlAction]:
+    """WrongLogicExec (Session 4 fidelity fix): the compromised device's own
+    logic issues its setpoint directly, bypassing message transport entirely.
 
-    Distinct from UnauthCommand in mechanism though similar in effect: here the
-    command on the wire is legitimate and the *device* misinterprets it, which
-    is the Stuxnet-style branch of Fig. 2 (left). Kept separate so the trace
-    attributes the physical consequence to the right attack step.
+    Distinct in mechanism from the three hooks above, which all operate on
+    messages *in transit* -- they have no effect unless a message happens to
+    be flowing at the moment the attack step completes. That was a real bug
+    (LAB_NOTEBOOK.md 2026-08-01, M1): WrongLogicExec previously rewrote
+    SETPOINT commands reaching its DER, but the control centre only ever
+    sends one after CorrReact has already succeeded, so in every run where
+    CorrReact failed, WrongLogicExec completed and had zero physical effect.
+
+    Fig. 3 read literally supports the direct mechanism: "Commands received
+    will now be filtered by the malicious software that will decide which
+    commands to execute" -- the compromised device's software makes this
+    decision on its own, not contingent on a command being in flight right
+    now. Returns a builder rather than performing the write itself, since the
+    actual `GridModel.apply_control_action` call belongs in the orchestrator
+    (`TwinRunner`), which is the only place that owns the grid.
     """
 
-    def hook(message: Message) -> Message:
-        if (
-            message.msg_type is not MessageType.COMMAND
-            or message.payload_category is not PayloadCategory.SETPOINT
-            or message.receiver not in der_ids
-        ):
-            return message
-        payload = dict(message.payload)
-        payload["p_mw"] = float(p_mw)
-        payload["logic_modified"] = "true"
-        return replace(message, payload=payload)
+    def build(t_units: float, provenance: tuple[str, ...]) -> ControlAction:
+        return ControlAction(der_id, float(p_mw), ActionOrigin.ATTACKER, t_units, provenance)
 
-    return hook
+    return build

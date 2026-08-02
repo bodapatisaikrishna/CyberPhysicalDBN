@@ -8,6 +8,7 @@ and mean times-to-completion from Table 3.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from fractions import Fraction
 from typing import Any, Literal
 
@@ -16,6 +17,33 @@ import networkx as nx
 NodeType = Literal["attack_step", "analytic", "reaction", "goal", "latch"]
 GateType = Literal["AND", "OR"]
 EdgeType = Literal["precondition", "triggers_analytic"]
+ObservableKind = Literal["cyber", "physical"]
+
+# Node names for the two Session-4 physical evidence nodes. Owned here (the
+# single source of truth for every node name in the model) and imported by
+# src/twin/consequence.py's observer registry and by
+# src/dbn/parameterization.py's dispatch, rather than redeclared as string
+# literals in either place.
+PHYS_LOCAL_DER = "PhysLocalDER"
+PHYS_WIDE_AREA = "PhysWideArea"
+
+
+@dataclass(frozen=True)
+class SensorModel:
+    """Per-node override of the global analytic error rates.
+
+    `source` is required and non-empty: every override must say WHERE its
+    numbers came from (a config value, a logged characterization run), so a
+    SensorModel can never silently carry an unexplained pair of floats.
+    """
+
+    p_pos: float
+    p_neg: float
+    source: str
+
+    def __post_init__(self) -> None:
+        if not self.source:
+            raise ValueError("SensorModel.source must be non-empty provenance")
 
 
 def _attack_step(
@@ -35,7 +63,10 @@ def _attack_step(
     }
 
 
-def _analytic() -> dict[str, Any]:
+def _analytic(
+    sensor_model: SensorModel | None = None,
+    observable_kind: ObservableKind = "cyber",
+) -> dict[str, Any]:
     return {
         "node_type": "analytic",
         "ttc": None,
@@ -44,6 +75,8 @@ def _analytic() -> dict[str, Any]:
         "mitre_matrix": None,
         "mitre_tactic": None,
         "mitre_technique": None,
+        "sensor_model": sensor_model,
+        "observable_kind": observable_kind,
     }
 
 
@@ -185,6 +218,48 @@ _TRIGGERS_ANALYTIC_EDGES: list[tuple[str, str]] = [
     ("Masquerade", "SuspArg"),
 ]
 
+# Session 4 (LAB_NOTEBOOK.md 2026-08-01). PhysLocalDER's parent is
+# WrongLogicExec because post-fix it is the only single-DER path in Fig. 2 --
+# a violation confined to one DER's zone can only arise from it.
+# PhysWideArea's parent is UnstablePS itself (the OR gate): a violation
+# spanning both DERs' zones requires both driven high, i.e. requires the
+# goal. The two are path-discriminating, not redundant.
+_PHYSICAL_TRIGGER_EDGES: list[tuple[str, str]] = [
+    ("WrongLogicExec", PHYS_LOCAL_DER),
+    ("UnstablePS", PHYS_WIDE_AREA),
+]
+
+
+def _add_physical_evidence_nodes(
+    graph: nx.DiGraph, sensor_models: dict[str, SensorModel] | None
+) -> None:
+    """Add PhysLocalDER and PhysWideArea, both ordinary analytics structurally.
+
+    Only `observable_kind="physical"` and an optional overriding `SensorModel`
+    distinguish them from the 8 cyber analytics -- same CPT family
+    (`build_analytic_cpt`), same compiler treatment, same
+    `node_type == "analytic"` filter everywhere. `mitre_*` stay None: a
+    voltage sensor implements no ATT&CK technique, and inventing one to fill
+    the field would violate CLAUDE.md rule 1.
+
+    `sensor_models`, when given, maps a physical node's name to its measured
+    (p_pos, p_neg) override (experiments/exp04_closed_loop_c1.py stage 1,
+    on a seed set disjoint from evaluation). When absent for a given node,
+    that node's CPT falls through to whatever global (p_pos, p_neg)
+    `attach_cpds` is called with -- the same mechanism the 8 cyber analytics
+    already use, not a new default being invented here.
+    """
+    sensor_models = sensor_models or {}
+    for node in (PHYS_LOCAL_DER, PHYS_WIDE_AREA):
+        graph.add_node(
+            node,
+            name=node,
+            mitre_technique_id=None,
+            **_analytic(sensor_model=sensor_models.get(node), observable_kind="physical"),
+        )
+    for source, target in _PHYSICAL_TRIGGER_EDGES:
+        graph.add_edge(source, target, edge_type="triggers_analytic")
+
 
 ReactionMode = Literal["memoryless", "latched"]
 
@@ -194,7 +269,12 @@ ReactionMode = Literal["memoryless", "latched"]
 LATCH_SUFFIX = "__Seen"
 
 
-def build_attack_graph(reaction_mode: ReactionMode = "memoryless") -> nx.DiGraph:
+def build_attack_graph(
+    reaction_mode: ReactionMode = "memoryless",
+    *,
+    physical_evidence: bool = False,
+    sensor_models: dict[str, SensorModel] | None = None,
+) -> nx.DiGraph:
     """Build the attack graph of Cerotti et al. Figure 2.
 
     Nodes carry name, node_type, mitre_technique_id, mitre_matrix, mitre_tactic,
@@ -230,7 +310,16 @@ def build_attack_graph(reaction_mode: ReactionMode = "memoryless") -> nx.DiGraph
     condition is "precondition holds now AND did not hold last slice", i.e. a
     dependency on t-2, which a 2TBN's Markov-order-1 transition model cannot
     express without carrying that extra slice of memory in a node.
+
+    physical_evidence (Session 4, LAB_NOTEBOOK.md 2026-08-01) adds two nodes,
+    PhysLocalDER and PhysWideArea, making UnstablePS's consequence a measured
+    quantity the DBN can condition on rather than only an internal assertion.
+    sensor_models optionally overrides their (p_pos, p_neg); raises if given
+    without physical_evidence=True (nothing to attach it to).
     """
+    if sensor_models is not None and not physical_evidence:
+        raise ValueError("sensor_models given but physical_evidence is False")
+
     graph = nx.DiGraph()
 
     for name, attrs in _NODE_DEFS.items():
@@ -244,6 +333,9 @@ def build_attack_graph(reaction_mode: ReactionMode = "memoryless") -> nx.DiGraph
 
     if reaction_mode == "latched":
         _apply_latched_reactions(graph)
+
+    if physical_evidence:
+        _add_physical_evidence_nodes(graph, sensor_models)
 
     for name, attrs in graph.nodes(data=True):
         if attrs["self_loop"]:
