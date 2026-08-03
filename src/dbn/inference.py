@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+from typing import Mapping
 
 import networkx as nx
 import numpy as np
@@ -37,6 +38,13 @@ from pgmpy.models import DiscreteBayesianNetwork
 
 from src.dbn.compiler import ANTERIOR, ULTERIOR, compile_to_2tbn
 from src.dbn.parameterization import attach_cpds
+from src.dbn.soft_evidence import (
+    SoftEvidenceConfig,
+    likelihood_from_probability,
+    soft_child_cpd,
+    soft_child_node,
+    uniform_soft_child_cpd,
+)
 
 Clustering = frozenset[frozenset[str]]
 BeliefState = dict[frozenset[str], np.ndarray]
@@ -92,6 +100,15 @@ class InferenceConfig:
     # that ambiguity rather than guessing at it. m is not used when this is
     # set, since delta_t depends only on the product m*Sigma.
     delta_t_override: float | None = None
+    # Session 5 (LAB_NOTEBOOK.md 2026-08-02): analytic nodes named here get
+    # LEARNED virtual (likelihood) evidence instead of the hard Table-2 bit,
+    # via src/dbn/soft_evidence.py. Trailing, defaulted field: when None (the
+    # default), DBNInference builds and behaves EXACTLY as before this
+    # session -- no extra node is created, no extra CPD is attached, and
+    # every float result is byte-identical (tests/test_inference.py::
+    # test_soft_evidence_none_produces_identical_network and
+    # test_existing_hard_evidence_path_bit_identical pin this).
+    soft_evidence: SoftEvidenceConfig | None = None
 
 
 @dataclass
@@ -99,6 +116,12 @@ class StepResult:
     marginals: dict[str, float]  # P(node=1) at this ulterior slice, all 23 nodes
     next_belief: BeliefState
     latency_s: float
+    # Session 5: the q actually fused this step, post-clipping, keyed by
+    # target name -- empty unless InferenceConfig.soft_evidence is set AND
+    # this step supplied a value for that target. Provenance only; the DBN's
+    # own fused posterior for a soft-evidenced node lives in `marginals` as
+    # usual (soft evidence is fused, not echoed, so the two generally differ).
+    soft_inputs: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -139,6 +162,25 @@ class DBNInference:
             for name in sorted(cluster):
                 dbn.add_edge(prior_node, (name, ANTERIOR))
 
+        # Session 5: soft-evidence child nodes are structural additions to the
+        # network, added ONCE here -- never per-step -- which is what lets
+        # step() sidestep pgmpy's native virtual_evidence path entirely (that
+        # path re-augments the model in place on every call; see
+        # soft_evidence.py's module docstring). Added before attach_cpds so
+        # it can attach the real analytic CPD to `target` normally; only the
+        # CHILD's own CPD is soft-evidence-specific and is attached below.
+        self._soft = config.soft_evidence
+        if self._soft is not None:
+            for target in self._soft.targets:
+                node_type = ag.nodes[target].get("node_type")
+                if node_type != "analytic":
+                    raise ValueError(
+                        f"soft evidence target {target!r} is not an analytic "
+                        f"node (node_type={node_type!r}); virtual evidence in "
+                        "this model is only defined for analytics"
+                    )
+                dbn.add_edge((target, ULTERIOR), soft_child_node(target))
+
         self.dbn: DiscreteBayesianNetwork = attach_cpds(
             dbn,
             ag,
@@ -150,6 +192,12 @@ class DBNInference:
 
         for cluster in self._multi_clusters:
             self.dbn.add_cpds(*self._decoder_cpds(cluster))
+
+        if self._soft is not None:
+            # Placeholder, uniform (exact no-op) CPD for every target; step()
+            # replaces these EVERY call, so a likelihood from slice s-1 can
+            # never survive into slice s.
+            self.dbn.add_cpds(*(uniform_soft_child_cpd(t) for t in self._soft.targets))
 
     def _decoder_cpds(self, cluster: frozenset[str]) -> list[TabularCPD]:
         members = sorted(cluster)
@@ -198,10 +246,51 @@ class DBNInference:
                 cpds.append(TabularCPD(prior_node, n_states, flat))
         self.dbn.add_cpds(*cpds)
 
-    def step(self, belief: BeliefState, evidence: dict[str, int]) -> StepResult:
+    def step(
+        self,
+        belief: BeliefState,
+        evidence: dict[str, int],
+        soft: Mapping[str, float] | None = None,
+    ) -> StepResult:
+        """`soft`: target name -> calibrated q = P(target=1|telemetry) for
+        this slice. Only meaningful when `InferenceConfig.soft_evidence` is
+        set; a target declared there but absent from `soft` this slice gets
+        the uniform (no-op) placeholder, never a stale value from a previous
+        slice. Raises if the same node appears in both `evidence` (hard) and
+        `soft` -- fusing a node with itself twice is not a meaningful
+        operation and almost certainly a caller bug.
+        """
         self._attach_belief_as_prior(belief)
-        infer = VariableElimination(self.dbn)
         ve_evidence = {(name, ULTERIOR): value for name, value in evidence.items()}
+        soft_inputs: dict[str, float] = {}
+
+        if self._soft is not None:
+            soft = soft or {}
+            overlap = set(soft) & set(evidence)
+            if overlap:
+                raise ValueError(
+                    f"node(s) {sorted(overlap)} given both hard and soft "
+                    "evidence in the same step"
+                )
+            cpds = []
+            for target in self._soft.targets:
+                if target in soft:
+                    l0, l1 = likelihood_from_probability(
+                        soft[target],
+                        mode=self._soft.mode,
+                        base_rate=(self._soft.base_rates or {}).get(target),
+                        eps=self._soft.eps,
+                    )
+                    cpds.append(soft_child_cpd(target, l0, l1))
+                    ve_evidence[soft_child_node(target)] = 0
+                    soft_inputs[target] = min(
+                        max(float(soft[target]), self._soft.eps), 1.0 - self._soft.eps
+                    )
+                else:
+                    cpds.append(uniform_soft_child_cpd(target))
+            self.dbn.add_cpds(*cpds)
+
+        infer = VariableElimination(self.dbn)
 
         # pgmpy disallows querying a variable that is also given as evidence:
         # an evidenced node's marginal is trivially the observed value itself.
@@ -249,14 +338,34 @@ class DBNInference:
             else float(report[(name, ULTERIOR)].values[1])
             for name in self.report_nodes
         }
-        return StepResult(marginals=marginals, next_belief=next_belief, latency_s=latency_s)
+        return StepResult(
+            marginals=marginals,
+            next_belief=next_belief,
+            latency_s=latency_s,
+            soft_inputs=soft_inputs,
+        )
 
-    def run(self, evidence_stream: dict[int, dict[str, int]], T: int) -> Trajectory:
-        """Run T steps (t=1..T), applying `evidence_stream.get(t, {})` at each."""
+    def run(
+        self,
+        evidence_stream: dict[int, dict[str, int]],
+        T: int,
+        soft_stream: dict[int, dict[str, float]] | None = None,
+    ) -> Trajectory:
+        """Run T steps (t=1..T), applying `evidence_stream.get(t, {})` and, if
+        given, `soft_stream.get(t, {})` at each. `soft_stream=None` (the
+        default) is not the same as an empty dict at every slice for a model
+        with `soft_evidence` configured: passing `None` here still calls
+        `step(..., soft=None)`, and `step` itself normalizes that to `{}` --
+        so every declared soft target still gets its uniform placeholder CPD
+        every slice either way. The parameter exists so callers with no soft
+        evidence at all (i.e. every existing call site before this session)
+        need not change.
+        """
         trajectory = Trajectory()
         belief = self.initial_belief()
         for t in range(1, T + 1):
-            result = self.step(belief, evidence_stream.get(t, {}))
+            soft = soft_stream.get(t, {}) if soft_stream is not None else None
+            result = self.step(belief, evidence_stream.get(t, {}), soft=soft)
             trajectory.marginals.append(result.marginals)
             trajectory.latencies_s.append(result.latency_s)
             belief = result.next_belief

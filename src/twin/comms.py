@@ -12,7 +12,11 @@ The manipulations correspond one-to-one with attack-graph steps:
   MITM            passive interception -- stamps provenance, alters nothing,
                   and is the precondition that makes the next two reachable
   SpoofRepMsg     rewrites a MEASUREMENT so the control centre's view is false
-  UnauthCommand   injects a COMMAND the control centre never issued
+  UnauthCommand   rewrites any COMMAND in transit to the attacker's value,
+                  AND forces every DER's setpoint DIRECTLY (Session 5
+                  fidelity fix -- see `force_device_setpoint` below; the
+                  rewrite alone left physical consequence gated on message
+                  timing, the same class of bug WrongLogicExec had)
   WrongLogicExec  forces its DER's setpoint DIRECTLY, bypassing message
                   transport entirely (Session 4 fidelity fix -- see
                   `force_device_setpoint` below)
