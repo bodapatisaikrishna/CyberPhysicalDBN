@@ -1108,3 +1108,293 @@ asked to be reported honestly rather than summarized as "C1 confirmed."
    is flagged above as likely an overconfidence artifact, not investigated
    further this session (CLAUDE.md rule 6: this would be a new analysis,
    not a fix, and is out of this session's scope).
+
+## 2026-08-02 Experiment: exp05_perception (soft evidence + learned likelihoods)
+
+**Motivation.** Every analytic evidence node so far fires from a fictional
+hand-set rate, `p_pos = p_neg = 1e-4` (Cerotti et al. Table 2), never measured.
+Because it is near-deterministic, a single hard evidence bit forces
+`P(parent) ~= 1`. This entry pre-registers replacing that fiction, on the
+analytics where it can honestly be replaced, with a heterogeneous GNN +
+temporal encoder trained on twin telemetry, entering the DBN as virtual
+(likelihood) evidence rather than a hard bit. CLAUDE.md layer [1].
+
+**Scope decision, stated before any code exists.** Of the 8 cyber analytics,
+only 2 have genuine telemetry substrate in this twin: `MeasureCoherence`
+(spoofed vs. true `vm_pu_min`) and `CommandCoherence` (rewritten vs. commanded
+`p_mw`). The other 6 (`FileAccess`, `FileIntegrity`, `SWIntegrityDER`,
+`NewServiceStarted`, `SWIntegritySCADA`, `SuspArg`) observe host/file/process
+techniques the twin does not model in any form -- no host, process, or file
+model exists in `src/twin/*`. Perception therefore targets exactly 4 nodes:
+`MeasureCoherence`, `CommandCoherence`, and (as an explicit **positive
+control** for the architecture, not a headline result) `PhysLocalDER` and
+`PhysWideArea`, which are a deterministic function of the 33-bus voltage
+vector via `consequence.classify`. The remaining 6 keep hard Table-2 evidence;
+that is a limitation of the twin's fidelity, recorded here rather than papered
+over, and extending the twin to host-level telemetry is the identified next
+step, out of this session's scope (CLAUDE.md rule 6).
+
+**Virtual-evidence mechanism, verified empirically before any design.** pgmpy
+1.1.2's `VariableElimination.query(virtual_evidence=[...])` implements Pearl's
+construction (binary child `V` with `P(V=0|X=x)=L(x)`, condition `V=0`) and
+was confirmed numerically correct against hand computation. It is unusable
+here directly: `pgmpy/inference/base.py:276` does `new_var = "__" + var`,
+which requires **string** variable names, and every node in this model is a
+tuple `(name, slice)` -- confirmed to raise `TypeError` on this repo's model.
+`src/dbn/soft_evidence.py` reimplements the identical construction with tuple
+names; a test (`test_matches_pgmpy_native_on_isomorphic_string_named_model`)
+proves numerical equivalence against pgmpy's own path on an isomorphic
+string-named model. In this session's own pre-check, our tuple-named
+construction matched pgmpy's native output to 0.000e+00 max absolute
+difference across 7 likelihood cases including near-degenerate extremes.
+
+**The likelihood-ratio correction, and why it is not optional.** A calibrated
+classifier emits `q = P(A=1|telemetry)`, but Pearl's construction needs a
+*likelihood* `L(x) ~= P(telemetry|A=x)`, and by Bayes `L(1)/L(0) = [q/pi] /
+[(1-q)/(1-pi)]`, where `pi` is the classifier's own training base rate.
+Passing `L = [1-q, q]` naively (ratio `q/(1-q)`) is only correct when `pi =
+1/2`; otherwise it double-counts a prior the DBN's own forward filter has
+already accounted for. Measured in this session's pre-check at `pi=0.12,
+q=0.60`: naive gives `P(parent=1) = 0.447`, prior-corrected gives `0.855` -- a
+0.41 divergence from a "cosmetic-looking" normalization choice. The default
+is `prior_corrected` (dividing by the measured train-split base rate); `naive`
+is kept as a named, logged ablation arm specifically to measure this damage
+rather than just describe it. A third, exact mode (`dbn_prior_corrected`,
+dividing by the DBN's own time-varying prior instead of a constant `pi`,
+costing one extra VE query per slice) is implemented and tested but off by
+default; if the ablation arms land within noise of each other, this constant-
+`pi` approximation is the first thing to re-examine.
+
+**Architecture note, pre-registered as a limitation before it can be
+discovered as an excuse.** The in-service `case33bw` line graph is a tree of
+diameter 20, and `DER_17`'s bus and `DER_32`'s bus sit exactly that far
+apart -- so no 2-3-layer heterogeneous GNN can compute `PhysWideArea` (a
+wide-area, cross-zone property) from electrical message passing alone. The
+design routes around this via a 3-hop CYBER shortcut
+(`bus -> DER -> IED -> host` is exactly 3 hops), which is the reason the
+architecture uses exactly 3 HGT layers. Consequence, stated here so a later
+"it worked" cannot be read as "the graph convolutions generalize": the
+physical-target positive control primarily validates the readout and feature
+pipeline, and validates the electrical convolutions only through this
+specific cyber shortcut. A clean pass on `PhysLocalDER`/`PhysWideArea` must
+not be reported as evidence the electrical message passing itself is sound.
+
+**Hypotheses (directions only, no magnitudes):**
+
+- **P1 (physical targets are controls).** `PhysLocalDER` and `PhysWideArea`
+  AUC-PR should be near-ceiling (>> base rate) and ECE should improve sharply
+  after temperature scaling, because both are a near-deterministic function
+  of features already in the graph. A clean pass here is a sanity check on
+  the pipeline, not evidence of generalization (see architecture note above).
+  Failure here would mean the asset graph, feature extraction, or GNN wiring
+  is broken, not that "physical perception is hard."
+- **P2 (MeasureCoherence is a near-control at sigma=0).** Under the
+  no-state-estimation-noise assumption (`se_noise_sigma=0`), the reported-vs-
+  true voltage residual should be near-perfectly separating, because
+  `SpoofRepMsg`'s spoof target (`min_vm_pu - spoof_margin_pu`) is a near-fixed
+  offset from the true value whenever active. Expect AUC-PR to degrade as
+  `se_noise_sigma` increases in the sweep -- the sweep, not the `sigma=0`
+  number, is the actual measured result for this target.
+- **P3 (CommandCoherence is the one genuinely hard target).** The attack's
+  forced setpoint (`max_p_mw`) equals the LEGITIMATE top rung of the dispatch
+  ladder, so the target is separable only as a temporal pattern (a rung skip
+  visible to the TCN's receptive field), not as an instantaneous value.
+  Expect AUC-PR well below the physical targets', and expect AUC-PR
+  conditioned on `telemetry_present_in_rf=1` to be substantially higher than
+  the unconditional number, because ~30% of positive slices (`CorrReact`
+  failures) have zero command traffic ever and are structurally undetectable
+  from this feature set -- an observability limit, not a model failure.
+- **P4 (calibration improves AUC-PR-preserving).** Temperature scaling should
+  reduce ECE materially while leaving AUC-PR exactly unchanged (a monotone
+  rescaling cannot change ranking) -- if AUC-PR moves at all after
+  temperature, that is a bug, not a calibration effect.
+- **P5 (soft evidence beats hard, calibrated beats uncalibrated, prior
+  correction matters).** Expected ordering on posterior calibration of
+  `P(UnstablePS)` against measured `grid_unstable`:
+  `hard <~ soft_uncalibrated < soft_calibrated`, and
+  `soft_calibrated_naive_lik` should be visibly WORSE than
+  `soft_calibrated` (isolating the prior double-counting measured above). The
+  `hard_thresholded_perception` arm exists specifically so a `soft` win
+  cannot be misattributed to "the GNN is better than a 1e-4 sensor" instead
+  of "soft evidence beats hard evidence" -- these are different claims and
+  the arm set is designed to separate them. A null or reversed ordering here
+  is a real, publishable possibility and will be reported as such, not
+  re-tuned toward.
+
+**Stop rule (restated for this experiment):** the validation gate tests
+correctness invariants only (leak guard, TCN causality, uniform-likelihood
+no-op, degenerate-likelihood-equals-hard-evidence, split disjointness, arm
+comparability, no NaN/inf, base-rate provenance, `n_test >= 30`) -- never
+whether soft evidence "won." AUC-PR, ECE, and the ablation ordering are
+reported with their uncertainty, whatever they turn out to be.
+
+**Result:** Ran `experiments/exp05_perception.py` (git SHA
+`d26ea3288d880432e8dd9c7ac086bcc667e988e2-dirty`, seed 42, 130 twin runs
+across 4 disjoint `SeedSequence(42).spawn(5)` streams: 60 train / 20 val / 20
+calib / 30 test). GATE PASSED: leak guard, TCN causality, uniform-likelihood
+no-op, degenerate-likelihood-equals-hard-evidence, split disjointness, cyber-
+evidence identity across all 5 ablation arms, base-rate provenance, and
+`n_test >= 30` all hold (`h` also surfaced 43,318 clip events at the
+`eps=1e-6` bound out of ~30 x 722 x 4 = 86,640 target-slices -- expected and
+non-alarming given how separable the targets turned out to be, see below).
+
+**Mid-run finding, fixed before results were trusted (not a pre-registered
+hypothesis, discovered during the run):** `CommandCoherence`'s manipulation
+mechanism (`unauthorized_command()` in `src/twin/comms.py`) was still the
+same in-transit-rewrite-only design that Session 4 found and fixed for
+`WrongLogicExec` (M1). Measured directly on 20 sampled scenarios: in 12/20
+runs where `UnauthCommand` went active, the gap between the last real COMMAND
+message and the attack step's completion exceeded the perception model's
+63-slice (17.4-time-unit) receptive field entirely, and in 7/20 of those, zero
+commands were EVER sent. User-approved fix: `UnauthCommand` now also forces
+every DER's setpoint directly (mirroring `WrongLogicExec`'s fix, but for all
+DERs, matching the original hook's all-DER scope), alongside keeping the
+in-transit rewrite. This is a genuine cross-modal signal, not a message-
+telemetry one: the GNN detects a mismatch between the control centre's own
+commanded ladder history (always visible, never tampered from its own
+viewpoint) and the ACTUAL physical voltage response, which now moves
+correctly at `UnauthCommand`'s true completion time regardless of message
+timing. Confirmed the fix is what carries the signal, not new message
+content: post-fix, `CommandCoherence`'s positive slices are STILL 96.7%
+unobservable by raw command-message telemetry alone
+(`frac_positive_slices_unobservable=0.9668`), yet AUC-PR is 0.9743.
+
+**Also fixed mid-run:** `TemperatureScaler` fitting was numerically
+unbounded (LBFGS on an underdetermined/degenerate calib fit drove log_T to
+literal millions in an early smoke run on `n_calib=2`). Added a box
+constraint `T in [0.05, 20]` via projected LBFGS
+(`src/perception/calibration.py`), with a printed warning whenever a fit
+hits the bound. At the real run's `n_calib=20`, no target hit the bound
+(temperatures: MeasureCoherence 1.209, CommandCoherence 0.957, PhysLocalDER
+0.187, PhysWideArea 0.193) -- the instability was specific to the tiny-sample
+smoke configuration, not the real split.
+
+**Perception evaluation (test, n=30 scenarios, ~21,660 slices/target):**
+
+| target | AUC-PR | base rate | ECE (before -> after temp) | temperature |
+|---|---|---|---|---|
+| MeasureCoherence | 0.9994 | 0.9101 | 0.073 -> 0.077 (flat/slightly worse) | 1.209 |
+| CommandCoherence | 0.9743 | 0.7320 | 0.043 -> 0.043 (flat) | 0.957 |
+| PhysLocalDER | 1.0000 | 0.0180 | 0.0001 -> 0.0000 | 0.187 |
+| PhysWideArea | 1.0000 | 0.8634 | 0.0003 -> 0.0000 | 0.193 |
+
+`CommandCoherence` AUC-PR conditioned on telemetry-in-RF: 0.8762 (vs. 0.9743
+unconditional) -- the model does slightly WORSE on the subset where raw
+command telemetry exists, consistent with the physical-consequence signal
+(available everywhere) being the dominant channel rather than the sparse
+message channel.
+
+**Sensitivity arms:**
+- SE-noise sigma sweep (`MeasureCoherence`): AUC-PR stayed at 0.999 +/- 0.001
+  across the ENTIRE swept range (sigma = 0, 0.005, 0.01, 0.02, 0.05 pu) --
+  essentially flat. H(P2)'s predicted degradation did not appear within this
+  range; the residual is far more robust than pre-registered, or the swept
+  range was too narrow to find where it breaks down. Not resolved by this
+  run -- a wider sweep (sigma > 0.05 pu) would be needed to find the actual
+  breakdown point, out of this session's scope.
+- Observability arm (`CommandCoherence`): voltage_only 0.9977 vs.
+  full_telemetry 0.9915 -- full_telemetry is WORSE, counter to the naive
+  expectation that more information helps. Caveat, not a causal finding: the
+  evaluated model was TRAINED under voltage_only only (DER setpoint channels
+  are always zero at train time); full_telemetry evaluation hands it
+  out-of-distribution nonzero features it never learned to use. This measures
+  "a voltage_only-trained model evaluated with extra unfamiliar inputs," not
+  "telemetry availability's true causal effect" -- a real full_telemetry ARM
+  would need its own trained model, out of this session's scope.
+
+**DBN 5-arm ablation (test, n=30 scenarios, `P(UnstablePS)` vs. measured
+`grid_unstable`):**
+
+| arm | ECE | Brier | BSS |
+|---|---|---|---|
+| hard | 0.0039 | 0.0018 | +0.9831 |
+| soft_uncalibrated | 0.0050 | 0.0021 | +0.9801 |
+| soft_calibrated | 0.0046 | 0.0020 | +0.9812 |
+| soft_calibrated_naive_lik | 0.0046 | 0.0020 | +0.9813 |
+| hard_thresholded_perception | 0.0044 | 0.0019 | +0.9818 |
+
+All five arms are within 0.003 of each other on every metric, all at
+near-ceiling calibration (BSS 0.98-0.983). `hard` scores marginally BEST, not
+worst -- the opposite of hypothesis P5's predicted ordering
+(`hard <~ soft_uncalibrated < soft_calibrated`, with `naive` visibly worse
+than `soft_calibrated`). None of P5's predicted orderings held.
+
+Lead time (full theta sweep, 0.05-0.99): `n_detected_before=0` for EVERY
+arm at EVERY threshold across all 30 test scenarios -- the DBN posterior
+never crosses any threshold strictly before the twin's measured instability,
+in any arm. `detection_rate=1.0` and `n_missed=0` everywhere (perfect
+eventual detection). Median lead is 0 or mildly negative at every threshold
+for every arm (e.g. at theta=0.99: hard -4, soft_uncalibrated -5,
+soft_calibrated -4, naive -4, thresholded -4 slices) -- differences of 1
+slice, not a meaningful ordering.
+
+**Interpretation:** The headline finding is a NULL on the core comparison
+this experiment was built to test (P5): calibrated soft evidence does not
+beat hard evidence, uncalibrated soft evidence does not lag calibrated soft
+evidence by a meaningful margin, and the naive/prior-corrected likelihood
+distinction -- which this session's own pre-check showed moves a fused
+posterior by ~0.4 in a *deliberately adversarial* toy case (pi=0.12, q=0.6)
+-- produces no measurable difference here (naive ECE 0.0046 vs.
+prior_corrected 0.0046, identical to 4 decimal places).
+
+The mechanism is straightforward once the perception numbers are read
+alongside the ablation: with `MeasureCoherence`, `PhysLocalDER`, and
+`PhysWideArea` all at or within 0.001 of AUC-PR=1.0, and `CommandCoherence`
+at 0.974, the perception layer has essentially SOLVED its 4 assigned
+detection problems. A near-perfect classifier's calibrated probability and
+its hard-thresholded bit carry almost the same information into the DBN --
+there is very little calibration-quality headroom left for soft evidence to
+win on. This is the flip side of Session 4's C1 finding: there, the fictional
+1e-4 hard-evidence rate was shown to matter (closed vs. open loop diverged
+measurably) BECAUSE the physical evidence carried information the cyber-only
+posterior lacked. Here, once perception is this accurate, the distinction
+between "hard bit" and "calibrated probability" stops being where the
+system's uncertainty lives -- both arms are effectively conditioning on the
+true state already. The `hard_thresholded_perception` arm (0.5-thresholding
+the SAME calibrated model) scoring within 0.002 of full soft evidence
+directly confirms this: the win, if any, was never about probabilistic
+fusion vs. a hard bit -- it is entirely about whether the underlying detector
+is accurate, and this one already is.
+
+This also explains the lead-time null cleanly: it is the SAME zero-duration-
+precursor structure Session 4 already found (M2) -- the DBN posterior can
+only move as fast as new evidence arrives, and with near-ceiling detectors
+in every arm, all arms saturate to near-certainty at essentially the same
+slice, which is at or after the twin's own instability, not meaningfully
+before it in any of them. C1's closed-loop lead-time advantage was about
+information CONTENT (physical evidence carrying signal cyber evidence
+lacked); this null is about information QUALITY being already maximal
+everywhere, leaving no margin for a fusion-vs-hard-bit distinction to show
+up in the timing at all.
+
+**Surprised?** yes, three times.
+1. That P5's predicted ordering not only failed to hold but REVERSED (hard
+   scored best, not worst). Checked: this is not a sign-flip bug -- gate
+   invariant (g) confirms the 6 non-perception cyber analytics are
+   bit-identical across all 5 arms, and the perception metrics table
+   independently confirms AUC-PR is genuinely near-ceiling for all 4
+   targets, which is the mechanistic explanation above, not evidence of a
+   wiring error. Not investigated further as a "bug" because the
+   interpretation is coherent and the gate that would catch a wiring error
+   passed.
+2. That the naive-vs-prior-corrected likelihood distinction, shown in this
+   session's own isolated pre-check to move a toy posterior by ~0.4, produced
+   an EXACTLY indistinguishable result here (ECE 0.0046 vs 0.0046). Checked:
+   this is consistent with, not contradictory to, the pre-check -- the
+   toy case used a deliberately adversarial base rate (pi=0.12) with a
+   moderate, uncertain q=0.6; here the calibrated q's are almost always near
+   0 or 1 (hence the 43,318 clip events), where naive and prior-corrected
+   likelihoods converge to the same near-degenerate ratio regardless of the
+   prior correction, since both q/(1-q) and q/pi : (1-q)/(1-pi) are
+   dominated by the same near-infinite/near-zero ratio at the extremes. The
+   prior-correction effect is real (proven in isolation) but this
+   experiment's near-ceiling classifiers never entered its regime of
+   materiality.
+3. That the observability arm reversed (full_telemetry worse than
+   voltage_only). Checked and resolved as a real but narrow methodological
+   caveat, not a twin or code bug: the evaluated model was never trained on
+   nonzero DER-channel inputs, so full_telemetry evaluation is out-of-
+   distribution for it by construction. Recorded as a limitation of this
+   session's sensitivity-arm design (a single model evaluated under two
+   observability settings) rather than as a finding about telemetry's true
+   causal value.

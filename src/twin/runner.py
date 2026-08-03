@@ -214,6 +214,24 @@ class TwinRunner:
             self.bus.register_manipulation(
                 "UnauthCommand", unauthorized_command(self._der_ids, top)
             )
+            # Session 5 fidelity fix (LAB_NOTEBOOK.md 2026-08-03), the same
+            # class of bug as WrongLogicExec's M1: the in-transit rewrite
+            # above only fires while a legitimate SETPOINT happens to be
+            # flowing, but by the time the full attack chain (CredAccess
+            # AND-gate -> MITM -> Masquerade) completes, the control centre
+            # has typically stopped issuing new commands (ladder already
+            # settled -- verified: in 12/20 sampled runs the gap between the
+            # last real command and UnauthCommand's completion exceeded the
+            # perception model's receptive field entirely). Force EVERY DER
+            # directly -- ALL of them, unlike WrongLogicExec's single-DER
+            # scope, matching the original rewrite hook's all-DER reach --
+            # so the physical consequence is measured at UnauthCommand's
+            # actual completion time, never contingent on message timing.
+            for der_id in self._der_ids:
+                action = force_device_setpoint(der_id, top)(t_units, ("UnauthCommand",))
+                self.grid.apply_control_action(action)
+            state = self.grid.solve(t_units)
+            self.trace.grid_solves.append((t_units, state))
         elif node == "WrongLogicExec":
             # Session 4 fidelity fix (LAB_NOTEBOOK.md 2026-08-01, M1): forces
             # its DER's setpoint DIRECTLY, bypassing message transport, so the

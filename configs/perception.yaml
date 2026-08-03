@@ -1,0 +1,129 @@
+# Perception layer configuration (CLAUDE.md layer [1], Session 5).
+#
+# Rule followed throughout: any quantity not read from the attack graph, the
+# pandapower network, or a genuinely measured value gets a config knob with a
+# comment stating why its default is what it is. Quantities that ARE derived
+# elsewhere (delta_t, N_SLICES, the receptive field) are not repeated here as
+# independently-settable numbers -- the code always recomputes them.
+
+cyber_overlay:
+  # The cyber overlay declared explicitly (never invented): exactly the 3
+  # comms endpoints the twin actually uses (src/twin/comms.py), split into
+  # one host asset (the control centre) and one IED per DER, each IED
+  # sharing the endpoint string of its co-located physical DER.
+  host_endpoint: "ControlCentre"
+  # DER-to-IED mapping is DERIVED from GridModel.der_ids at build time in
+  # experiments/exp05_perception.py, not listed here -- listing bus numbers
+  # would let this file drift from select_der_buses's own derivation.
+
+targets:
+  # The 4 analytic nodes perception learns a likelihood for.
+  perception_targets: ["MeasureCoherence", "CommandCoherence", "PhysLocalDER", "PhysWideArea"]
+  # The other 6 cyber analytics (FileAccess, FileIntegrity, SWIntegrityDER,
+  # NewServiceStarted, SWIntegritySCADA, SuspArg) have NO telemetry substrate
+  # in this twin -- no host/file/process model exists anywhere in src/twin/
+  # (LAB_NOTEBOOK.md 2026-08-02). They keep hard Table-2 evidence, unchanged
+  # from Sessions 1-4. This is a stated twin-fidelity limitation, not an
+  # oversight.
+  cyber_only_targets: ["FileAccess", "FileIntegrity", "SWIntegrityDER", "NewServiceStarted", "SWIntegritySCADA", "SuspArg"]
+  # Pre-registered (LAB_NOTEBOOK.md 2026-08-02, hypotheses P1/P2): these two
+  # are architecture POSITIVE CONTROLS (near-deterministic from the 33-bus
+  # voltage vector), not headline results. A clean pass validates the
+  # pipeline; it does not by itself validate the electrical convolutions in
+  # isolation (see encoder.py's docstring on the 3-hop cyber shortcut).
+  control_targets: ["PhysLocalDER", "PhysWideArea"]
+
+observability:
+  # "voltage_only" (default/headline): DER setpoint telemetry is NOT exposed
+  # to any feature; CommandCoherence is then a genuine inference problem --
+  # the control centre only knows what it COMMANDED (its own outbound log),
+  # never what arrived at the wire.
+  # "full_telemetry": upper-bound sensitivity control arm (setpoint exposed).
+  default: "voltage_only"
+  arms: ["voltage_only", "full_telemetry"]
+
+sensitivity:
+  # State-estimation noise added to bus voltage features (MeasureCoherence
+  # sensitivity arm, LAB_NOTEBOOK.md 2026-08-02 hypothesis P2). sigma=0 is
+  # the control/default -- under it MeasureCoherence's residual is expected
+  # to be a near-fixed offset whenever SpoofRepMsg is active, so this sweep
+  # (not the sigma=0 number alone) is the actual measured result for that
+  # target: at what SE quality does the residual stop being separable?
+  se_noise_sigma_sweep_pu: [0.0, 0.005, 0.01, 0.02, 0.05]
+  # Cap on the ZOH staleness channel (src/perception/features.py). delta_t
+  # ~= 166.13/600 ~= 0.277 time units, so 50 slices ~= 13.8 time units ~= 14
+  # dispatch periods (dispatch_period=1.0) -- large enough that it is not
+  # expected to bind in a normal run; exists only so a genuinely stale
+  # channel is bounded rather than growing without limit.
+  max_staleness_slices: 50.0
+
+architecture:
+  hidden_dim: 64
+  gnn_heads: 4
+  # LOAD-BEARING -- do not change without re-running
+  # tests/test_asset_graph.py::test_hops_from_der_bus_to_host_equals_n_gnn_layers.
+  # See src/perception/encoder.py's module docstring: the cyber overlay
+  # (bus -> DER -> IED -> host) puts every DER's bus exactly this many hops
+  # from `host`, independent of the 20-hop electrical distance on case33bw's
+  # in-service tree -- this is the architecture's only route to a wide-area
+  # signal for PhysWideArea.
+  n_gnn_layers: 3
+  tcn_kernel_size: 3
+  tcn_dilations: [1, 2, 4, 8, 16]
+  tcn_dropout: 0.1
+  # Reference only, never independently read by code:
+  # encoder.receptive_field(tcn_kernel_size, tcn_dilations) always
+  # recomputes this from the two values above, so it cannot drift from them.
+  # 1 + 2*(1+2+4+8+16) = 63 slices ~= 17 dispatch periods -- comfortable
+  # margin over the ~4 rungs CommandCoherence's ladder-climb signature needs.
+  tcn_receptive_field_slices_reference: 63
+
+splits:
+  # Disjoint SeedSequence(seed).spawn(5) streams, split by SCENARIO (whole
+  # twin run), never by slice -- slices within one run are strongly
+  # autocorrelated (the same argument src/eval/calibration.py's run-level
+  # bootstrap already makes for claim C1's evaluation).
+  n_train: 60  # weights, FeatureScaler, base rates pi_k for prior_corrected
+  n_val: 20    # early stopping / model selection ONLY (on val LOSS, not AP)
+  n_calib: 20  # temperature ONLY
+  n_test: 30   # every reported metric AND the DBN ablation; >= 30 per the
+               # repo's stated minimum-scenario-count convention (exp04)
+
+training:
+  batch_size: 4  # scenarios per gradient step -- kept small because each
+                 # scenario is already large (722 slices x ~75 nodes)
+  n_epochs: 30
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  early_stopping_patience_epochs: 5
+  grad_clip_norm: 1.0
+
+soft_evidence:
+  # Default likelihood mode for the soft_calibrated (primary closed-loop)
+  # ablation arm. "naive" is a SEPARATE, deliberately-named ablation arm
+  # (soft_calibrated_naive_lik) -- never the default. See
+  # src/dbn/soft_evidence.py's module docstring: naive double-counts the
+  # DBN's own prior, measured in this session's pre-check to move a fused
+  # posterior by ~0.4 at a realistic base rate.
+  default_mode: "prior_corrected"
+  clip_eps: 1.0e-6
+
+dbn_ablation:
+  arms: ["hard", "soft_uncalibrated", "soft_calibrated", "soft_calibrated_naive_lik", "hard_thresholded_perception"]
+  # Fine threshold grid for lead-time evaluation, matching exp04's own
+  # convention (swept, never a single hand-picked theta).
+  thresholds_start: 0.05
+  thresholds_stop: 1.0
+  thresholds_step: 0.02
+
+smoke:
+  # experiments/exp05_perception.py --smoke overrides splits/training with
+  # these so the FULL pipeline (every stage, the full validation gate) runs
+  # in minutes rather than hours, before committing to the real run. Smoke
+  # numbers are written to a separately-named CSV and are never mixed into
+  # reported results (CLAUDE.md rule 2).
+  n_train: 4
+  n_val: 2
+  n_calib: 2
+  n_test: 4
+  n_epochs: 2
