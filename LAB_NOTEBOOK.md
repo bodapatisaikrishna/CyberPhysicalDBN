@@ -1641,3 +1641,266 @@ above ~theta=0.7), and `lstm_ae` similarly degrades (0.70 at theta=0.99).
    problem on scripted, non-adaptive attacks -- it is simply easy for a
    supervised model with reasonable capacity, regardless of its exact
    hyperparameters -- not a bug to chase further.
+
+## 2026-08-05 Experiment: exp07_sherlock (grounding perception on real data)
+
+**Motivation.** Every result through Session 6 is evaluated on twin-generated
+data only -- exactly the criticism Cerotti et al.'s own paper already
+absorbs (it compares only against its own inference variants, never against
+an independent real dataset). This entry pre-registers grounding the
+perception layer on Sherlock (Wagner, Bader, Wolsing, Serror; ACM
+CODASPY'25), a real power-grid IDS dataset built on the Wattson
+co-simulator (pandapower + IEC 60870-5-104), and testing transfer in both
+directions: Sherlock-trained scored on twin data, twin-trained scored on
+Sherlock data.
+
+**Facts verified directly against the live site/Zenodo/IPAL repository
+before any code was written** (CLAUDE.md rules 2/5: orientation claims must
+be checked through the actual source, not assumed from the task
+description, and every discrepancy stated plainly):
+
+- The task's "35 days" does not match the site's own wording ("over 30
+  days" total, across all 3 scenarios combined, not per-scenario).
+- The Sherlock download page links to Zenodo record `15168928`, which is
+  **v1** (April 2025). Zenodo's own UI flags that v2 and v3 (latest: Feb
+  2026) exist, but the live download page still serves v1. Used v1 as
+  found, this discrepancy stated rather than silently resolved either way.
+- Confirmed exactly: `01-Basic.zip` (704.1 MB) and `02-Semiurban.zip`
+  (4.7 GB) each ship a clean train split + an attack test split;
+  `03-Rural.zip` (1.9 GB) is test-only, explicitly to motivate
+  transferability research -- matches the task's "two networks have both
+  attack-free and attack data, one is attack-only" precisely.
+- Format: raw IEC-104 captures are ALSO shipped pre-transcribed into IPAL
+  (Industrial Protocol Abstraction Layer), a JSON-lines format with a
+  documented, verified schema (message-level: `id/timestamp/protocol/
+  malicious/src/dest/activity/data`; state-level fixed-timeslice
+  snapshots: `timestamp/state/malicious`). This is the tractable parsing
+  path used here, not raw pcap/IEC-104 decoding.
+- Co-simulation runs at 21x acceleration (8 wall-clock hours = 1 simulated
+  week); data collection is passive-only (mirror-port captures, no active
+  polling).
+- Zenodo's own guidance: "01_Basic is smaller and therefore recommended for
+  initial prototyping" -- matches this session's own size-driven choice to
+  download only `01-Basic.zip`.
+- NOT verified before writing any parsing code (genuinely unknown until
+  real files are inspected): the exact internal zip layout, whether a
+  pandapower-compatible network definition ships per scenario, and
+  Sherlock's real attack-label taxonomy/file schema. Zenodo's in-browser
+  preview does not expose a zip's internal file tree without downloading.
+  Reconciling `sherlock_loader.py` against the REAL files, once
+  downloaded, is treated as part of this session's implementation work,
+  not something resolved by the plan alone -- per the task's own
+  instruction to "report the actual structure rather than adapting
+  silently."
+
+**User-approved decisions (binding):** (1) download `01-Basic.zip` only
+this session (704.1 MB, explicit permission given in chat, stating
+filename/source/size) -- `02-Semiurban`/`03-Rural` are opt-in via a flag,
+not fetched; (2) transfer arms (twin<->Sherlock) use a small SHARED REDUCED
+feature subspace (`has_report`/`report_rate`/`has_command`/`command_rate`/
+`time_since_last_message` -- derivable from both domains' existing
+has/n/zoh/staleness channels without inventing any value), scored
+separately from each domain's own full-feature single-domain numbers, never
+conflated with them; (3) no new dependencies -- `.ipal`/`.state`
+JSON-lines parsed with stdlib `gzip`+`json` only, matching Sessions 5-6's
+established practice of hand-implementing every ML/parsing component with
+a pytest test rather than pulling in a wrapper library (`ipal_ids_framework`
+was considered and explicitly not added).
+
+**A verified fact that forced a real refactor, not just a design note:**
+`src/perception/asset_graph.py::build_asset_graph` does not merely GUARD on
+`case33bw` -- its body unconditionally calls `net = pn.case33bw()`
+regardless of what `GridModel` is passed. Confirmed by reading the source
+before any Sherlock code was written. This means the twin's asset-graph
+builder cannot be pointed at Sherlock's real topology by relaxing a check
+alone; the node/edge-construction logic (already feeder-agnostic by its own
+module docstring's claim) must be extracted into a topology-agnostic
+sibling function that `build_asset_graph` itself calls, so Sherlock uses
+the identical, already-tested construction logic rather than a duplicate
+implementation. This refactor is regression-tested (byte-identical output
+to the pre-refactor function on case33bw) before any Sherlock-specific code
+depends on it.
+
+**Hypotheses (directions only, no magnitudes):**
+
+- **H1 (primary-target performance).** AUC-PR/ECE/Brier for the primary
+  target (a single unified "is this slice malicious" binary label, always
+  computable from Sherlock's own attack-interval ground truth regardless of
+  taxonomy details) on held-out Sherlock data will be reported exactly as
+  measured, whatever the value. No expectation stated as fact -- unlike the
+  twin's scripted, non-adaptive, single-attack-graph scenarios, Sherlock's
+  real traffic and real attack diversity give no prior reason to expect the
+  same near-ceiling AUC-PR Session 6's baselines found on twin data.
+- **H2 (named risk -- transfer gap).** Twin-trained perception scored on
+  Sherlock, and Sherlock-trained perception scored on twin data, may both
+  show a SUBSTANTIAL performance gap relative to each domain's own
+  single-domain numbers. This is pre-registered as a PLAUSIBLE AND
+  INFORMATIVE outcome, not a failure -- mirroring exp06's own H1 framing
+  ("a baseline may beat the DBN" was stated as acceptable in advance). The
+  task's own validation-gate instruction states this explicitly: "a large
+  twin->Sherlock gap is an important finding about twin realism, not a
+  failure to hide." If found, it will be reported as the headline finding
+  of this session, not minimized.
+- **H3 (named risk -- topology).** Sherlock may not ship a usable
+  pandapower-compatible network definition, forcing the COMMS-ONLY
+  asset-graph branch (electrical_coupling/bus/line left empty; only
+  network-observed IED/host/RTU nodes and network_reachability/
+  control_authority edges populated). If this branch fires, it is reported
+  plainly as a real limitation of what can be learned from Sherlock's
+  shipped files, not silently patched by substituting twin topology.
+- **H4 (named risk -- label taxonomy).** Sherlock's real attack taxonomy
+  may not decompose into the twin's 4 semantic targets
+  (`MeasureCoherence`/`CommandCoherence`/`PhysLocalDER`/`PhysWideArea`),
+  each tied to this project's own synthetic attack graph. The secondary,
+  best-effort per-target label mapping may end up mostly or entirely
+  `None` ("not attempted") for lack of a defensible correspondence -- this
+  is explicitly an acceptable outcome per the two-tier label design
+  (primary target is always reportable regardless), not a failure of task 3.
+
+Each hypothesis has a reserved **Surprised?** slot below, filled in only
+after real files are inspected -- so whatever the real dataset shows reads
+as a checked, pre-registered risk, not a post-hoc excuse.
+
+**Stop rule (restated for this experiment):** the validation gate tests
+correctness invariants only (data hash-matched against the documented
+Zenodo md5, leak-guard tests referenced, train/test split honored exactly
+as the dataset's own authors defined it, `build_asset_graph_generic`'s
+regression equivalence to the pre-refactor twin behavior, no `None`
+secondary target ever silently printed as a number) -- never whether
+Sherlock performance matches the twin's, or whether transfer "works." The
+twin<->Sherlock AUC-PR/ECE gap is printed unconditionally, before the
+PASS/FAIL line, specifically so a large and unflattering gap cannot be
+buried.
+
+**Result (real-data pivot, recorded once `data/sherlock/01-Basic/` was
+downloaded and inspected):**
+
+The real download diverges from this session's own pre-registration in a
+way none of H1-H4 anticipated the SHAPE of, though H3/H4 correctly flagged
+the general risk category. Full detail in `docs/sherlock_download.md`
+discrepancy 4 and `src/perception/sherlock_loader.py`'s module docstring;
+summary here:
+
+`01-Basic` ships `train.n302.state.gz`/`test.n302.state.gz` -- gzipped
+JSON-lines, ONE PHYSICAL POWER-GRID STATE SNAPSHOT PER SECOND (verified
+exact 1.0s cadence, 43204 lines each), keyed by real component name
+(`bus.N:voltage`, `line.N:active_power_from`, `switch.N:closed`,
+`load.N:active_power`, `trafo.N:tap_position`, `sgen.N:active_power`).
+There is **no message-level IEC-104 export at all** (no `src`/`dest`/
+`activity` field anywhere in what ships) -- this project's own task
+description, and this session's plan built from it, assumed Sherlock ships
+message-level traffic transcribed into IPAL. It does not, for this
+scenario. `raw/{train,test}/data-point-map.json` confirms the state keys
+ARE derived from real IEC-104 point addresses, just pre-resolved to
+semantic names rather than shipped as raw addresses or per-message events.
+
+**H3 resolution:** worse than the pre-registered risk anticipated. H3
+predicted "no pandapower net -> comms-only branch (IED/host nodes from
+observed endpoints, bus/line empty)." The real finding is stronger: there
+is no message-level endpoint data to build even a comms-only branch from
+(no `src`/`dest` fields exist at all), AND no electrical connectivity
+(`data-point-map.json` names components, never their `from_bus`/`to_bus`).
+Both the original message-level asset-graph design and its comms-only
+fallback were inapplicable and were removed from `sherlock_loader.py`
+rather than kept as dead code. `experiments/exp07_sherlock.py` uses a
+topology-free `CausalTCN` classifier over an aggregate per-slice feature
+vector instead -- a real, stated architectural divergence from the twin's
+HGTConv pipeline, not a silent downgrade.
+
+**H4 resolution:** also resolved more strongly than "mostly None." The
+shipped state export carries no cyber-analytic signal at all (no
+file-access, command-coherence, or process-value-vs-expected residual --
+just raw physical telemetry plus a directly-resolved `malicious` field), so
+the secondary 4-way target mapping was not merely unmapped per-target, it
+was not attempted at all: this session reports ONLY the primary binary
+target (`malicious_binary`), taken DIRECTLY from each record's own
+`malicious` field (`false` / `"<n> (benign event)"` = negative, a bare
+numeric event id = positive) -- no interval-overlap computation needed,
+since the real export already resolves ground truth per slice. This is
+simpler and more reliable than the interval-overlap design originally
+planned, not a downgrade.
+
+**H1/H2 -- real numbers from the full (non-smoke) run**
+(`results/exp07_perception_metrics_20260805T153324Z.csv`,
+`results/exp07_transfer_20260805T153324Z.csv`,
+`results/exp07_training_20260805T153324Z.csv`, git SHA logged in each CSV):
+
+A second, real bug was found and fixed BEFORE these numbers were trusted:
+`parse_state_line`'s benign-event check originally matched the literal
+substring `"benign event"` (space-separated), taken from the test file's
+own format (`"27 (benign event)"`). The TRAIN file's benign marker turned
+out to be the bare, hyphenated string `"benign-event"` (no id) -- verified
+by enumerating every distinct non-`false` `malicious` value in both real
+files with `collections.Counter`. The space-only check silently scored the
+train file's 39 benign-event slices as real attacks (base rate 0.0 ->
+0.000903). A first full run completed on this bug before it was caught;
+those result CSVs were deleted, not reported, once the mismatch was traced
+(train's post-fix base rate is exactly 0.0, matching the dataset's own
+documented "attack-free training data" design for 01-Basic). Regression
+test: `TestParseStateLine::test_train_style_benign_event_hyphenated`.
+
+**Primary target, in-domain (stage 3):** train/val/calib base rate = 0.0
+(01-Basic's train split has ZERO real attacks, confirmed after the fix --
+matches "two networks have both attack-free and attack data" for the
+train/test pairing). Test base rate = 0.132974 (43204 slices, real attacks
+present). AUC-PR = 0.1330 (before AND after temperature scaling) -- IDENTICAL
+to the test base rate, i.e. the model learned NO discrimination. This is
+not a bug: with zero positive examples anywhere in train/val/calib, no
+supervised signal exists for the primary target on this scenario's own
+labels, so the model converges to always predicting "not malicious"
+(training loss hits exactly 0.0000 by epoch 6, early-stopping trivially --
+visible in the training CSV). ECE == AUC-PR == base rate for the same
+reason (a constant-probability predictor is "calibrated" only in the
+degenerate sense of matching the marginal rate). The calibration
+temperature fit hit its upper bound (T=20, logged WARNING) -- an
+independent symptom of the same all-negative-calib-set problem, not a
+second issue.
+
+**Bidirectional transfer (stage 4), shared bus-voltage subspace:**
+- Sherlock-trained -> twin-eval: AUC-PR = 0.9873 (mean over 10 fresh twin
+  scenarios). Reported, but flagged as LIKELY NOT MEANINGFUL: the
+  Sherlock-side training data for this arm is `chunks["train"].y`, the
+  SAME all-negative label set as stage 3 -- there is nothing for this model
+  to have learned to discriminate on Sherlock either. A high score here
+  most plausibly reflects the model's architectural/initialization bias
+  (its logit still varies over time from the 2-column voltage-delta input
+  even under all-negative BCE pressure) happening to correlate with the
+  twin's own attack-driven voltage volatility, not a demonstrated transfer
+  of learned discrimination. Stated as an open uncertainty (CLAUDE.md rule
+  5), not claimed as a positive transfer result.
+- twin-trained -> Sherlock-eval: AUC-PR = 0.1692, vs. Sherlock test's own
+  base rate of 0.1330 -- a small, real margin above baseline. This is the
+  ONLY transfer-arm number backed by a training set that actually contains
+  both classes (the twin's "any attack-step active" label), so it is the
+  more trustworthy of the two transfer numbers, and it shows only weak
+  cross-domain discrimination.
+
+**Interpretation:** the headline finding of this session is not a
+performance gap between the twin and Sherlock in the sense H2
+anticipated (a trained model degrading when moved to a harder, more
+realistic domain) -- it is that the SPECIFIC scenario downloaded
+(01-Basic) does not provide usable in-domain supervision for its own
+primary target at all, because its training split is attack-free by the
+dataset authors' own design (`sherlock.wattson.it` documents 01-Basic as
+"recommended for initial prototyping," which now reads as prototyping the
+PIPELINE, not prototyping a trained detector). A meaningful in-domain
+AUC-PR number for Sherlock would require either training on `02-Semiurban`
+(confirmed to also ship attack-free train + attack test, not downloaded
+this session -- 4.7 GB, opt-in) or reformulating this scenario as anomaly
+detection (train on clean data only, without ever seeing a positive
+label) rather than supervised binary classification -- out of scope for
+this session, stated here as the natural next step rather than attempted
+under time pressure.
+
+**Surprised?** Yes -- on three counts now, each investigated before
+adapting code silently: (1) the format is physical telemetry, not comms
+traffic, confirmed by directly `gunzip`-ing and `json.load`-ing real
+lines rather than trusting the task description or the Zenodo page's
+prose; (2) `malicious` is a string-encoded event id, not boolean,
+confirmed by scanning the full value distribution across both real files
+with a `collections.Counter`; (3) the benign-event string format itself
+differs between the train and test files within the SAME scenario
+(`"benign-event"` vs. `"<n> (benign event)"`) -- caught only because the
+first full run's train base rate (0.000903) was checked against the
+expected 0.0 rather than accepted at face value, per this project's own
+"a surprising result means either a bug or a finding" rule.

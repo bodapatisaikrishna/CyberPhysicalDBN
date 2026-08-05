@@ -291,6 +291,42 @@ class TestOptimizerBeforeForward:
         assert model_param_ids == opt_param_ids
 
 
+class TestReadout:
+    """Session 7 (Sherlock grounding): Readout.forward was generalized from
+    a fixed host/IED/DER/bus part list to conditionally including whatever
+    types are present in `h_dict`. These pin that case33bw's behavior
+    (all 4 types always present) is unchanged, and that the narrower
+    Sherlock comms-only shape (host/IED only) runs without KeyError."""
+
+    def test_matches_original_fixed_part_list_when_all_types_present(self):
+        torch.manual_seed(0)
+        h_dict = {
+            "host": torch.randn(2, 5, 1, 8),
+            "IED": torch.randn(2, 5, 3, 8),
+            "DER": torch.randn(2, 5, 3, 8),
+            "bus": torch.randn(2, 5, 33, 8),
+        }
+        globals_ = torch.randn(2, 5, 4)
+        readout = Readout(hidden=16)
+        out = readout(h_dict, globals_)
+
+        expected_parts = [
+            h_dict["host"][:, :, 0, :], h_dict["IED"].mean(dim=2),
+            h_dict["DER"].mean(dim=2), h_dict["bus"].mean(dim=2),
+            h_dict["bus"].max(dim=2).values, globals_,
+        ]
+        expected = readout.proj(torch.cat(expected_parts, dim=-1))
+        torch.testing.assert_close(out, expected)
+
+    def test_runs_on_host_ied_only_no_der_no_bus(self):
+        """The Sherlock comms-only shape: no KeyError, no bus/DER required."""
+        h_dict = {"host": torch.randn(1, 4, 1, 8), "IED": torch.randn(1, 4, 2, 8)}
+        globals_ = torch.randn(1, 4, 3)
+        readout = Readout(hidden=16)
+        out = readout(h_dict, globals_)
+        assert out.shape == (1, 4, 16)
+
+
 class TestScaffolding:
     def test_combine_static_dynamic_broadcasts_static_across_slices(self):
         static_x = {"bus": torch.ones(3, 2)}
