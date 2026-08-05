@@ -1,0 +1,116 @@
+# External ML baseline configuration (CLAUDE.md's `src/baselines/`,
+# Session 6). Same convention as configs/perception.yaml: any quantity not
+# derived from the twin/attack graph gets a comment stating why its default
+# is what it is. Every `selected:` field below stays `null` until the
+# search actually runs and writes the winner -- inventing one ahead of time
+# would violate CLAUDE.md rule 1.
+
+common:
+  # Reused VERBATIM from configs/perception.yaml's dbn_ablation section so
+  # every baseline AND the DBN are evaluated on an identical threshold grid
+  # (never a single hand-picked theta).
+  thresholds_start: 0.05
+  thresholds_stop: 1.0
+  thresholds_step: 0.02
+
+  # Tuning-budget honesty (LAB_NOTEBOOK.md 2026-08-03): the proposed
+  # system's ARCHITECTURE was fixed by a structural proof
+  # (src/perception/encoder.py's 3-hop cyber-shortcut, n_gnn_layers=3), not
+  # grid-searched; only its training hyperparameters were used as given.
+  # Every baseline below DOES get a genuine search -- see
+  # src.baselines.common.TUNING_BUDGET_NOTE_BASELINE /
+  # TUNING_BUDGET_NOTE_DBN, printed in exp06's report so this asymmetry
+  # cannot be missed.
+
+rule_based:
+  # A lookup/count rule has little tunable capacity. This 5-point sweep IS
+  # its entire hyperparameter space -- not an artificially padded search to
+  # look comparable to the ML baselines' trial counts. 63 is included for
+  # cross-baseline comparability with the LSTM-AE/perception-TCN receptive
+  # field (src.perception.encoder.receptive_field()).
+  window_slices_sweep: [1, 5, 10, 20, 63]
+
+gbm:
+  # Random search, 25 trials, sampled without replacement from the full
+  # 3*4*3*3*3=324-point grid below, selected by val-split AUC-PR against
+  # grid_unstable.
+  n_search_trials: 25
+  search_space:
+    max_iter: [50, 100, 200]
+    max_depth: [null, 3, 5, 7]
+    learning_rate: [0.03, 0.1, 0.3]
+    l2_regularization: [0.0, 0.1, 1.0]
+    max_leaf_nodes: [15, 31, 63]
+  selected: null  # filled in only after the search runs
+
+lstm_ae:
+  # Reused directly from src.perception.encoder.receptive_field(), never
+  # independently set -- for cross-baseline comparability with the DBN
+  # perception TCN's own 63-slice receptive field.
+  window_slices: 63
+  # Random search, 24 trials from the 3*2*2*2*2=48-point grid below.
+  n_search_trials: 24
+  search_space:
+    hidden_dim: [16, 32, 64]
+    latent_dim: [8, 16]
+    n_layers: [1, 2]
+    dropout: [0.0, 0.1]
+    learning_rate: [1.0e-3, 3.0e-4]
+  # Training budget for EVERY trial (epoch-level early stopping is on VAL
+  # reconstruction loss, unsupervised -- never touches a label during
+  # training).
+  n_epochs: 30
+  batch_size: 32
+  grad_clip_norm: 1.0
+  early_stopping_patience_epochs: 5
+  # Reconstruction-error scaler fit split -- VAL nominal-prefix only, never
+  # test. Recorded here so the provenance string is a config value, not a
+  # literal buried in source.
+  scaler_fit_split: "val_nominal_prefix"
+  selected: null
+
+gnn_classifier:
+  # BUDGET NOTE (LAB_NOTEBOOK.md 2026-08-03, mid-session correction): the
+  # first real run of this search did not finish in 12+ hours. Measured
+  # directly: a SINGLE SAGEConv relation at this experiment's real batch
+  # scale (batch_size x N_SLICES = 4*722 = 2888 replicated graph copies)
+  # costs ~0.15s fwd+bwd; HeteroConv runs 9 relations SEQUENTIALLY in pure
+  # Python per layer (unlike HGTConv, which fuses all relations into one
+  # call -- this is why the DBN's own perception encoder, same batch scale,
+  # trains in minutes). At n_layers=4 that is 36 relation-convs per batch,
+  # x15 batches/epoch x up to 30 epochs x 28 trials -- the observed
+  # multi-hour cost is explained by this, not a hang. Fixed two ways,
+  # documented rather than silently shrunk:
+  #   1. search_scenario_subset below -- SEARCH TRIALS score on a smaller,
+  #      fixed subset of train/val (still real twin data, same seeds); the
+  #      FINAL selected config is retrained on the FULL train/val split
+  #      exp06 uses for every other baseline and the DBN, so only the
+  #      SELECTION step is budget-constrained, not the reported model.
+  #   2. The grid below drops the most expensive corner (n_layers=4,
+  #      hidden=128, heads=8) and n_epochs is capped lower (still early-
+  #      stopped on val loss same as before). n_layers=1 is KEPT (the
+  #      deliberate ablation showing failure to reach the 3-hop signal).
+  n_search_trials: 16
+  search_scenario_subset:
+    n_train: 15
+    n_val: 8
+  search_space:
+    conv_type: ["gat", "sage"]
+    n_layers: [1, 2, 3]
+    hidden: [32, 64]
+    heads: [2, 4]              # GAT-only
+    dropout: [0.0, 0.1, 0.3]
+    sage_aggr: ["mean", "max", "add"]  # SAGE-only
+    # Deliberately 5-17 slices, NOT the DBN perception TCN's 63-slice
+    # receptive field (would make this baseline architecturally a
+    # near-clone of the proposed system); itself searched so the baseline
+    # picks its own best short window rather than being handed an
+    # arbitrary one. This asymmetry is stated, not hidden.
+    temporal_kernel_size: [5, 9, 17]
+  n_epochs: 15
+  batch_size: 4
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip_norm: 1.0
+  early_stopping_patience_epochs: 5
+  selected: null

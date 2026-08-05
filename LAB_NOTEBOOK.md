@@ -1398,3 +1398,246 @@ up in the timing at all.
    session's sensitivity-arm design (a single model evaluated under two
    observability settings) rather than as a finding about telemetry's true
    causal value.
+
+## 2026-08-03 Experiment: exp06_baselines (external ML comparison)
+
+**Motivation.** Cerotti et al. compare only against their own inference
+variants (EX/CL/FF). Reviewers will demand external baselines, and an
+undertrained one is the fastest route to rejection. This entry pre-registers
+four baselines -- LSTM autoencoder (reconstruction error), GAT/GraphSAGE
+end-to-end classifier over the asset graph, gradient-boosted trees on
+engineered features, and a rule/signature-based IDS proxy -- each with a
+genuine, logged hyperparameter search, evaluated against "the proposed
+system" (exp05's `soft_calibrated` closed-loop-DBN-plus-learned-perception
+arm) on IDENTICAL twin scenarios and seeds (the same
+`SeedSequence(42).spawn(5)` train/val/calib/test split exp05 used, imported
+from `experiments/exp05_perception.py` rather than regenerated).
+
+**No new dependencies** (user-approved): GBM via
+`sklearn.ensemble.HistGradientBoostingClassifier` (already pinned, has a
+native `class_weight` param, verified), LSTM-AE hand-implemented in `torch`
+(already pinned), GAT/GraphSAGE via `torch_geometric.nn.{GATConv,SAGEConv,
+HeteroConv}` (already pinned, both verified present). Matches this repo's
+established practice of hand-implementing every numerical component with a
+pytest test rather than pulling in a wrapper library.
+
+**Ground truth for every system, always**: `SliceRecord.grid_unstable`
+(measured), never `ground_truth["UnstablePS"]` (asserted) -- the same rule
+`src/eval/calibration.py`'s own docstring states for the DBN, applied
+uniformly across all 4 baselines too, so no system gets an easier or harder
+target than any other.
+
+**Tuning-budget honesty, stated before any result exists**: the proposed
+system's ARCHITECTURE (`n_gnn_layers=3`, hidden=64, TCN dilations) was never
+grid-searched -- it is fixed by the 3-hop cyber-shortcut proof in
+`src/perception/encoder.py`'s docstring
+(`test_hops_from_der_bus_to_host_equals_n_gnn_layers`), not by validation
+performance. Only its training hyperparameters (lr, epochs, early-stopping
+patience) were used as given from `configs/perception.yaml`, also not
+searched. Every baseline in this session DOES get a genuine, logged search
+(25+ trials each, every trial written to CSV, not just the winner). This is
+an asymmetry, not an oversight, and it is printed in exp06's gate output so
+it cannot be missed: baselines get more absolute tuning effort than the
+DBN's architecture did, by design, because the DBN's structure is a
+theoretical commitment (Boyen-Koller causal factorization + the graph's own
+topology), not a hyperparameter.
+
+**Hypotheses (directions only, no magnitudes):**
+
+- **H1 (AUC-PR).** At least one ML baseline (most likely GBM or the GNN
+  classifier) may match or exceed the DBN's raw AUC-PR on these scripted,
+  non-adaptive attacks. This is explicitly a PLAUSIBLE AND ACCEPTABLE
+  outcome, not a failure of the project: the thesis is lead time,
+  calibration, explainability, and robustness under adaptation (claim C3,
+  future work), not raw AUC-PR supremacy on a fixed, non-adversarial
+  scenario distribution a supervised classifier can simply fit. If a
+  baseline wins on AUC-PR, that result will be reported prominently, not
+  buried in a CSV column -- the validation gate prints an unconditional,
+  sorted ranking of every system regardless of outcome.
+- **H2 (lead time).** The DBN is expected to show longer median detection
+  lead time than the rule-based and GBM baselines specifically, because
+  both react only to already-fired discrete signatures/flattened per-slice
+  features rather than a continuously accumulating structured posterior
+  with explicit temporal persistence (self-loops). No directional claim for
+  LSTM-AE or the GNN classifier -- both have some temporal memory (a
+  63-slice window and a short causal head respectively), so the direction
+  is genuinely uncertain and will be reported as measured.
+- **H3 (calibration).** The DBN's `soft_calibrated` arm is expected to show
+  better ECE/BSS than the LSTM-AE specifically, flagged in advance as a
+  WEAKER, transform-dependent comparison for the AE: its "probability" is a
+  post-hoc sigmoid over a z-scored reconstruction error (a chosen link
+  function), not the output of a fitted probabilistic inference procedure
+  like the DBN's posterior. A calibration loss for the AE therefore answers
+  a narrower question ("how well does this particular sigmoid map error to
+  frequency") than the DBN's calibration claim, and this asymmetry will be
+  stated in the interpretation, not treated as a like-for-like result.
+
+**Named risk, pre-registered before results are seen:** the LSTM-AE's
+"presumed-nominal" training corpus is built by reading `ground_truth` ONCE,
+at training-corpus-construction time, to find the earliest slice at which
+ANY attack-graph node's ground truth turns 1 across ALL four enabled attack
+roots (`configs/twin.yaml`'s `enabled_roots` are all active at t=0, so there
+is no attack-free scenario in this twin -- confirmed before writing any
+code). This is stated plainly as a mild form of privileged-information use
+in the training-set CURATION step (a fielded system would substitute an
+operator-declared quiet period), structurally distinct from the label-as-
+feature leak `src/perception/features.py`'s `SliceObservation` barrier
+exists to prevent (the model never receives `ground_truth` as an input or
+target; identical feature-extraction/scoring code runs on every split
+regardless of this boundary). Enforced by two tests mirroring that barrier's
+own tests exactly (`inspect.signature`-based disjointness,
+`torch.equal`-based perturbation invariance). Reserved "Surprised?" slot: is
+the presumed-nominal prefix, in practice, long enough to be a useful
+training corpus, or does the fastest of the four attack branches complete
+so early that this baseline is starved of nominal data? That would be a
+finding demanding investigation (CLAUDE.md rule 3), not a bug to silently
+patch by loosening the cutoff.
+
+**Stop rule (restated for this experiment):** the validation gate tests
+correctness invariants only (scenario identity vs. exp05, every search CSV
+has its expected trial count, the two LSTM-AE leak-guard tests, scaler
+fit-split provenance, `n_test >= 30`) -- never whether a baseline "loses" to
+the DBN. The AUC-PR ranking table is printed unconditionally, before the
+PASS/FAIL line, specifically so an unfavorable number cannot be buried.
+
+**Result:** Ran `experiments/exp06_baselines.py` (git SHA logged per-run,
+seed 42, identical 60/20/20/30 scenario split to exp05, same root
+`SeedSequence(42).spawn(5)`). GATE PASSED: split identity, search trial
+counts, LSTM-AE leak-guard tests, AE scaler fit-split provenance, every
+system's test-split score finite, `n_test=30` all hold.
+
+**Mid-run finding, fixed before results were trusted (not a pre-registered
+hypothesis, discovered during the run):** the first real run of the
+`gnn_classifier` search did not finish in 12+ hours and had to be killed.
+Diagnosed directly (not guessed): a single `SAGEConv` relation at this
+experiment's real batch scale (`batch_size x N_SLICES = 4*722 = 2888`
+replicated graph copies, from the block-diagonal replication trick reused
+from `encoder.py`) costs ~0.15s forward+backward. `HeteroConv` runs its 9
+edge-type convolutions SEQUENTIALLY in pure Python per layer -- unlike the
+DBN's own `HGTConv`, which fuses every relation into one call, which is why
+the proposed system's perception encoder trains in minutes at the identical
+batch scale. At the original grid's worst corner (`n_layers=4, hidden=128,
+heads=8`) x 28 trials x up to 30 epochs, this compounds to the observed
+multi-hour cost. Fixed two ways, both stated in `configs/baselines.yaml`:
+(1) search TRIALS now score on a fixed 15-train/8-val scenario subset,
+while the FINAL selected config is retrained on the full 60/20 split
+identically to every other baseline -- only the *selection* step is
+budget-constrained, not the reported model; (2) the grid dropped its most
+expensive corner (max `n_layers=3`, `hidden=64`, `heads=4`) and trial count
+went 28 -> 16, `n_epochs` cap 30 -> 15. Verified directly before relaunch:
+worst-case single-batch cost ~5.2s, giving an ~84-minute upper bound for the
+whole search (measured, not assumed) -- the real run's `gnn_classifier`
+stage in fact completed well inside that.
+
+**Search summary** (every trial logged, not just the winner --
+`results/exp06_search_*.csv`):
+
+| baseline | n trials | val AUC-PR range | selected config |
+|---|---|---|---|
+| rule_based | 5 | 0.9998-0.9998 | `window_slices=63` |
+| gbm | 25 | 1.0000-1.0000 (every trial) | `max_iter=200, max_depth=5, learning_rate=0.1, l2_regularization=1.0, max_leaf_nodes=15` |
+| lstm_ae | 24 | 0.99347-0.99355 (near-flat across the whole grid) | `hidden_dim=16, latent_dim=8, n_layers=2, dropout=0.1, learning_rate=3e-4` |
+| gnn_classifier | 16 | 0.99969-0.99999 | `conv_type=gat, n_layers=2, hidden=64, heads=2, dropout=0.3, temporal_kernel_size=5` |
+
+Tuning-budget note printed for every system in the gate output: baselines
+got a genuine, logged search each; the proposed system's ARCHITECTURE was
+fixed by the 3-hop cyber-shortcut proof, never grid-searched (see
+`src.baselines.common.TUNING_BUDGET_NOTE_DBN`).
+
+**Comparison table (test, n=30 scenarios, ~21,660 slices):**
+
+| system | AUC-PR | ECE(10,uniform) | Brier | BSS |
+|---|---|---|---|---|
+| dbn_soft_calibrated | 1.0000 | 0.0046 | 0.0020 | +0.9812 |
+| gbm | 1.0000 | 0.0000 | 0.0000 | +1.0000 |
+| gnn_classifier | 1.0000 | 0.0009 | 0.0007 | +0.9934 |
+| rule_based | 0.9992 | 0.1517 | 0.0514 | +0.5083 |
+| lstm_ae | 0.9856 | 0.0999 | 0.0891 | +0.1482 |
+
+**AUC-PR ranking (printed unconditionally, per the gate's design): the
+proposed system leads (tied with gbm/gnn_classifier at 1.0000) on this test
+split.** No baseline beat it here -- reported exactly as measured, not
+tuned toward this outcome (the smoke-scale dry run, on 4 test scenarios,
+had in fact shown 4/4 baselines nominally ahead; that was noise from a
+tiny sample, not signal, and is superseded by this real, adequately-powered
+result).
+
+**Lead time (full theta sweep, 0.05-0.99), the standout finding:**
+
+| system | theta=0.05 lead_median | theta=0.31 lead_median | theta=0.99 lead_median / detection_rate |
+|---|---|---|---|
+| dbn_soft_calibrated | 0 (29/30 detected_after) | 0 | -4 / 1.00 |
+| gbm | 0 | 0 | 0 / 1.00 |
+| gnn_classifier | 0 | 0 | -1 / 1.00 |
+| rule_based | **+53** (29/30 detected_before) | +44 | -47 / 0.33 (20 missed) |
+| lstm_ae | **+54** (30/30 detected_before) | +54 | -3 / 0.70 (9 missed) |
+
+At LOW thresholds, `rule_based` and `lstm_ae` show substantial POSITIVE
+median lead (~44-54 slices, detecting before instability in nearly every
+scenario), while `dbn_soft_calibrated`, `gbm`, and `gnn_classifier` show
+ZERO OR NEGATIVE median lead at EVERY threshold in the sweep -- never once
+detecting strictly before instability on the median scenario. At HIGH
+thresholds this reverses sharply: `rule_based`'s detection rate collapses
+to 0.33 (its raw score is a count/10 ratio, structurally bounded well below
+1.0 for a partial-signature scenario, so it MISSES most scenarios outright
+above ~theta=0.7), and `lstm_ae` similarly degrades (0.70 at theta=0.99).
+
+**Interpretation:** Three pre-registered hypotheses, checked against real,
+30-scenario-powered data:
+
+- **H1 (AUC-PR):** did NOT materialize as "a baseline may beat the DBN" --
+  the proposed system ties for the lead (1.0000, shared with gbm and
+  gnn_classifier). This is itself informative, not just a non-event: on
+  these scripted, non-adaptive attacks, ANY sufficiently expressive
+  supervised detector (a GBM on 40 engineered features, a 2-layer GAT with
+  a 5-slice causal head) reaches the same ceiling the DBN reaches. The
+  task's own framing anticipated this outcome as plausible and it is
+  reported as measured, tied not beaten.
+- **H2 (lead time):** REVERSED, and this is the session's most
+  mechanistically interesting result. H2 predicted the DBN would show
+  LONGER lead time than rule_based/gbm specifically. Instead, at the SAME
+  thresholds, the two WEAKER, noisier detectors (rule_based, lstm_ae) show
+  the only positive lead times in the entire comparison, while the three
+  near-ceiling classifiers (dbn, gbm, gnn) never detect strictly before
+  instability at any threshold. Mechanism: a near-perfect classifier's
+  score distribution is SHARP -- it stays low until very close to the true
+  event and then jumps, which is exactly what "near-ceiling AUC-PR" means,
+  but it leaves no room for an EARLY, partial signal to cross a loose
+  threshold ahead of time. A noisier detector's score drifts upward
+  earlier (at the cost of also firing on partial/spurious signal, visible
+  in rule_based's and lstm_ae's much worse ECE/BSS above) and gets credited
+  with "lead time" for exactly that reason. This means raw lead-time
+  comparison, taken alone and without pairing it against calibration, can
+  reward a WORSE detector -- a genuine methodological point, not a defect
+  in this experiment's measurement.
+- **H3 (calibration):** partially held. The DBN clearly beats the AE
+  (BSS +0.98 vs +0.15, exactly as predicted, with the AE's calibration
+  correctly flagged in advance as transform-dependent). But the broader
+  implicit claim -- that the DBN's calibration is uniquely good among all
+  systems -- did NOT hold: gbm (BSS +1.0000) and gnn_classifier (+0.9934)
+  matched or exceeded it. On this test split, calibration quality tracked
+  overall detector accuracy across the board, not a DBN-specific property.
+
+**Surprised?** yes, three times.
+1. That the `gnn_classifier` search took over 12 hours and had to be
+   killed. Investigated directly (timing repro on real-scale tensors, not
+   assumption) and root-caused to `HeteroConv`'s sequential per-relation
+   Python loop, confirmed by contrast with `HGTConv`'s fused call at the
+   identical batch scale. Fixed and documented in `configs/baselines.yaml`
+   rather than silently reducing the budget without explanation.
+2. That H2 didn't just fail to hold but reversed, with a mechanistic
+   explanation (score sharpness vs. threshold looseness) that only became
+   visible from the FULL theta sweep, not a single hand-picked threshold --
+   confirms the repo's standing convention (never report lead time at one
+   theta) caught something a single-threshold report would have hidden
+   entirely.
+3. That GBM's validation AUC-PR was EXACTLY 1.0000 across all 25 search
+   trials with zero variance (min=max=1.0000), and LSTM-AE's was nearly flat
+   across its entire 24-trial grid (0.99347-0.99355) -- checked this isn't
+   a search-harness bug (the trial CSV shows genuinely different sampled
+   configs per row, and GBM's test-split AUC-PR, computed independently in
+   stage 4, also lands at 1.0000, consistent rather than contradictory).
+   Concluded this is a real property of the underlying classification
+   problem on scripted, non-adaptive attacks -- it is simply easy for a
+   supervised model with reasonable capacity, regardless of its exact
+   hyperparameters -- not a bug to chase further.
