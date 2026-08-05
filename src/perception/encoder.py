@@ -220,6 +220,22 @@ class Readout(nn.Module):
     is why the trunk -- and the TCN below -- are shared rather than
     per-target: four separate TCNs would quadruple parameters for no added
     capacity); the four heads at the end are what differentiate the targets.
+
+    Session 7 generalization: on case33bw, `h_dict` always has all of
+    `host`/`IED`/`DER`/`bus` (READOUT_TYPES), so this degrades to exactly
+    the original fixed part list -- verified byte-identical by
+    `TestReadout::test_matches_original_fixed_part_list_when_all_types_present`.
+    A caller whose asset graph lacks `DER`/`bus` (any topology-free or
+    partial overlay) still runs: `nn.LazyLinear` accommodates the narrower
+    concatenation on its first call, so no per-topology model class is
+    needed (mirrors `nonempty_metadata`/`filtered_input`'s "restrict to
+    what's actually present" discipline in `asset_graph.py`). NOTE: Sherlock
+    grounding (LAB_NOTEBOOK.md 2026-08-05) ended up NOT using this pipeline
+    at all -- the real Sherlock export has no verified electrical topology,
+    so `experiments/exp07_sherlock.py` uses a separate topology-free
+    `CausalTCN` classifier directly. This generalization remains a real,
+    tested improvement for any future asset graph with a partial node-type
+    set, independent of that outcome.
     """
 
     def __init__(self, hidden: int = HIDDEN_DIM):
@@ -227,14 +243,15 @@ class Readout(nn.Module):
         self.proj = nn.LazyLinear(hidden)
 
     def forward(self, h_dict: dict[str, torch.Tensor], globals_: torch.Tensor) -> torch.Tensor:
-        parts = [
-            h_dict["host"][:, :, 0, :],
-            h_dict["IED"].mean(dim=2),
-            h_dict["DER"].mean(dim=2),
-            h_dict["bus"].mean(dim=2),
-            h_dict["bus"].max(dim=2).values,
-            globals_,
-        ]
+        parts = []
+        if "host" in h_dict:
+            parts.append(h_dict["host"][:, :, 0, :])
+        for t in ("IED", "DER", "bus"):
+            if t in h_dict:
+                parts.append(h_dict[t].mean(dim=2))
+        if "bus" in h_dict:
+            parts.append(h_dict["bus"].max(dim=2).values)
+        parts.append(globals_)
         return self.proj(torch.cat(parts, dim=-1))
 
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import networkx as nx
 import numpy as np
+import pandapower.networks as pn
 import pytest
 import torch
 from torch_geometric.nn import HGTConv
@@ -20,6 +21,7 @@ from src.perception.asset_graph import (
     CyberAsset,
     CyberOverlayConfig,
     build_asset_graph,
+    build_asset_graph_generic,
     filtered_input,
     hops_between,
     nonempty_metadata,
@@ -219,6 +221,52 @@ class TestEdgesAndMetadata:
         assert a.edge_counts == b.edge_counts
         for et in a.data.edge_types:
             torch.testing.assert_close(a.data[et].edge_index, b.data[et].edge_index)
+
+
+class TestGenericExtractionRegression:
+    """Session 7: `build_asset_graph_generic` was extracted from
+    `build_asset_graph`'s body so Sherlock's real topology (if any ships)
+    reuses the identical, already-tested construction logic instead of a
+    duplicate implementation. These tests pin that the extraction changed
+    nothing about case33bw's output -- `build_asset_graph` is now a thin
+    wrapper and must produce results identical to calling the generic
+    function directly with the same case33bw net/DER lists."""
+
+    def test_wrapper_matches_direct_generic_call(self, grid, obs):
+        wrapped = build_asset_graph(grid, _overlay(), observed_endpoints_set=obs)
+        direct = build_asset_graph_generic(
+            pn.case33bw(),
+            grid.der_ids,
+            grid.der_buses,
+            _overlay(),
+            observed_endpoints_set=obs,
+            network_name="case33bw",
+        )
+        assert wrapped.counts == direct.counts
+        assert wrapped.edge_counts == direct.edge_counts
+        assert wrapped.empty_node_types == direct.empty_node_types
+        assert wrapped.provenance == direct.provenance
+        assert wrapped.node_index == direct.node_index
+        for node_type in wrapped.data.node_types:
+            torch.testing.assert_close(wrapped.data[node_type].x, direct.data[node_type].x)
+        for et in wrapped.data.edge_types:
+            torch.testing.assert_close(wrapped.data[et].edge_index, direct.data[et].edge_index)
+
+    def test_generic_rejects_nothing_case33bw_specific(self, grid, obs):
+        """The generic function has no case33bw guard -- it must run on any
+        net with the required pandapower attributes. Confirmed here by
+        passing a net directly without going through GridModel at all for
+        the endpoint-fabrication guard's own validation path."""
+        ag = build_asset_graph_generic(
+            pn.case33bw(),
+            grid.der_ids,
+            grid.der_buses,
+            _overlay(),
+            observed_endpoints_set=obs,
+            network_name="not-case33bw-in-name-only",
+        )
+        assert ag.provenance["network"] == "not-case33bw-in-name-only"
+        assert ag.counts["bus"] == 33
 
 
 class TestHGTConvCompatibility:

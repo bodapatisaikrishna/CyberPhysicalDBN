@@ -136,11 +136,15 @@ def _line_graph(net) -> nx.Graph:
     return graph
 
 
-def _bus_static_features(net, grid: GridModel, dijkstra_dist: Mapping[int, float]) -> torch.Tensor:
+def _bus_static_features(net, dijkstra_dist: Mapping[int, float]) -> torch.Tensor:
     """[degree, z_dist_from_slack (normalized), is_slack, has_load,
-    load_p_mw, load_q_mvar] per bus, in bus-index order."""
+    load_p_mw, load_q_mvar] per bus, in bus-index order.
+
+    Network-agnostic (Session 7 refactor for `build_asset_graph_generic`):
+    no longer takes a `GridModel` -- its only prior use was computing a
+    `der_buses` set that was immediately deleted unused (dead code, removed
+    here rather than carried into the generic path)."""
     slack = int(net.ext_grid.bus.iloc[0])
-    der_buses = set(grid.der_buses)
     load_by_bus: dict[int, tuple[float, float]] = {}
     for _, row in net.load.iterrows():
         b = int(row.bus)
@@ -166,10 +170,9 @@ def _bus_static_features(net, grid: GridModel, dijkstra_dist: Mapping[int, float
             p_mw,
             q_mvar,
         ])
-    del der_buses  # kept for symmetry with DER features; bus features stay
-    # feeder-topology-only -- "is this bus a DER bus" is redundant with the
-    # explicit bus<->DER control_authority/electrical_coupling edges below,
-    # not duplicated as a feature bit.
+    # Deliberately no "is this bus a DER bus" feature bit: that fact is
+    # already explicit via the bus<->DER control_authority/electrical_coupling
+    # edges below, not duplicated as a feature.
     return torch.tensor(rows, dtype=torch.float32)
 
 
@@ -187,46 +190,43 @@ def _line_static_features(net) -> torch.Tensor:
     return torch.tensor(rows, dtype=torch.float32)
 
 
-def build_asset_graph(
-    grid: GridModel,
+def build_asset_graph_generic(
+    net,
+    der_ids: Sequence[str],
+    der_buses: Sequence[int],
     overlay: CyberOverlayConfig,
     *,
     observed_endpoints_set: frozenset[str],
+    network_name: str,
     feature_dims: Mapping[str, int] | None = None,
 ) -> AssetGraph:
-    """Build the static asset graph.
+    """Network-agnostic asset-graph construction (Session 7 extraction, for
+    Sherlock grounding -- CLAUDE.md layer [1] must reuse this identical
+    construction logic on a real topology, not a duplicate implementation).
+
+    Takes a pandapower `net`, `der_ids`/`der_buses` sequences, and a
+    provenance `network_name` string directly rather than a `GridModel`, so
+    it has no dependency on `src.twin.grid` and can run on any pandapower
+    net that has `.bus`/`.line`/`.load`/`.ext_grid`. `build_asset_graph`
+    below is a thin case33bw-specific wrapper around this function; its
+    behavior on case33bw is regression-tested to be unchanged by the
+    extraction (`test_build_asset_graph_generic_matches_case33bw_wrapper`).
 
     Governing rule (mechanically enforced, not just documented): an asset
     node exists iff it is (a) a row derived from the pandapower net, or (b) a
     `CyberAsset` whose `endpoint` actually appears in `observed_endpoints_set`
-    (built from a real twin run's `CommsBus.log` via `observed_endpoints`).
-    Raises if any declared cyber asset's endpoint was never observed --
-    nothing is created because a config or a type list merely mentions it.
-
-    Only `case33bw` is wired up (matches `src/twin/grid.py`'s own
-    `_build_base_network` restriction) -- raises otherwise rather than
-    silently building the wrong topology.
+    (built from a real run's comms log via `observed_endpoints`). Raises if
+    any declared cyber asset's endpoint was never observed -- nothing is
+    created because a config or a type list merely mentions it.
     """
-    if grid.config.network != "case33bw":
-        raise ValueError(
-            f"only case33bw is wired up for the asset graph, got {grid.config.network!r}"
-        )
     feature_dims = {**_DEFAULT_FEATURE_DIM, **(feature_dims or {})}
 
     unknown_endpoints = {a.endpoint for a in overlay.assets} - observed_endpoints_set
     if unknown_endpoints:
         raise ValueError(
             f"cyber asset endpoint(s) {sorted(unknown_endpoints)} never appeared "
-            "in the observed twin comms log; an asset node must not be created "
+            "in the observed comms log; an asset node must not be created "
             "for an endpoint that was never seen (CLAUDE.md rule 1)"
-        )
-
-    net = pn.case33bw()
-    if len(net.bus) != 33 or int((~net.line.in_service).sum()) != 5:
-        raise AssertionError(
-            "pandapower.networks.case33bw() no longer matches the counts this "
-            "module was verified against; re-derive rather than trust stale "
-            "constants"
         )
 
     slack = int(net.ext_grid.bus.iloc[0])
@@ -238,7 +238,7 @@ def build_asset_graph(
     data = HeteroData()
 
     # --- bus, line: derived from the pandapower net -------------------------
-    data["bus"].x = _bus_static_features(net, grid, dijkstra_dist)
+    data["bus"].x = _bus_static_features(net, dijkstra_dist)
     node_index["bus"] = {str(int(b)): i for i, b in enumerate(net.bus.index)}
     counts["bus"] = len(net.bus)
 
@@ -249,11 +249,11 @@ def build_asset_graph(
     data["transformer"].x = torch.zeros((0, feature_dims["transformer"]), dtype=torch.float32)
     counts["transformer"] = 0
 
-    # --- DER: derived from GridModel, never a literal bus number -----------
-    node_index["DER"] = {der_id: i for i, der_id in enumerate(grid.der_ids)}
-    counts["DER"] = len(grid.der_ids)
+    # --- DER: derived from der_ids/der_buses, never a literal bus number ----
+    node_index["DER"] = {der_id: i for i, der_id in enumerate(der_ids)}
+    counts["DER"] = len(der_ids)
     der_rows = []
-    for der_id, bus in zip(grid.der_ids, grid.der_buses):
+    for der_id, bus in zip(der_ids, der_buses):
         der_rows.append([1.0, float(dijkstra_dist.get(bus, 0.0)) / max(max(dijkstra_dist.values(), default=1.0), 1e-9), float(bus)])
     data["DER"].x = torch.tensor(der_rows, dtype=torch.float32) if der_rows else torch.zeros(
         (0, feature_dims["DER"]), dtype=torch.float32
@@ -297,7 +297,7 @@ def build_asset_graph(
 
     bus_der = [
         (node_index["bus"][str(bus)], node_index["DER"][der_id])
-        for der_id, bus in zip(grid.der_ids, grid.der_buses)
+        for der_id, bus in zip(der_ids, der_buses)
     ]
     _add_edges("bus", "electrical_coupling", "DER", bus_der)
 
@@ -352,8 +352,46 @@ def build_asset_graph(
         empty_node_types=empty_node_types,
         counts=counts,
         edge_counts=edge_counts,
-        provenance={"cyber_overlay_source": overlay.source, "network": "case33bw"},
+        provenance={"cyber_overlay_source": overlay.source, "network": network_name},
         graph=line_graph,
+    )
+
+
+def build_asset_graph(
+    grid: GridModel,
+    overlay: CyberOverlayConfig,
+    *,
+    observed_endpoints_set: frozenset[str],
+    feature_dims: Mapping[str, int] | None = None,
+) -> AssetGraph:
+    """Build the static asset graph for the twin's case33bw feeder.
+
+    Thin wrapper around `build_asset_graph_generic` (Session 7 extraction).
+    Only `case33bw` is wired up (matches `src/twin/grid.py`'s own
+    `_build_base_network` restriction) -- raises otherwise rather than
+    silently building the wrong topology.
+    """
+    if grid.config.network != "case33bw":
+        raise ValueError(
+            f"only case33bw is wired up for the asset graph, got {grid.config.network!r}"
+        )
+
+    net = pn.case33bw()
+    if len(net.bus) != 33 or int((~net.line.in_service).sum()) != 5:
+        raise AssertionError(
+            "pandapower.networks.case33bw() no longer matches the counts this "
+            "module was verified against; re-derive rather than trust stale "
+            "constants"
+        )
+
+    return build_asset_graph_generic(
+        net,
+        grid.der_ids,
+        grid.der_buses,
+        overlay,
+        observed_endpoints_set=observed_endpoints_set,
+        network_name="case33bw",
+        feature_dims=feature_dims,
     )
 
 

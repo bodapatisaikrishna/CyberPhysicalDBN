@@ -1,0 +1,90 @@
+# Sherlock (Wagner et al., ACM CODASPY'25) grounding configuration
+# (CLAUDE.md layer [1], Session 7).
+#
+# REWRITTEN after downloading and inspecting the real 01-Basic scenario
+# (LAB_NOTEBOOK.md 2026-08-05): the shipped data is physical power-grid
+# STATE snapshots (bus/line/trafo/sgen/load/switch values, 1.0s cadence),
+# with a ready-made per-slice `malicious` label -- not IEC-104 message
+# traffic. No verified electrical topology ships (no from_bus/to_bus), so
+# this config's architecture section describes a topology-FREE CausalTCN
+# classifier over aggregate physical features, not the HGTConv pipeline
+# configs/perception.yaml describes for the twin.
+
+data:
+  scenario: "01-Basic"
+  data_dir: "data/sherlock/01-Basic/01-Basic"
+  # Real, verified file names at the scenario root (glob patterns, since
+  # the exact "n302"/"n<N>" suffix may differ per scenario -- N is the
+  # number of distinct state-point IDs, scenario-specific).
+  train_glob: "train.*.state.gz"
+  test_glob: "test.*.state.gz"
+
+timebase:
+  # Verified exact cadence in the downloaded 01-Basic scenario: 1.0 second
+  # per record, no gaps. exp07 stage 0 VERIFIES this against the real file
+  # rather than assuming it silently -- see check_uniform_cadence.
+  expected_cadence_seconds: 1.0
+  cadence_tolerance_seconds: 0.01
+
+targets:
+  # Directly from each record's own `malicious` field (module docstring,
+  # sherlock_loader.py) -- no interval-overlap computation, no secondary
+  # 4-way decomposition attempted: Sherlock's real attack taxonomy (event
+  # ids like "14") has no verified correspondence to this project's
+  # MeasureCoherence/CommandCoherence/PhysLocalDER/PhysWideArea targets
+  # (LAB_NOTEBOOK H4) -- unlike the originally-planned message-level
+  # design, the STATE export doesn't even carry a cyber-analytic signal
+  # (file access, command coherence, etc.) to attempt a mapping from.
+  primary: "malicious_binary"
+
+architecture:
+  # Topology-free: Linear(len(SHERLOCK_GLOBAL_COLUMNS) -> hidden) ->
+  # CausalTCN (src/perception/encoder.py, reused unmodified) -> 1x1 conv
+  # head. See sherlock_loader.py's module docstring for why no HGTConv/
+  # asset graph is used (no verified electrical connectivity in the real
+  # export).
+  hidden_dim: 32
+  tcn_kernel_size: 3
+  tcn_dilations: [1, 2, 4, 8, 16]
+  tcn_dropout: 0.1
+
+transfer:
+  # Reduced shared subspace (revised after the rewrite): both domains
+  # genuinely measure bus voltage in per-unit (Sherlock's data-point-map.json
+  # confirms `bus.N:voltage` is PER_UNIT, directly comparable to the twin's
+  # own vm_pu) -- src/perception/sherlock_loader.py::build_shared_subspace /
+  # src/perception/features.py::twin_bus_voltage_shared_subspace. A SEPARATE
+  # small model (same CausalTCN architecture, 2-column input) trained fresh
+  # on each domain's reduced representation, since the main model's input
+  # width otherwise differs by domain. Scored separately from stage 3's
+  # full-feature single-domain numbers, never conflated.
+  enabled: true
+  hidden_dim: 16
+  n_epochs: 15
+  learning_rate: 1.0e-3
+  n_twin_scenarios: 10
+  twin_horizon_time_units: 200
+
+splits:
+  # 01-Basic's own train(clean)/test(attack) split honored as-is (train file
+  # verified 0 real attack events; test file has real attack events under
+  # several event ids). These fractions carve the TRAIN file's own
+  # chronological order into (train, val, calib) -- val/calib for model
+  # selection and temperature fitting only, never test.
+  val_frac_of_train: 0.2
+  calib_frac_of_train: 0.2
+
+training:
+  n_epochs: 30
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  early_stopping_patience_epochs: 5
+  grad_clip_norm: 1.0
+
+smoke:
+  # experiments/exp07_sherlock.py --smoke: a real prefix of the real
+  # downloaded files (never synthetic), run through every stage in
+  # minutes. Smoke numbers are written to a separately-named CSV and never
+  # mixed into reported results (CLAUDE.md rule 2), mirroring exp05/exp06.
+  max_records: 2000
+  n_epochs: 3

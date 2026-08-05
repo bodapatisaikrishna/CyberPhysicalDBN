@@ -433,6 +433,25 @@ class FeatureScaler:
         return (x - self.mean) / self.std
 
 
+def twin_bus_voltage_shared_subspace(bus_dynamic: torch.Tensor) -> torch.Tensor:
+    """`[S, n_bus, 4]` (`BUS_DYNAMIC_COLUMNS`) -> `[S, 2]`
+    (`sherlock_loader.SHARED_TRANSFER_COLUMNS` = mean bus voltage pu, its
+    slice-to-slice delta), the twin-side half of the Session 7
+    bidirectional-transfer reduced subspace (LAB_NOTEBOOK 2026-08-05,
+    revised after inspecting Sherlock's real data: both domains genuinely
+    measure bus voltage in per-unit, confirmed against Sherlock's
+    `data-point-map.json` unit field -- a real shared quantity, not an
+    invented one). Mirrors `sherlock_loader.build_shared_subspace` exactly:
+    mean over the bus axis of column `vm_pu`, and column `delta_vm_pu`
+    already computed per-bus by `bus_dynamic_features`, mean-pooled here."""
+    if bus_dynamic.shape[-1] != len(BUS_DYNAMIC_COLUMNS):
+        raise ValueError(f"expected width {len(BUS_DYNAMIC_COLUMNS)}, got {bus_dynamic.shape[-1]}")
+    c = {name: i for i, name in enumerate(BUS_DYNAMIC_COLUMNS)}
+    mean_vm = bus_dynamic[..., c["vm_pu"]].mean(dim=-1)  # [S]
+    mean_delta = bus_dynamic[..., c["delta_vm_pu"]].mean(dim=-1)  # [S]
+    return torch.stack([mean_vm, mean_delta], dim=-1)
+
+
 def fit_feature_scaler(x: torch.Tensor, *, eps: float = 1e-6) -> FeatureScaler:
     """Fit mean/std over every leading dimension of `x` (e.g. `[n_runs, S, N,
     F]` or `[S, N, F]`), keeping only the last (feature) axis. `eps` floors
