@@ -7,7 +7,13 @@ import itertools
 import numpy as np
 import pytest
 
-from src.attack_graph.graph import PHYS_LOCAL_DER, PHYS_WIDE_AREA, SensorModel, build_attack_graph
+from src.attack_graph.graph import (
+    PHYS_LOCAL_DER,
+    PHYS_WIDE_AREA,
+    SensorModel,
+    build_attack_graph,
+    technique_table3_ttc,
+)
 from src.dbn.compiler import ANTERIOR, ULTERIOR, compile_to_2tbn
 from src.dbn.parameterization import (
     analytic_error_rates,
@@ -437,3 +443,42 @@ class TestPhysicalEvidenceNodes:
             p_neg=PAPER_P_NEG,
         )
         assert len(dbn.get_cpds()) == 25
+
+
+class TestTechniqueTable3Ttc:
+    """Session 8 (claim C2): technique_table3_ttc() is the single source of
+    truth src/attack_graph/family.py and exp08_transfer_c2.py's Table-3
+    baseline arm both import."""
+
+    def test_known_techniques_and_values(self):
+        table = technique_table3_ttc()
+        assert table["Unsecured Credentials"] == pytest.approx(1 / 3)
+        assert table["Modify authentication process"] == pytest.approx(1 / 2)
+        assert table["Man-in-the-middle"] == pytest.approx(2.0)
+        assert table["Spoof Reporting Message"] == pytest.approx(15.0)
+        assert table["Unauthorized Command Message"] == pytest.approx(40.0)
+        assert table["Manipulation of Control"] == pytest.approx(50.0)
+        assert table["Modify Program"] == pytest.approx(2.0)
+        assert table["Masquerading"] == pytest.approx(2.0)
+
+    def test_exactly_eight_techniques(self):
+        assert len(technique_table3_ttc()) == 8
+
+    def test_excludes_untimed_and_analytic_nodes(self):
+        table = technique_table3_ttc()
+        # CredAccess/UnstablePS/CorrReact/WrongLogicExec have ttc=None or no
+        # mitre_technique; the 8 cyber analytics have mitre_technique=None.
+        assert None not in table
+
+    def test_repeated_technique_shares_one_ttc_by_construction(self):
+        """UnsecCred1/UnsecCred2/UnsecCred all share "Unsecured
+        Credentials" -- this is the recurrence technique_table3_ttc()
+        asserts consistency over, not merely tolerates."""
+        ag = build_attack_graph()
+        nodes_sharing = [
+            n for n, d in ag.nodes(data=True) if d.get("mitre_technique") == "Unsecured Credentials"
+        ]
+        assert len(nodes_sharing) == 3
+        ttcs = {float(ag.nodes[n]["ttc"]) for n in nodes_sharing}
+        assert len(ttcs) == 1
+        assert next(iter(ttcs)) == pytest.approx(1 / 3)
