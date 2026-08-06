@@ -145,3 +145,117 @@ stage 2: training (gnn, then mlp) ...
     epoch 2/30 train_loss=1.5183 val_loss=0.5560
     epoch 3/30 train_loss=0.9279 val_loss=0.4406
     epoch 4/30 train_loss=0.5319 val_loss=0.4003
+    epoch 5/30 train_loss=0.3005 val_loss=0.2271
+    epoch 6/30 train_loss=0.2751 val_loss=0.3077
+    epoch 7/30 train_loss=0.2274 val_loss=0.2551
+    epoch 8/30 train_loss=0.2440 val_loss=0.2573
+    epoch 9/30 train_loss=0.2480 val_loss=0.2385
+    epoch 10/30 train_loss=0.2224 val_loss=0.1705
+    epoch 11/30 train_loss=0.2048 val_loss=0.2019
+    epoch 12/30 train_loss=0.1972 val_loss=0.1698
+    epoch 13/30 train_loss=0.1885 val_loss=0.2538
+    epoch 14/30 train_loss=0.2249 val_loss=0.1723
+    epoch 15/30 train_loss=0.1927 val_loss=0.2018
+    epoch 16/30 train_loss=0.2032 val_loss=0.1650
+    epoch 17/30 train_loss=0.1835 val_loss=0.1991
+    epoch 18/30 train_loss=0.1793 val_loss=0.1784
+    epoch 19/30 train_loss=0.1778 val_loss=0.1493
+    epoch 20/30 train_loss=0.1533 val_loss=0.2399
+    epoch 21/30 train_loss=0.2166 val_loss=0.1431
+    epoch 22/30 train_loss=0.1468 val_loss=0.1608
+    epoch 23/30 train_loss=0.1448 val_loss=0.1226
+    epoch 24/30 train_loss=0.1406 val_loss=0.1708
+    epoch 25/30 train_loss=0.1496 val_loss=0.1331
+    epoch 26/30 train_loss=0.1904 val_loss=0.1605
+    epoch 27/30 train_loss=0.1397 val_loss=0.1082
+    epoch 28/30 train_loss=0.1364 val_loss=0.1153
+    epoch 29/30 train_loss=0.1531 val_loss=0.0953
+    epoch 30/30 train_loss=0.1276 val_loss=0.1664
+  training mlp ...
+    epoch 1/30 train_loss=2.6038 val_loss=0.8316
+    epoch 2/30 train_loss=1.3087 val_loss=0.5764
+    epoch 3/30 train_loss=1.5922 val_loss=0.5757
+    epoch 4/30 train_loss=1.6800 val_loss=0.7015
+    epoch 5/30 train_loss=2.8115 val_loss=0.4186
+    epoch 6/30 train_loss=1.9488 val_loss=0.3779
+    epoch 7/30 train_loss=1.7145 val_loss=0.3329
+    epoch 8/30 train_loss=1.3469 val_loss=0.2957
+    epoch 9/30 train_loss=1.6659 val_loss=0.3126
+    epoch 10/30 train_loss=1.3236 val_loss=0.2019
+    epoch 11/30 train_loss=0.5788 val_loss=0.2623
+    epoch 12/30 train_loss=0.3787 val_loss=0.1777
+    epoch 13/30 train_loss=0.2613 val_loss=0.1570
+    epoch 14/30 train_loss=0.2526 val_loss=0.1249
+    epoch 15/30 train_loss=0.1650 val_loss=0.1084
+    epoch 16/30 train_loss=0.3839 val_loss=0.1084
+    epoch 17/30 train_loss=0.1767 val_loss=0.1163
+    epoch 18/30 train_loss=0.1290 val_loss=0.1267
+    epoch 19/30 train_loss=0.1393 val_loss=0.0875
+    epoch 20/30 train_loss=0.1260 val_loss=0.2055
+    epoch 21/30 train_loss=0.2251 val_loss=0.1047
+    epoch 22/30 train_loss=0.2246 val_loss=0.1430
+    epoch 23/30 train_loss=0.1317 val_loss=0.1020
+    epoch 24/30 train_loss=0.1255 val_loss=0.1505
+    early stopping
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp11_training_20260806T100252Z.csv
+
+stage 3: perception evaluation (gnn vs. mlp) ...
+  gnn  MeasureCoherence   AUC-PR=0.9988 (base_rate=0.9101)
+  gnn  CommandCoherence   AUC-PR=0.9752 (base_rate=0.7320)
+  gnn  PhysLocalDER       AUC-PR=1.0000 (base_rate=0.0180)
+  gnn  PhysWideArea       AUC-PR=1.0000 (base_rate=0.8634)
+  WARNING: temperature for 'PhysLocalDER' hit its bound (T=0.05, n_fit=14440) -- likely an underdetermined fit (too few calib slices or too extreme a base rate), not a meaningful calibration. Reported as-is, not silently trusted.
+  mlp  MeasureCoherence   AUC-PR=0.9989 (base_rate=0.9101)
+  mlp  CommandCoherence   AUC-PR=0.9701 (base_rate=0.7320)
+  mlp  PhysLocalDER       AUC-PR=1.0000 (base_rate=0.0180)
+  mlp  PhysWideArea       AUC-PR=1.0000 (base_rate=0.8634)
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp11_perception_metrics_20260806T100252Z.csv
+
+stage 4: DBN ablation (hard vs. soft_calibrated_gnn vs. soft_calibrated_mlp) ...
+  ablation scenario 1/30 done
+  ablation scenario 2/30 done
+  ablation scenario 3/30 done
+  ablation scenario 4/30 done
+  ablation scenario 5/30 done
+  ablation scenario 6/30 done
+  ablation scenario 7/30 done
+  ablation scenario 8/30 done
+  ablation scenario 9/30 done
+  ablation scenario 10/30 done
+  ablation scenario 11/30 done
+  ablation scenario 12/30 done
+  ablation scenario 13/30 done
+  ablation scenario 14/30 done
+  ablation scenario 15/30 done
+  ablation scenario 16/30 done
+  ablation scenario 17/30 done
+  ablation scenario 18/30 done
+  ablation scenario 19/30 done
+  ablation scenario 20/30 done
+  ablation scenario 21/30 done
+  ablation scenario 22/30 done
+  ablation scenario 23/30 done
+  ablation scenario 24/30 done
+  ablation scenario 25/30 done
+  ablation scenario 26/30 done
+  ablation scenario 27/30 done
+  ablation scenario 28/30 done
+  ablation scenario 29/30 done
+  ablation scenario 30/30 done
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp11_dbn_lead_time_20260806T100252Z.csv
+  hard                     ECE=0.0039 Brier=0.0018 BSS=+0.9831
+  soft_calibrated_gnn      ECE=0.0052 Brier=0.0023 BSS=+0.9778
+  soft_calibrated_mlp      ECE=0.0047 Brier=0.0020 BSS=+0.9812
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp11_dbn_calibration_20260806T100252Z.csv
+
+=== VALIDATION GATE ===
+(a) leak guard .............................. PASS (asserted in tests/test_perception_features.py)
+(b) TCN causality ............................ PASS (asserted in tests/test_perception_encoder.py)
+(c) both arms trained on byte-identical split . PASS (single train/val/calib/test generation, shared)
+(d) splits pairwise disjoint (spawn keys) .... PASS ([(0,), (1,), (2,), (3,)])
+(e) every DBN score in [0,1], correct length .. PASS
+(f) n_test >= 30 (30)  PASS
+
+NOTE: the GNN-vs-MLP AUC-PR/lead-time/ECE comparison above is REPORTED, not gated (CLAUDE.md rule 3). If the MLP matches or beats the GNN -- including on PhysWideArea, the target this session's pre-registered H3 specifically expects the GNN to win on -- that is the valid, reportable result. See LAB_NOTEBOOK.md.
+
+GATE PASSED

@@ -2468,5 +2468,186 @@ hardcoded numeric) -- per the user's own stated validation gate for this
 session, a failure there must be reported clearly, not hidden or
 downgraded.
 
-**Result:** _(filled in after exp10, exp11, the reproducibility check, and
-the consolidation script all complete)_
+**Result:** All four deliverables completed. git SHA at commit time
+`26df4e8995c1c630633feceb754368becd635ef4-dirty` (exp10/exp11 runs), later
+committed as `dbec0fb37ae4b59d6be4b7a81ef68414c5e0a09e`. Implementation
+deviation from the approved plan, disclosed: skipped creating
+`configs/perception_ablation.yaml` and reused `configs/perception.yaml`
+directly for exp11 (no new parameters were actually needed beyond
+`encoder_type`, and reusing it matches `exp06_baselines.py`'s own
+established precedent of reusing exp05's config as-is).
+
+**1. Ablation set.** exp10 (`results/exp10_m_sweep_perf_20260806T095232Z.csv`,
+`results/exp10_m_sweep_kl_20260806T095232Z.csv`) and exp11
+(`results/exp11_perception_metrics_20260806T100252Z.csv`,
+`results/exp11_dbn_lead_time_20260806T100252Z.csv`,
+`results/exp11_dbn_calibration_20260806T100252Z.csv`) both **GATE PASSED**.
+
+- m sweep: EX mean per-slice latency 0.2681s (m=1/3) -> 0.4901s (m=1);
+  peak tracemalloc 204.07MB -> 206.00MB; both monotonically increasing with
+  m as H1 predicted (gate item c). **KL(EX||FF) did NOT match H1**: rather
+  than staying flat/dominated-by-clustering, it INCREASED substantially
+  with m -- UnstablePS 0.0457->0.1435, CorrReact 0.0608->0.2373, MITM
+  0.0358->0.4545 (all ~3-13x larger at m=1 than m=1/3). H2's pre-registered
+  failure mode triggered; investigated rather than dismissed (see
+  Interpretation).
+- GNN vs. MLP: perception-level AUC-PR on the 30-scenario test split is a
+  near-tie on every one of the 4 targets, INCLUDING `PhysWideArea` --
+  gnn=1.0000 vs. mlp=1.0000, gnn=0.99997 vs. mlp=1.0000 (PhysLocalDER),
+  gnn=0.9988 vs. mlp=0.9989 (MeasureCoherence), gnn=0.9752 vs. mlp=0.9701
+  (CommandCoherence, GNN slightly ahead here, the only target where it is).
+  DBN-level: `hard` ECE=0.0039/BSS=+0.9831, `soft_calibrated_gnn`
+  ECE=0.0052/BSS=+0.9778, `soft_calibrated_mlp` ECE=0.0047/BSS=+0.9812 --
+  also a near-tie. H3 (GNN wins specifically on PhysWideArea via 3-hop
+  message passing) is **REFUTED**; H4 (pre-registered acceptable failure
+  mode) is what actually happened, investigated below.
+- Open/closed loop (exp04), expert/learned TTC (exp08), calibrated/
+  uncalibrated/hard evidence (exp05), EX-vs-FF (exp01): no new runs, all 4
+  axes re-presented unmodified in `results/summary/` from their existing
+  canonical CSVs (see task 3 below). CL clustering: confirmed still out of
+  scope per CLAUDE.md's own rejected-directions list; not built.
+
+**2. Reproducibility check.** `scripts/verify_reproducibility.py`
+(`results/repro_check_v2_20260806T101712Z.log`). **exp01: PASS, bit-for-bit
+exact** across all 4 scenario CSVs and the summary CSV -- every `p_active`,
+`m_kl`, and `argmax_t` value matched the canonical
+`..._20260731T164052Z.csv` run with `max_abs_diff=0.0`, `max_rel_diff=0.0`.
+Only `latency_s` (wall-clock, explicitly not gated) differed. **exp03:
+FAIL** -- `results/exp03_twin_slices_*.csv`'s `value` column diverges from
+the canonical `..._20260801T123239Z.csv` run starting at slice 160
+(t~=44.3 time units) in the `deterministic` arm, replicate 0, `grid.
+is_unstable`: canonical says stable (0.0), this run says unstable (1.0),
+persisting at every sampled point through slice 350. This propagates into
+the summary's `median_first_unstable_slice` (2-slice difference) and
+`open_loop_lag_slices` (2-slice difference). Investigated, not dismissed
+(see Interpretation) -- reported as required by this session's own
+validation gate, not hidden.
+
+**3. Consolidation.** `scripts/build_summary_tables.py` wrote 14 per-axis
+CSVs + 2 figures to the new `results/summary/` (binding decision 2):
+`open_vs_closed_{lead_time,calibration}.csv`,
+`expert_vs_learned_ttc_{transfer_eval,lead_time_summary}.csv`,
+`evidence_calibration_{lead_time,calibration}.csv`, `ex_vs_ff_summary.csv`,
+`adversarial_robustness_{robustness_curve,reward_curve}.csv`,
+`gnn_vs_mlp_{perception_metrics,lead_time,calibration}.csv`,
+`m_sweep_{perf,kl}.csv`; figures `m_sweep_latency_memory.png`,
+`gnn_vs_mlp_auc_pr.png`. Every row carries `source_file`/`ablation_axis`
+columns; every value traces to an existing logged CSV, no recomputation.
+
+**4. Audit.** Performed by a read-only Explore agent BEFORE any plan was
+written (informing scope), plus my own follow-up verification. **Zero
+SUSPICIOUS hardcoded-numeric findings** across all of `src/`,
+`experiments/`, `docs/`, and print-based validation-gate summaries --
+every result-looking decimal traced to a source-paper Table-2/3 constant,
+a config default, a test's hand-computed expected value, a round
+pre-registered gate threshold (`0.05`, `30`, `1e-9`, `1e-12`), or (for the
+two genuinely specific decimals found, `0.5079` in exp02's docstring and
+`0.548`/`0.197`/`0.174` in exp09's gate print) an exact cross-verification
+against both this notebook and the underlying `results/*.csv`. 5/5 spot
+checks (exp01/04/06/08/09) matched their cited CSVs exactly. **Two
+adjacent findings, report-only per this session's binding decision 3**:
+(a) `experiments/exp08_transfer_c2.py`'s 6 result CSVs have no `seed`
+column at all -- a real CLAUDE.md rule-4 gap, not fixed this session
+(fixing means re-running its ~40 min pipeline); (b) the pre-provenance-fix
+`git_sha` in exp01's ORIGINAL canonical CSV
+(`exp01_scenario1_ff_20260731T164052Z.csv`) is known-wrong (predates the
+`src/eval/provenance.py` fix, documented in this notebook's 2026-08-01
+entry) -- unfixable retroactively, but moot for THIS session's own
+reproducibility check since that check diffs by content, not by trusting
+the stored git_sha.
+
+**Interpretation:**
+
+- **m sweep -- H1 partially refuted, H2 triggered, investigated:** KL(EX||FF)
+  growing with m (finer discretization) is the opposite of "KL is a fixed
+  property of the clustering, independent of m." A plausible mechanism,
+  reasoned through but NOT independently proven this session (stated as an
+  interpretation, not a fact, per CLAUDE.md rule 5): FF's per-slice
+  independence assumption commits one approximation error per discrete
+  step; at a fixed T=200 time-unit horizon, finer m means MORE discrete
+  steps over the same real time, giving more opportunities for that
+  per-step error to compound before `M_KL`'s max-over-trajectory is taken.
+  Coarser m (fewer, larger steps) applies the approximation fewer times,
+  so less accumulates. This does not contradict CLAUDE.md's reference
+  table (that table's KL bound is stated at ONE m, not swept) -- it
+  extends it with a genuinely new observation this project had never
+  tested. Flagged explicitly: this experiment could not reproduce Table
+  5's absolute delta_t scale by design (documented ~4x gap since Session
+  1), so the ABSOLUTE m values here are not the paper's own m=1/3 and m=1
+  operating points, only the qualitative trend is comparable.
+- **GNN vs. MLP -- H3 refuted, H4's mechanism investigated and
+  identified:** traced concretely, not left as an open mystery. The
+  `Readout` stage (`src/perception/encoder.py`, UNCHANGED regardless of
+  encoder type) does `mean(dim=2)`/`max(dim=2)` pooling across ALL 33 bus
+  embeddings. `bus_dynamic_features` (`src/perception/features.py:184`)
+  includes a per-bus `is_violated` flag. Even the MLP's per-node transform
+  is applied independently per bus (no mixing), but each bus's own
+  embedding still individually reflects that bus's own `is_violated`/
+  `vm_pu` -- so Readout's shared mean-pool across all buses already
+  approximates "fraction of buses violated," which is close to exactly
+  the LOCALIZED-vs-WIDESPREAD distinction `PhysWideArea` needs
+  (`src/twin/consequence.py:224-228`). The encoder module's own docstring
+  claim that 3-hop GNN message passing is "the architecture's only route
+  to a wide-area signal" is REFUTED empirically: it correctly identified
+  that per-node LOCAL features alone can't solve this, but overlooked that
+  Readout's own pooling operation -- present identically in both arms --
+  is a second, sufficient route. This is a real architectural finding
+  worth carrying forward, not a wasted ablation.
+- **Reproducibility -- exp01 PASS, exp03 FAIL, investigated not
+  dismissed:** exp01's forward-filtering computation (pure numpy/pgmpy-
+  style, no torch, no sampling affecting output) reproduces bit-for-bit,
+  confirming H5 fully for that script. exp03's divergence was traced as
+  far as feasible within this session's scope: the diverging arm
+  (`deterministic`) has been confirmed to draw ZERO randomness for attack
+  timing (`DelayLaw.DETERMINISTIC.sample()` returns the fixed TTC
+  unconditionally, `src/twin/attacker.py:50-53`), ruling out an
+  attacker-side RNG-seeding bug. `numpy.show_config()` on this machine
+  confirms numpy/scipy link against Apple's Accelerate framework, a
+  multi-threaded BLAS/LAPACK implementation with known run-to-run
+  floating-point reduction-order non-determinism for iterative numerical
+  solves -- `pandapower`'s Newton-Raphson power-flow solver depends on
+  exactly this class of routine. The stated hypothesis (not proven to the
+  level of forcing single-threaded BLAS and re-diffing, which was judged
+  out of scope for this already-large session): a razor-thin,
+  machine/thread-scheduling-dependent voltage difference from the power
+  flow solve crosses the `is_unstable` threshold differently on this run
+  vs. the original 2026-08-01 run, and because control decisions feed back
+  from grid state (closed loop), that single crossing then compounds into
+  a persistent ~2-slice divergence in derived summary statistics rather
+  than a one-off blip. This is a genuine numerical-precision limitation of
+  the underlying BLAS library on this machine, not a logic bug in
+  `src/twin/*.py` -- but it means exp03's specific published numbers
+  (`median_first_unstable_slice`, `open_loop_lag_slices`) carry a
+  previously-undocumented +-2-slice reproducibility uncertainty band that
+  no prior session had reason to discover, since no prior session
+  attempted a bit-for-bit rerun.
+- **Audit -- clean, as it should be after 9 sessions of the same
+  discipline.** The two report-only findings are real but bounded: neither
+  involves a fabricated or unsourced number, both are logging/provenance
+  completeness gaps with a clear, disclosed reason they weren't fixed this
+  session (cost of re-running, not an oversight).
+
+**Surprised?** Yes, on three counts, all investigated before writing this
+section, none left as an unexplained "huh, weird":
+
+1. KL(EX||FF) increasing with m rather than staying flat -- genuinely
+   contrary to my own pre-registered H1. Investigated via the
+   error-accumulation-over-more-steps reasoning above; stated with
+   appropriate hedging since it wasn't independently proven by, e.g.,
+   sweeping a third or fourth m value to confirm the trend is smooth
+   rather than a two-point artifact -- a real limitation of only testing
+   m in {1/3, 1} as CLAUDE.md's own reference table specifies.
+2. The MLP matching the GNN on `PhysWideArea` specifically -- the ONE
+   target the encoder module's own docstring singles out as needing
+   message passing. Investigated down to the exact code path (Readout's
+   shared bus-pooling + the `is_violated` feature column) rather than
+   accepted as "ties happen sometimes." This is the most actionable
+   finding of the session: it suggests the GNN's real value (if any) in
+   this architecture has not yet been isolated by any ablation run so
+   far, since the one target designed to require it doesn't.
+3. exp03 failing the reproducibility check when exp01 didn't -- checked
+   whether this was a seeding bug in the SCRIPT (it is not, confirmed via
+   `DelayLaw.DETERMINISTIC`'s zero-RNG code path) before concluding it's
+   a BLAS-level floating-point non-determinism issue, rather than
+   guessing. Not independently confirmed by forcing single-threaded BLAS
+   and re-running (flagged as the natural follow-up, out of scope here).

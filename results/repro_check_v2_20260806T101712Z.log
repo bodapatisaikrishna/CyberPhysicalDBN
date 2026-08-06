@@ -3,3 +3,255 @@ running exp01_reproduce_paper.py fresh ...
   from .StructureScore import (
 reaction_mode: memoryless
 running scenario1 / FF ...
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario1_ff_memoryless_20260806T101718Z.csv
+running scenario1 / EX ...
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario1_ex_memoryless_20260806T101718Z.csv
+running scenario2 / FF ...
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario2_ff_memoryless_20260806T101718Z.csv
+running scenario2 / EX ...
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario2_ex_memoryless_20260806T101718Z.csv
+
+wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/summaries/exp01_summary_memoryless_20260806T101718Z.csv
+wrote plots to /Users/bodapati/Downloads/CyberPhysicalDBN/results/figures
+
+=== VALIDATION GATE ===
+check                                                           got    target    result
+Scenario 2 @t=8: UnsecCred ~1.0                              1.0000      1.00      PASS
+Scenario 2 @t=20: MITM ~1.0                                  0.9941      1.00      PASS
+Scenario 2 @t=31: SpoofRepMsg ~1.0                           0.9947      1.00      PASS
+Scenario 2 @t=31: CorrReact ~0.7                             0.6963      0.70      PASS
+Scenario 2 @t=31: UnstablePS ~0.85                           0.8088      0.85      FAIL
+Scenario 2 @t=52: UnauthCommand ~1.0                         0.9859      1.00      PASS
+Scenario 2 @t=52: UnstablePS ~1.0                            0.9980      1.00      PASS
+
+KL check                                                 got     at t        target
+S1 UnstablePS KL peak (t~40-50)                      0.02734      6.6         ~2e-2
+S1 CorrReact KL plateau                              0.03528             ~0.11-0.12
+S1 MITM KL peak (t~10)                              0.007507      1.9       ~1.8e-2
+S2 UnstablePS KL peak (t~31)                       1.612e-16      6.1      ~1.15e-2
+
+horizon: 200 time units = 722 slices (delta_t = 166.13 s)
+FF mean per-slice latency: 0.0270s (paper: ~0.03s)
+scenario1/FF tracemalloc peak: 203.919 MB  (rss delta: -158.843 MB)
+scenario1/EX tracemalloc peak: 203.942 MB  (rss delta: 25.182 MB)
+scenario2/FF tracemalloc peak: 7.611 MB  (rss delta: -252.854 MB)
+scenario2/EX tracemalloc peak: 10.182 MB  (rss delta: 23.216 MB)
+
+Probability checks: SOME FAILED -- see above
+  exp01_reproduce_paper.py finished in 2137.9s (exit code 1, see note above on why this is not itself a repro failure)
+running exp03_twin_open_loop.py fresh ...
+/Users/bodapati/Downloads/CyberPhysicalDBN/.venv/lib/python3.11/site-packages/pgmpy/estimators/__init__.py:4: FutureWarning: `pgmpy.estimators.StructureScore` is deprecated and will be removed in v1.3.0. Use `pgmpy.structure_score` instead.
+  from .StructureScore import (
+stage 0: grid calibration sweep ...
+ p_mw_per_der  converged  vm_pu_min  vm_pu_max  n_violated  unstable  limit_min_vm_pu  limit_max_vm_pu der_buses                                        git_sha  seed
+          0.0       True   0.913090   1.000000           0     False              0.9              1.1     17,32 dbec0fb37ae4b59d6be4b7a81ef68414c5e0a09e-dirty    42
+          0.8       True   0.961110   1.000000           0     False              0.9              1.1     17,32 dbec0fb37ae4b59d6be4b7a81ef68414c5e0a09e-dirty    42
+          2.0       True   0.983738   1.069943           0     False              0.9              1.1     17,32 dbec0fb37ae4b59d6be4b7a81ef68414c5e0a09e-dirty    42
+          3.0       True   0.989280   1.131096           3      True              0.9              1.1     17,32 dbec0fb37ae4b59d6be4b7a81ef68414c5e0a09e-dirty    42
+          5.0       True   0.996070   1.233635          13      True              0.9              1.1     17,32 dbec0fb37ae4b59d6be4b7a81ef68414c5e0a09e-dirty    42
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp03_grid_sweep_20260806T105255Z.csv
+
+stage 1-3 [exponential]: 20 replicates ...
+  rep 1/20 done
+  rep 2/20 done
+  rep 3/20 done
+  rep 4/20 done
+  rep 5/20 done
+  rep 6/20 done
+  rep 7/20 done
+  rep 8/20 done
+  rep 9/20 done
+  rep 10/20 done
+  rep 11/20 done
+  rep 12/20 done
+  rep 13/20 done
+  rep 14/20 done
+  rep 15/20 done
+  rep 16/20 done
+  rep 17/20 done
+  rep 18/20 done
+  rep 19/20 done
+  rep 20/20 done
+
+stage 1-3 [deterministic]: 20 replicates ...
+  rep 1/20 done
+  rep 2/20 done
+  rep 3/20 done
+  rep 4/20 done
+  rep 5/20 done
+  rep 6/20 done
+  rep 7/20 done
+  rep 8/20 done
+  rep 9/20 done
+  rep 10/20 done
+  rep 11/20 done
+  rep 12/20 done
+  rep 13/20 done
+  rep 14/20 done
+  rep 15/20 done
+  rep 16/20 done
+  rep 17/20 done
+  rep 18/20 done
+  rep 19/20 done
+  rep 20/20 done
+
+reference: scripted Scenario 2 ...
+
+=== ANALYTIC RAISING TIMES: twin vs Table 4 ===
+analytic            arm              median t     p10     p90   Table 4
+FileAccess          exponential        0.97    0.55    1.69         8
+FileIntegrity       exponential        0.97    0.28    1.97         9
+MeasureCoherence    exponential       11.49    5.43   34.67        31
+CommandCoherence    exponential       33.64    6.65  131.69        52
+NewServiceStarted   exponential        1.52    0.28    3.07       n/a
+FileAccess          deterministic      1.11    1.11    1.11         8
+FileIntegrity       deterministic      1.11    1.11    1.11         9
+MeasureCoherence    deterministic     18.27   18.27   18.27        31
+CommandCoherence    deterministic     43.19   43.19   43.19        52
+NewServiceStarted   deterministic      2.22    2.22    2.22       n/a
+
+=== POSTERIOR: twin median vs scripted Scenario 2 ===
+node          arm              twin med @T  scripted @T  max |diff|
+UnstablePS    exponential           1.0000       1.0000      0.5919
+CorrReact     exponential           0.7000       0.7000      0.7000
+MITM          exponential           1.0000       1.0000      0.9821
+UnstablePS    deterministic         1.0000       1.0000      0.5260
+CorrReact     deterministic         0.7000       0.7000      0.7000
+MITM          deterministic         1.0000       1.0000      0.9793
+
+=== PHYSICAL INSTABILITY vs POSTERIOR CROSSING (open-loop baseline) ===
+arm              first unstable  threshold  P(UnstablePS) xing     lag
+exponential                  46       0.50                  38      -8
+exponential                  46       0.90                 118     +72
+exponential                  46       0.99                 125     +80
+deterministic                66       0.50                  66      +0
+deterministic                66       0.90                 156     +90
+deterministic                66       0.99                 156     +90
+
+wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp03_twin_slices_20260806T105255Z.csv  (23360 rows)
+wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/summaries/exp03_twin_summary_20260806T105255Z.csv
+wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/figures/exp03_twin_vs_scripted.png
+
+=== VALIDATION GATE ===
+(a) precondition ordering .......... PASS
+(b) analytic attribution ........... PASS (asserted in tests/test_twin.py)
+(c) physical effect ................ PASS  (nominal vmax 1.0000 -> compromised 1.2336, limit 1.10)
+(d) posterior rises over horizon ... PASS
+(e) evidence-stream scope guard .... PASS (enforced in DiscreteTrace)
+
+NOTE: the Table 4 comparison above is REPORTED, not gated. Gating on it would be fitting to a target (CLAUDE.md rule 3).
+
+GATE PASSED
+  exp03_twin_open_loop.py finished in 587.4s (exit code 0, see note above on why this is not itself a repro failure)
+
+=== REPRODUCIBILITY CHECK ===
+
+[exp01/scenario1_ff] PASS
+  fresh:     /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario1_ff_memoryless_20260806T101718Z.csv
+  canonical: /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario1_ff_20260731T164052Z.csv
+  slice                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  t                        max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_active                 max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  latency_s                max_abs_diff=2.344e+00 max_rel_diff=1.218e+01  (wall-clock/memory, not gated)
+  seed                     max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  m                        max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  delta_t_override         max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_pos                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_neg                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+
+[exp01/scenario1_ex] PASS
+  fresh:     /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario1_ex_memoryless_20260806T101718Z.csv
+  canonical: /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario1_ex_20260731T164052Z.csv
+  slice                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  t                        max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_active                 max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  latency_s                max_abs_diff=7.870e-01 max_rel_diff=3.400e+00  (wall-clock/memory, not gated)
+  seed                     max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  m                        max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  delta_t_override         max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_pos                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_neg                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+
+[exp01/scenario2_ff] PASS
+  fresh:     /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario2_ff_memoryless_20260806T101718Z.csv
+  canonical: /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario2_ff_20260731T164052Z.csv
+  slice                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  t                        max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_active                 max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  latency_s                max_abs_diff=9.705e-02 max_rel_diff=6.203e+00  (wall-clock/memory, not gated)
+  seed                     max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  m                        max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  delta_t_override         max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_pos                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_neg                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+
+[exp01/scenario2_ex] PASS
+  fresh:     /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario2_ex_memoryless_20260806T101718Z.csv
+  canonical: /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp01_scenario2_ex_20260731T164052Z.csv
+  slice                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  t                        max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_active                 max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  latency_s                max_abs_diff=4.488e-01 max_rel_diff=1.267e+01  (wall-clock/memory, not gated)
+  seed                     max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  m                        max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  delta_t_override         max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_pos                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_neg                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+
+[exp01/summary] PASS
+  fresh:     /Users/bodapati/Downloads/CyberPhysicalDBN/results/summaries/exp01_summary_memoryless_20260806T101718Z.csv
+  canonical: /Users/bodapati/Downloads/CyberPhysicalDBN/results/summaries/exp01_summary_20260731T164052Z.csv
+  m_kl                     max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  argmax_t                 max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  seed                     max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  m                        max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_pos                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_neg                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+
+[exp03/grid_sweep] PASS
+  fresh:     /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp03_grid_sweep_20260806T105255Z.csv
+  canonical: /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp03_grid_sweep_20260801T123239Z.csv
+  p_mw_per_der             max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  converged                max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  vm_pu_min                max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  vm_pu_max                max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  n_violated               max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  unstable                 max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  limit_min_vm_pu          max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  limit_max_vm_pu          max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  seed                     max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+
+[exp03/twin_slices] FAIL
+  fresh:     /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp03_twin_slices_20260806T105255Z.csv
+  canonical: /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp03_twin_slices_20260801T123239Z.csv
+  replicate                max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  slice                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  t_units                  max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  value                    max_abs_diff=1.000e+00 max_rel_diff=1.000e+300  <-- non-zero diff (GATED)
+  seed                     max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  m                        max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  delta_t_override         max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_pos                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p_neg                    max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  n_replicates             max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+
+[exp03/summary] FAIL
+  fresh:     /Users/bodapati/Downloads/CyberPhysicalDBN/results/summaries/exp03_twin_summary_20260806T105255Z.csv
+  canonical: /Users/bodapati/Downloads/CyberPhysicalDBN/results/summaries/exp03_twin_summary_20260801T123239Z.csv
+  median                   max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p10                      max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  p90                      max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  table4_reference         max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  n_fired                  max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  n_replicates             max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  twin_median_final        max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  scripted_final           max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  max_abs_diff             max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  threshold                max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  median_first_unstable_slice max_abs_diff=2.000e+00 max_rel_diff=4.598e-02  <-- non-zero diff (GATED)
+  posterior_crossing_slice max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  open_loop_lag_slices     max_abs_diff=2.000e+00 max_rel_diff=3.636e-01  <-- non-zero diff (GATED)
+  seed                     max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+  delta_t                  max_abs_diff=0.000e+00 max_rel_diff=0.000e+00
+
+FAIL: reproducibility check FAILED (rtol=1e-09, atol=1e-12)
