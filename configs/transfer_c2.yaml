@@ -1,0 +1,110 @@
+# Claim C2 transfer test configuration (CLAUDE.md layer [2]/[3], Session 8).
+# `m` continues to come from configs/base.yaml's discretization.m, consistent
+# with every other exp0N script -- not repeated here.
+
+twin_sweep:
+  # "Asset configuration" axis (task 1): GridConfig.network is fixed to
+  # case33bw (the only topology wired up in src/twin/grid.py) -- these are
+  # the only fields that vary.
+  grid_configs:
+    - {n_der: 1, nominal_level_index: 0}
+    - {n_der: 2, nominal_level_index: 1}
+    - {n_der: 3, nominal_level_index: 2}
+  # "Attacker capability" / "defensive posture" axes: the new multiplicative
+  # AttackerConfig fields (src/twin/attacker.py, Session 8).
+  speed_multipliers: [0.5, 1.0, 2.0]
+  defense_slowdown_multipliers: [1.0, 2.0, 4.0]
+  # 3, not 5 (also cut for stage-1 runtime, alongside horizon_safety_factor
+  # below): 9 (speed,defense) combos x 3 grid_configs x 3 seeds x 11 timed
+  # nodes still yields ~890 real twin rows for the amortized model, ample
+  # for the small (8-technique, 3-continuous-feature) model this session
+  # trains.
+  n_seeds_per_config: 3
+  base_horizon_time_units: 200.0
+  # Per-combo horizon = base_horizon * horizon_safety_factor * defense/speed
+  # (computed fresh per (speed, defense) combo in exp08_transfer_c2.py, not
+  # one global horizon sized for the single slowest combo applied to every
+  # run -- an earlier full run used the global-max approach and took over
+  # 40 minutes just for stage 1 before being killed; measured directly,
+  # twin run time scales ~linearly with horizon: 200 units -> 2.6s, 3200
+  # units -> 37.5s). horizon_safety_factor=1.0 (not 2.0): the defense/speed
+  # ratio itself already scales the horizon proportionally to how much
+  # slower that combo's attack steps are, so an extra 2x margin on top is
+  # not needed and was the main driver of the 40-minute stage 1 -- cutting
+  # it to 1.0 keeps the same margin logic with roughly half the runtime.
+  horizon_safety_factor: 1.0
+
+family:
+  n_graphs: 60
+  n_train: 30
+  n_val: 5
+  n_test: 25
+  # Verified tractable ranges (src/attack_graph/family.py's module
+  # docstring): depth alone or branching/process-count alone scale fine;
+  # the generator itself caps n_root_processes>1 and branching_factor>1
+  # from ever co-occurring (measured pgmpy VariableElimination blowup).
+  # depth_range narrowed to [2,5] (not [3,6]) after that same measurement,
+  # so the largest tractable single-axis graphs stay comfortably inside
+  # the verified-fast region (20 graphs at these ranges: ~19s total).
+  depth_range: [2, 5]
+  branching_factor_range: [1, 3]
+  n_root_processes_range: [1, 3]
+  analytic_coverage_range: [0.3, 1.0]
+  # Twin-side asset_context is derived from twin_sweep.grid_configs (3 real
+  # points); family-side is sampled Uniform over this same [0,1] range --
+  # same meaning ("normalized favorability of asset config to the
+  # attacker"), different provenance, documented in family.py.
+  asset_context_range: [0.0, 1.0]
+  defensive_posture_range: [0.5, 4.0]
+  attacker_capability_range: [0.25, 4.0]
+  horizon_time_units: 200.0
+  # n_slices sized PER GRAPH from that graph's own delta_t/max-TTC (never a
+  # fixed slice count reused across differently-shaped graphs, since
+  # different graphs' delta_t genuinely differ): n_slices = ceil(
+  # n_slices_multiple_of_max_ttc * max(ttc) / delta_t), capped at
+  # max_n_slices so a graph with many timed nodes (tiny delta_t) cannot
+  # blow up runtime. Measured directly (the paper's 11-interface-node
+  # graph): ~0.18s/slice under DBNInference -- at multiple=5/cap=300 stage
+  # 4 (25 test graphs x 3 arms) was projected at ~65+ minutes; cut to
+  # multiple=3/cap=100 (~3x fewer slices at the cap) for a session-scale run.
+  n_slices_multiple_of_max_ttc: 3
+  max_n_slices: 100
+
+architecture:
+  embedding_dim: 4
+  hidden_dim: 16
+
+training:
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-4
+  n_epochs: 300
+  early_stopping_patience_epochs: 20
+  grad_clip_norm: 1.0
+
+inference:
+  p_pos: 1.0e-4
+  p_neg: 1.0e-4
+  detection_thresholds: [0.5, 0.9, 0.99]
+
+smoke:
+  twin_sweep:
+    grid_configs:
+      - {n_der: 1, nominal_level_index: 0}
+    speed_multipliers: [1.0]
+    defense_slowdown_multipliers: [1.0]
+    n_seeds_per_config: 2
+    base_horizon_time_units: 50.0
+    horizon_safety_factor: 2.0
+  family:
+    n_graphs: 6
+    n_train: 3
+    n_val: 1
+    n_test: 2
+    depth_range: [2, 3]
+    branching_factor_range: [1, 2]
+    n_root_processes_range: [1, 2]
+    n_slices_multiple_of_max_ttc: 3
+    max_n_slices: 30
+  training:
+    n_epochs: 20
+    early_stopping_patience_epochs: 20

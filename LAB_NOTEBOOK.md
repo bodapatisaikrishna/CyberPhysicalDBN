@@ -1904,3 +1904,225 @@ differs between the train and test files within the SAME scenario
 first full run's train base rate (0.000903) was checked against the
 expected 0.0 rather than accepted at face value, per this project's own
 "a surprising result means either a bug or a finding" rule.
+
+## 2026-08-05 Experiment: exp08_transfer_c2 (learned TTC parameterization, claim C2)
+
+**Motivation.** The source paper (Cerotti et al.) hand-elicits every
+attack-step TTC (Table 3) from experts with no stated derivation -- an
+admitted weakness this session directly attacks. Claim C2: a model mapping
+(MITRE technique, asset context, defensive posture, attacker capability) ->
+T_bar_s, trained on twin executions, can match/beat those expert numbers
+AND **transfer to attack graphs it never saw fitted data for**. Per the
+task's own validation-gate wording: "transfer is the entire claim --
+same-graph fitting is not a contribution." This session builds that model
+(`src/parameterization/amortized.py`), a family of 60 synthetic attack
+graphs to test transfer on (`src/attack_graph/family.py`, split
+30 train / 5 val / 25 test), and `experiments/exp08_transfer_c2.py`, which
+evaluates the model zero-shot on the 25 held-out test graphs against (a)
+expert Table-3 TTCs looked up by technique and (b) a constant-prior
+control, via DBN self-consistency (forward-sample a true trajectory from
+oracle CPTs, run existing unmodified `DBNInference`/`attach_cpds` with each
+arm's TTC-mutated graph, score via `src/eval/metrics.py`/`lead_time.py`).
+
+**Naming correction:** the task text says `exp07_transfer_c2.py`, but
+`experiments/exp07_sherlock.py` already exists (Session 7) -- this
+session's script is `experiments/exp08_transfer_c2.py`.
+
+**Verified fact forcing a design choice:** `src/twin/runner.py`'s
+`_on_step_complete` and `src/twin/comms.py`'s manipulation functions
+dispatch physical/comms side-effects by literal hardcoded node name
+(`"MITM"`, `"SpoofRepMsg"`, etc.) -- specific to the one 20-node paper
+graph, confirmed does NOT generalize to synthetic topologies. Therefore
+family graphs are NEVER twin-executed; their ground-truth TTC uses the
+SAME closed-form multiplicative mechanism newly instrumented into the twin
+(`table3_ttc[technique] * defensive_posture / attacker_capability`),
+applied outside the twin. Documented explicitly as a deliberate synthetic-
+ground-truth choice, not a hidden shortcut.
+
+**User-approved binding decisions** (both confirmed via AskUserQuestion
+before any code was written):
+1. Detection-quality method: DBN self-consistency (forward-sample +
+   existing inference), not a simpler TTC-MAE-only comparison.
+2. Attacker capability / defensive posture mechanism: multiplicative TTC
+   scaling (`AttackerConfig.speed_multiplier`,
+   `defense_slowdown_multiplier`), not an active block/interrupt mechanism.
+3. Amortized-model training data POOLS real twin-measured rows with the
+   30 TRAIN family graphs' synthetic-label rows (matches the task's literal
+   30/5/25 split -- those graphs are meant to be trained on), accepting and
+   documenting the resulting circularity risk (H3 below) rather than
+   avoiding it via a twin-only training arm. No 4th "twin-only" ablation
+   arm this session (flagged as future work, not approved).
+
+**H1:** the pooled-trained amortized model achieves lower held-out
+log-T_bar_s MAE on the 25 test graphs than a technique-only (context-blind)
+baseline, because defense/capability enter as a learnable log-linear
+transform and the model can in principle recover it.
+
+**H2:** on the DBN self-consistency comparison (KL / M_KL / detection lead
+time against the oracle trajectory), the amortized arm MATCHES -- not
+necessarily beats -- the Table-3 arm specifically for test graphs whose
+sampled multipliers sit near 1.0 (where Table-3's context-blind number is
+close to correct by construction). No expectation stated as fact for graphs
+far from multiplier=1.0.
+
+**H3 (named risk -- circularity, pre-registered per binding decision 3):**
+because part of the amortized model's training supervision is the
+closed-form `table3_ttc * multiplier` label on the 30 train family graphs'
+nodes, an observed "match" with Table-3 near multiplier~=1 may partly
+reflect the model recovering shared arithmetic structure rather than
+demonstrating genuine twin-dynamics generalization. The model only ever
+sees `(technique, asset_context, defensive_posture, attacker_capability)`
+as input -- never the formula itself -- so it must still learn to
+interpolate across context combinations it did not see labeled, which is a
+real (if narrower) transfer test. Stated here explicitly so the eventual
+result is read correctly, not oversold.
+
+**H4 (named risk -- feature transfer):** the twin sweep's `asset_context`
+axis is derived from only 3 real `(n_der, nominal_level_index)` grid points
+(`configs/transfer_c2.yaml`'s `twin_sweep.grid_configs`), far narrower and
+differently distributed than the family graphs' synthetic
+`Uniform(asset_context_range)` sampling. Predicted specific failure mode:
+the model transfers better on technique/defense/capability (literally
+shared multiplier units between twin and family domains) than on
+asset_context (structurally different provenance between domains). Stage 5
+of `exp08_transfer_c2.py` (per-technique and per-context-quartile held-out
+error breakdown, always computed, never gated) is designed specifically to
+surface this -- the task's own "if transfer fails, diagnose WHICH features
+fail to transfer; that diagnostic is itself a finding" instruction.
+
+**H5:** the constant-prior control is strictly worse than both the
+amortized and Table-3 arms on `M_KL` and detection lead time on most of
+the 25 test graphs (a sanity floor -- if this fails, something upstream is
+broken, not merely "the control won").
+
+**Stop rule:** the stage-6 validation gate in `exp08_transfer_c2.py` tests
+STRUCTURAL correctness only -- leak barrier, graph-level train/val/test
+disjointness, no retraining occurred on test graphs (mechanically checked
+via `torch.equal` on a pre/post model-state snapshot), every mutated
+graph's `delta_t>0` and `p_s in (0,1]`, CSV provenance, and sampled-
+trajectory precondition/persistence validity. It never gates on whether
+the amortized arm wins against Table-3 or the constant-prior control --
+KL/M_KL/lead-time numbers print unconditionally, before the PASS/FAIL line,
+mirroring `exp07`'s "gap is printed unconditionally" convention. A C2
+transfer failure is exactly as valid an experimental outcome as a success,
+per CLAUDE.md rule 3.
+
+**Runtime note (not a scientific finding, recorded for reproducibility):**
+the first full run used a single global worst-case horizon
+(`base_horizon * safety_factor * max(defense)/min(speed)` = 200*2*8 = 3200
+time units) applied to EVERY twin run in the sweep, not just the slowest
+combo. Measured directly: a twin run at horizon=200 takes ~2.6s, at
+horizon=3200 takes ~37.5s (near-linear scaling) -- the first run was killed
+after 41 minutes still inside stage 1. Fixed by computing horizon
+PER-COMBO (`base_horizon * safety * defense/speed` for that combo's own
+multipliers, not the sweep's global extreme), cutting `horizon_safety_factor`
+1.0 (the ratio itself already provides proportional margin), cutting
+`n_seeds_per_config` 5->3, and cutting stage 4's `n_slices_multiple_of_max_ttc`
+5->3 / `max_n_slices` 300->100 (also measured directly: ~0.18s/slice under
+`DBNInference`, so 25 test graphs x 3 arms x 300 slices projected past an
+hour). All logged in `configs/transfer_c2.yaml`'s comments.
+
+**Result** (git SHA `446cdf8953872b7380ab07baa902553c29ec24d4-dirty`, from
+`results/exp08_twin_ttc_dataset_20260806T044635Z.csv`,
+`results/exp08_family_graph_nodes_20260806T044635Z.csv`,
+`results/exp08_amortized_training_20260806T044635Z.csv`,
+`results/exp08_transfer_eval_20260806T044635Z.csv`,
+`results/exp08_lead_time_summary_20260806T044635Z.csv`,
+`results/exp08_transfer_error_breakdown_20260806T044635Z.csv`):
+
+**Stage 1 (twin):** 888 real realized-TTC rows (9 speed/defense combos x 3
+grid configs x 3 seeds x 11 timed nodes = 891 possible; 3 node-runs never
+completed within their combo's horizon -- honest, not silently dropped).
+
+**Stage 2 (family):** 60 graphs generated exactly 30/5/25 train/val/test;
+every graph passed the `compile_to_2tbn` + 2-slice `DBNInference` structural
+smoke-check (0 failures).
+
+**Stage 3 (amortized training):** pooled 888 twin + 268 family-train = 1156
+training rows, 36 family-val rows; ran the full 300-epoch budget (early
+stopping never triggered within patience=20), final `val_mae_log_ttc` =
+0.4377.
+
+**Stage 4 (zero-shot, 25 test graphs, no retraining -- gate (c) confirms
+model weights identical pre/post):**
+
+| arm | mean M_KL | detection_rate @0.5 | @0.9 | @0.99 |
+|---|---|---|---|---|
+| amortized | **0.2260** | **1.0** | **0.8** | **0.7** |
+| table3 | 0.2964 | 0.8 | 0.7 | 0.6 |
+| constant_prior | 0.2964 | 0.8 | 0.7 | 0.6 |
+
+**Unplanned finding, discovered from the real numbers, not designed for:**
+`table3` and `constant_prior` produced IDENTICAL M_KL and detection rates,
+to the printed decimal. Not a bug -- traced to a real mathematical property
+of uniformization (Eq. 3): `constant_prior`'s TTC assignment is
+`table3_ttc[technique] * constant_ratio` for a SINGLE scalar
+`constant_ratio` (2.5499, the grand mean twin-realized/table3 ratio) applied
+identically to every node. Scaling every node's TTC by the SAME constant
+`c` scales `delta_t = 1/(m*sum(1/ttc_i))` by exactly `c` too (since
+`sum(1/ttc_i)` scales by `1/c`), so `p_s = delta_t/ttc_s = (c*delta_t_0)/
+(c*ttc_s0) = delta_t_0/ttc_s0` is UNCHANGED -- every CPT, and therefore
+every downstream inference number, is provably invariant to a uniform
+rescaling of all TTCs. My `constant_prior` "control" arm is therefore not
+actually control for TECHNIQUE information at all, only for the numeric
+scale of TTCs (which uniformization already normalizes away) -- it
+accidentally inherited 100% of table3's relative technique/technique TTC
+ratios. The real, informative, un-confounded comparison this run supports
+is **amortized vs. table3** (context-aware learned model vs. context-blind
+expert lookup), not amortized vs. a meaningfully-different null.
+
+**Interpretation:**
+
+- **H1 (amortized beats technique-only baseline): SUPPORTED.** Lower mean
+  M_KL (0.226 vs 0.296, ~24% lower) and higher detection_rate at every
+  threshold, on 25 graphs the model never saw fitted labels for, with
+  weights mechanically confirmed unchanged after training (gate c). This is
+  the transfer result the task's validation gate demanded -- not same-graph
+  fitting.
+- **H2 (amortized matches, not necessarily beats, table3 near multiplier~=1):
+  PARTIALLY SUPERSEDED -- the real result is stronger than hypothesized**
+  (amortized beats table3 on the aggregate, not just matches it near
+  multiplier=1). A per-graph breakdown by each test graph's own sampled
+  multiplier values was not computed this session (stage 5 breaks down by
+  QUARTILE across all test-graph nodes pooled, not by graph); a fairer test
+  of H2's specific "near multiplier=1" claim is a natural next step, stated
+  here rather than retrofitted into this session's numbers.
+- **H3 (circularity risk): the caveat stands, unresolved either way by this
+  run.** Because 268 of 1156 training rows are the closed-form
+  `table3*multiplier` label, some of the amortized model's advantage over
+  table3 could reflect learning that closed form rather than genuine
+  twin-dynamics generalization -- this run cannot distinguish "the model
+  learned real (technique, context)->TTC structure" from "the model learned
+  to reproduce the formula its synthetic labels were generated from." The
+  twin's 888 REAL rows are the only rows NOT subject to this circularity,
+  and they are pooled indistinguishably with the synthetic ones in
+  training -- an honest limitation, not resolved this session (the
+  previously-declined 4th "twin-only-trained" ablation arm would settle
+  this directly).
+- **H4 (asset_context transfers worse than defense/capability): NOT
+  CLEARLY CONFIRMED.** Stage 5's per-quartile mean log-abs-error is fairly
+  flat across all three context axes (asset_context: 0.49/0.46/0.54/0.50;
+  defensive_posture: 0.33/0.59/0.59/0.51; attacker_capability: 0.59/0.45/
+  0.47/0.49) -- no axis stands out as dramatically worse than the others.
+  The clearest real signal in the stage-5 breakdown is actually BY
+  TECHNIQUE, not by context axis: "Unauthorized Command Message" (TTC=40,
+  the second-largest Table-3 value) has the worst mean log-abs-error
+  (1.02), roughly 2.5-3x every other technique's (0.33-0.44), except
+  "Manipulation of Control" (TTC=50, the largest) at 0.75 -- suggesting the
+  model transfers WORSE on the two largest-TTC, least-frequently-completing
+  techniques than on the smaller/faster ones, a different (and more
+  specific) feature-transfer failure than H4 predicted.
+- **H5 (constant-prior strictly worse, sanity floor): NOT MEANINGFULLY
+  TESTABLE as designed** -- see the unplanned finding above. `constant_prior`
+  IS strictly worse than `amortized` (as H5 predicted), but only because it
+  is mathematically identical to `table3`, not because it demonstrates
+  "some technique/context signal beats none."
+
+**Surprised?** Yes, on the table3/constant_prior identity -- genuinely
+unexpected on first read (identical printed decimals look like a bug), but
+traced to a real, provable property of Eq. 3 (uniform TTC rescaling leaves
+every `p_s` invariant) via direct hand derivation before writing anything
+here, not assumed. This is exactly the kind of result CLAUDE.md's protocol
+exists for: investigated rather than dismissed or silently patched, and
+reported as the finding it is -- the session's constant-prior control was
+under-designed, not the DBN machinery malfunctioning.

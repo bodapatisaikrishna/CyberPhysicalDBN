@@ -393,6 +393,31 @@ def _apply_latched_reactions(graph: nx.DiGraph) -> None:
         graph.nodes[reaction]["latch"] = latch
 
 
+def technique_table3_ttc() -> dict[str, float]:
+    """`{mitre_technique: table3_ttc}`, derived from `_NODE_DEFS` (never
+    hand-copied) -- the single source of truth `src/attack_graph/family.py`
+    (Session 8, claim C2) uses both to synthesize family-graph ground-truth
+    TTCs and, unmodified, as the "expert Table-3" baseline arm in
+    `experiments/exp08_transfer_c2.py`. Raises if a technique somehow maps
+    to two different TTCs across the timed nodes that use it (true today --
+    e.g. `UnsecCred1`/`UnsecCred2`/`UnsecCred` all share `Fraction(1,3)` --
+    but asserted here rather than silently assumed)."""
+    out: dict[str, float] = {}
+    for name, attrs in _NODE_DEFS.items():
+        technique = attrs.get("mitre_technique")
+        ttc = attrs.get("ttc")
+        if technique is None or ttc is None:
+            continue
+        ttc = float(ttc)
+        if technique in out and out[technique] != ttc:
+            raise ValueError(
+                f"technique {technique!r} maps to inconsistent TTCs: "
+                f"{out[technique]} (earlier node) vs {ttc} (node {name!r})"
+            )
+        out[technique] = ttc
+    return out
+
+
 def undetermined_fields() -> dict[str, str]:
     """Node attributes left None because the source paper does not supply them.
 

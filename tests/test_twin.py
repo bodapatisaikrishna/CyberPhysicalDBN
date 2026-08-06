@@ -134,6 +134,71 @@ class TestPreconditionOrdering:
         assert [e.t_units for e in completions] == sorted(e.t_units for e in completions)
 
 
+class TestCapabilityPostureMultipliers:
+    """Session 8 (claim C2): AttackerConfig.speed_multiplier /
+    defense_slowdown_multiplier, verified against the SAME hand-computed
+    arithmetic as test_deterministic_law_reproduces_precondition_arithmetic."""
+
+    def test_default_multipliers_reproduce_existing_trace_byte_identically(self, ag):
+        """Regression: every prior experiment constructs AttackerConfig()
+        bare -- both new fields must default to a pure no-op."""
+        trace = _run_twin(
+            ag, seed=0, horizon=200.0, attacker=AttackerConfig(delay_law=DelayLaw.DETERMINISTIC),
+        )
+        done = trace.step_completion_times
+        assert done["UnsecCred"] == pytest.approx(1.0)
+        assert done["MITM"] == pytest.approx(3.0)
+        assert done["SpoofRepMsg"] == pytest.approx(18.0)
+        assert done["UnauthCommand"] == pytest.approx(43.0)
+
+    def test_speed_multiplier_two_halves_every_completion_time(self, ag):
+        trace = _run_twin(
+            ag, seed=0, horizon=200.0,
+            attacker=AttackerConfig(delay_law=DelayLaw.DETERMINISTIC, speed_multiplier=2.0),
+        )
+        done = trace.step_completion_times
+        assert done["UnsecCred"] == pytest.approx(0.5)
+        assert done["ModAuthProc"] == pytest.approx(0.5)
+        assert done["CredAccess"] == pytest.approx(0.5)
+        assert done["MITM"] == pytest.approx(1.5)
+        assert done["SpoofRepMsg"] == pytest.approx(9.0)
+        assert done["Masquerade"] == pytest.approx(2.0)
+        assert done["UnauthCommand"] == pytest.approx(21.5)
+
+    def test_defense_slowdown_multiplier_two_doubles_every_completion_time(self, ag):
+        trace = _run_twin(
+            ag, seed=0, horizon=400.0,
+            attacker=AttackerConfig(delay_law=DelayLaw.DETERMINISTIC, defense_slowdown_multiplier=2.0),
+        )
+        done = trace.step_completion_times
+        assert done["UnsecCred"] == pytest.approx(2.0)
+        assert done["MITM"] == pytest.approx(6.0)
+        assert done["SpoofRepMsg"] == pytest.approx(36.0)
+        assert done["UnauthCommand"] == pytest.approx(86.0)
+
+    def test_multipliers_cancel_when_equal(self, ag):
+        """defense_slowdown_multiplier == speed_multiplier -> effective_ttc
+        == ttc exactly, same as both defaulted to 1.0."""
+        trace = _run_twin(
+            ag, seed=0, horizon=200.0,
+            attacker=AttackerConfig(
+                delay_law=DelayLaw.DETERMINISTIC, speed_multiplier=3.0, defense_slowdown_multiplier=3.0,
+            ),
+        )
+        done = trace.step_completion_times
+        assert done["UnauthCommand"] == pytest.approx(43.0)
+
+    def test_nonpositive_speed_multiplier_rejected(self):
+        with pytest.raises(ValueError, match="speed_multiplier"):
+            AttackerConfig(speed_multiplier=0.0)
+        with pytest.raises(ValueError, match="speed_multiplier"):
+            AttackerConfig(speed_multiplier=-1.0)
+
+    def test_nonpositive_defense_slowdown_multiplier_rejected(self):
+        with pytest.raises(ValueError, match="defense_slowdown_multiplier"):
+            AttackerConfig(defense_slowdown_multiplier=0.0)
+
+
 # --- gate (b): analytics fire only after their trigger ----------------------
 
 

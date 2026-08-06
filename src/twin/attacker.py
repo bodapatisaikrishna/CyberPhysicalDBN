@@ -76,6 +76,23 @@ class AttackerConfig:
         "ModCtrlLogic",
         "ModifyProgram",
     )
+    # Session 8 (claim C2, LAB_NOTEBOOK.md 2026-08-05): the two axes
+    # exp08_transfer_c2.py sweeps to measure how realized attack-step
+    # duration depends on attacker capability and defensive posture, so the
+    # amortized TTC model has real (not synthetic-only) supervision for
+    # both. Multiplicative on the node's own expert TTC -- never a new
+    # distribution, only a rescaled mean of the SAME delay_law:
+    # effective_ttc = ttc * defense_slowdown_multiplier / speed_multiplier.
+    speed_multiplier: float = 1.0  # attacker capability: >1 faster/skilled
+    defense_slowdown_multiplier: float = 1.0  # defensive posture: >1 hardened/monitored, slows the attacker
+
+    def __post_init__(self) -> None:
+        if self.speed_multiplier <= 0:
+            raise ValueError(f"speed_multiplier must be positive, got {self.speed_multiplier}")
+        if self.defense_slowdown_multiplier <= 0:
+            raise ValueError(
+                f"defense_slowdown_multiplier must be positive, got {self.defense_slowdown_multiplier}"
+            )
 
 
 class ScriptedAttacker:
@@ -162,7 +179,8 @@ class ScriptedAttacker:
         self._log(EventKind.PRECONDITION_SATISFIED, node)
 
         ttc = float(self.ag.nodes[node]["ttc"])
-        delay = self.config.delay_law.sample(ttc, self.rng_delays)
+        effective_ttc = ttc * self.config.defense_slowdown_multiplier / self.config.speed_multiplier
+        delay = self.config.delay_law.sample(effective_ttc, self.rng_delays)
         yield self.env.timeout(delay)
 
         self._complete(node, detail=f"delay={delay:.4f}")
