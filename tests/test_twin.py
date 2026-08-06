@@ -199,6 +199,62 @@ class TestCapabilityPostureMultipliers:
             AttackerConfig(defense_slowdown_multiplier=0.0)
 
 
+class TestExcludedNodes:
+    """Session 9 (claim C3): AttackerConfig.excluded_nodes, the mechanism
+    src/twin/rl_attacker.py's action space uses to express path avoidance
+    (which of SpoofRepMsg/UnauthCommand to pursue at the MITM branch)."""
+
+    def test_default_excluded_nodes_reproduce_existing_trace_byte_identically(self, ag):
+        """Regression: every prior experiment constructs AttackerConfig()
+        bare -- the new field must default to a pure no-op."""
+        trace = _run_twin(
+            ag, seed=0, horizon=200.0, attacker=AttackerConfig(delay_law=DelayLaw.DETERMINISTIC),
+        )
+        done = trace.step_completion_times
+        assert done["UnsecCred"] == pytest.approx(1.0)
+        assert done["MITM"] == pytest.approx(3.0)
+        assert done["SpoofRepMsg"] == pytest.approx(18.0)
+        assert done["UnauthCommand"] == pytest.approx(43.0)
+
+    def test_excluding_spoofrepmsg_removes_it_and_corrreact(self, ag):
+        trace = _run_twin(
+            ag, seed=0, horizon=200.0,
+            attacker=AttackerConfig(delay_law=DelayLaw.DETERMINISTIC, excluded_nodes=frozenset({"SpoofRepMsg"})),
+        )
+        done = trace.step_completion_times
+        assert "SpoofRepMsg" not in done
+        assert "CorrReact" not in done  # SpoofRepMsg is CorrReact's only precondition
+        assert done["UnauthCommand"] == pytest.approx(43.0)  # unaffected, separate branch
+
+    def test_excluding_unauthcommand_blocks_both_incoming_paths(self, ag):
+        trace = _run_twin(
+            ag, seed=0, horizon=200.0,
+            attacker=AttackerConfig(delay_law=DelayLaw.DETERMINISTIC, excluded_nodes=frozenset({"UnauthCommand"})),
+        )
+        done = trace.step_completion_times
+        assert "UnauthCommand" not in done
+        assert done["Masquerade"] == pytest.approx(4.0)  # its own path unaffected
+        assert done["SpoofRepMsg"] == pytest.approx(18.0)  # its own path unaffected
+
+    def test_excluding_root_overrides_enabled_roots(self, ag):
+        """excluded_nodes takes precedence even when the node is listed in
+        enabled_roots -- exclusion is unconditional, checked first."""
+        trace = _run_twin(
+            ag, seed=0, horizon=200.0,
+            attacker=AttackerConfig(delay_law=DelayLaw.DETERMINISTIC, excluded_nodes=frozenset({"ModCtrlLogic"})),
+        )
+        done = trace.step_completion_times
+        assert "ModCtrlLogic" not in done
+        assert "WrongLogicExec" not in done
+
+    def test_validate_trace_passes_under_exclusion(self, ag):
+        trace = _run_twin(
+            ag, seed=1, horizon=200.0,
+            attacker=AttackerConfig(excluded_nodes=frozenset({"SpoofRepMsg", "ModifyProgram"})),
+        )
+        assert validate_trace(trace, ag) == []
+
+
 # --- gate (b): analytics fire only after their trigger ----------------------
 
 

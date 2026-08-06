@@ -85,6 +85,16 @@ class AttackerConfig:
     # effective_ttc = ttc * defense_slowdown_multiplier / speed_multiplier.
     speed_multiplier: float = 1.0  # attacker capability: >1 faster/skilled
     defense_slowdown_multiplier: float = 1.0  # defensive posture: >1 hardened/monitored, slows the attacker
+    # Session 9 (claim C3, LAB_NOTEBOOK.md 2026-08-06): generalizes
+    # enabled_roots' root-only exclusion to ANY attack_step node, so
+    # src/twin/rl_attacker.py's RL action can express "avoid this graph
+    # node entirely" (e.g. the MITM branch choice between SpoofRepMsg/
+    # UnauthCommand) without any new SimPy process/event mechanism -- an
+    # excluded node's process just returns early, so any child waiting on
+    # it via env.any_of([...]) resolves through its OTHER parent instead,
+    # exactly matching real path-avoidance semantics. Empty by default --
+    # pure no-op, byte-identical to every prior session's behavior.
+    excluded_nodes: frozenset[str] = field(default_factory=frozenset)
 
     def __post_init__(self) -> None:
         if self.speed_multiplier <= 0:
@@ -171,6 +181,8 @@ class ScriptedAttacker:
             yield from self._attack_step_process(node)
 
     def _attack_step_process(self, node: str):
+        if node in self.config.excluded_nodes:
+            return  # RL-excluded node (Session 9): never launches, regardless of preconditions/roots
         if not self._preconditions(node) and node not in self.config.enabled_roots:
             return  # a disabled root never launches
 
