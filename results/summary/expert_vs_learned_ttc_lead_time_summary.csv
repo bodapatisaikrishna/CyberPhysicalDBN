@@ -1,0 +1,10 @@
+arm,threshold,n_runs,n_detected_before,n_detected_after,n_missed,n_false_alarm,n_no_event,detection_rate,false_alarm_rate,n_lead_defined,lead_median_slices,lead_p10_slices,lead_p90_slices,lead_mean_slices,git_sha,source_file,ablation_axis
+amortized,0.5,25,1,9,0,0,15,1.0,0.0,10,0.0,-30.0,0.0,-3.2,446cdf8953872b7380ab07baa902553c29ec24d4-dirty,exp08_lead_time_summary_20260806T044635Z.csv,expert_vs_learned_ttc
+amortized,0.9,25,0,8,2,0,15,0.8,0.0,8,0.0,-2.0,0.0,-0.5,446cdf8953872b7380ab07baa902553c29ec24d4-dirty,exp08_lead_time_summary_20260806T044635Z.csv,expert_vs_learned_ttc
+amortized,0.99,25,0,7,3,0,15,0.7,0.0,7,0.0,-6.0,0.0,-1.7142857142857142,446cdf8953872b7380ab07baa902553c29ec24d4-dirty,exp08_lead_time_summary_20260806T044635Z.csv,expert_vs_learned_ttc
+table3,0.5,25,0,8,2,0,15,0.8,0.0,8,0.0,-38.0,0.0,-4.875,446cdf8953872b7380ab07baa902553c29ec24d4-dirty,exp08_lead_time_summary_20260806T044635Z.csv,expert_vs_learned_ttc
+table3,0.9,25,0,7,3,0,15,0.7,0.0,7,0.0,-16.0,0.0,-3.2857142857142856,446cdf8953872b7380ab07baa902553c29ec24d4-dirty,exp08_lead_time_summary_20260806T044635Z.csv,expert_vs_learned_ttc
+table3,0.99,25,0,6,4,0,15,0.6,0.0,6,0.0,-16.0,0.0,-2.8333333333333335,446cdf8953872b7380ab07baa902553c29ec24d4-dirty,exp08_lead_time_summary_20260806T044635Z.csv,expert_vs_learned_ttc
+constant_prior,0.5,25,0,8,2,0,15,0.8,0.0,8,0.0,-38.0,0.0,-4.875,446cdf8953872b7380ab07baa902553c29ec24d4-dirty,exp08_lead_time_summary_20260806T044635Z.csv,expert_vs_learned_ttc
+constant_prior,0.9,25,0,7,3,0,15,0.7,0.0,7,0.0,-16.0,0.0,-3.2857142857142856,446cdf8953872b7380ab07baa902553c29ec24d4-dirty,exp08_lead_time_summary_20260806T044635Z.csv,expert_vs_learned_ttc
+constant_prior,0.99,25,0,6,4,0,15,0.6,0.0,6,0.0,-16.0,0.0,-2.8333333333333335,446cdf8953872b7380ab07baa902553c29ec24d4-dirty,exp08_lead_time_summary_20260806T044635Z.csv,expert_vs_learned_ttc
