@@ -1,0 +1,14 @@
+/Users/bodapati/Downloads/CyberPhysicalDBN/.venv/lib/python3.11/site-packages/pgmpy/estimators/__init__.py:4: FutureWarning: `pgmpy.estimators.StructureScore` is deprecated and will be removed in v1.3.0. Use `pgmpy.structure_score` instead.
+  from .StructureScore import (
+min TTC across 11 timed nodes: 0.333333 time units
+
+m=0.333333 delta_t=0.205315 n_slices=974 max_p_s=0.6159
+  running FF ...
+    mean_latency=0.2239s peak_tracemalloc=204.63MB rss_delta=-121.73MB
+  running EX ...
+    mean_latency=0.2681s peak_tracemalloc=204.07MB rss_delta=69.68MB
+
+m=1.000000 delta_t=0.068438 n_slices=2922 max_p_s=0.2053
+  running FF ...
+    mean_latency=0.2665s peak_tracemalloc=205.70MB rss_delta=-72.07MB
+  running EX ...

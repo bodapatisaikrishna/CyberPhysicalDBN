@@ -1,0 +1,147 @@
+/Users/bodapati/Downloads/CyberPhysicalDBN/.venv/lib/python3.11/site-packages/pgmpy/estimators/__init__.py:4: FutureWarning: `pgmpy.estimators.StructureScore` is deprecated and will be removed in v1.3.0. Use `pgmpy.structure_score` instead.
+  from .StructureScore import (
+stage 0: asset graph ...
+
+stage 1: data generation ...
+  train: 60 scenarios ...
+    train 1/60 done
+    train 2/60 done
+    train 3/60 done
+    train 4/60 done
+    train 5/60 done
+    train 6/60 done
+    train 7/60 done
+    train 8/60 done
+    train 9/60 done
+    train 10/60 done
+    train 11/60 done
+    train 12/60 done
+    train 13/60 done
+    train 14/60 done
+    train 15/60 done
+    train 16/60 done
+    train 17/60 done
+    train 18/60 done
+    train 19/60 done
+    train 20/60 done
+    train 21/60 done
+    train 22/60 done
+    train 23/60 done
+    train 24/60 done
+    train 25/60 done
+    train 26/60 done
+    train 27/60 done
+    train 28/60 done
+    train 29/60 done
+    train 30/60 done
+    train 31/60 done
+    train 32/60 done
+    train 33/60 done
+    train 34/60 done
+    train 35/60 done
+    train 36/60 done
+    train 37/60 done
+    train 38/60 done
+    train 39/60 done
+    train 40/60 done
+    train 41/60 done
+    train 42/60 done
+    train 43/60 done
+    train 44/60 done
+    train 45/60 done
+    train 46/60 done
+    train 47/60 done
+    train 48/60 done
+    train 49/60 done
+    train 50/60 done
+    train 51/60 done
+    train 52/60 done
+    train 53/60 done
+    train 54/60 done
+    train 55/60 done
+    train 56/60 done
+    train 57/60 done
+    train 58/60 done
+    train 59/60 done
+    train 60/60 done
+  val: 20 scenarios ...
+    val 1/20 done
+    val 2/20 done
+    val 3/20 done
+    val 4/20 done
+    val 5/20 done
+    val 6/20 done
+    val 7/20 done
+    val 8/20 done
+    val 9/20 done
+    val 10/20 done
+    val 11/20 done
+    val 12/20 done
+    val 13/20 done
+    val 14/20 done
+    val 15/20 done
+    val 16/20 done
+    val 17/20 done
+    val 18/20 done
+    val 19/20 done
+    val 20/20 done
+  calib: 20 scenarios ...
+    calib 1/20 done
+    calib 2/20 done
+    calib 3/20 done
+    calib 4/20 done
+    calib 5/20 done
+    calib 6/20 done
+    calib 7/20 done
+    calib 8/20 done
+    calib 9/20 done
+    calib 10/20 done
+    calib 11/20 done
+    calib 12/20 done
+    calib 13/20 done
+    calib 14/20 done
+    calib 15/20 done
+    calib 16/20 done
+    calib 17/20 done
+    calib 18/20 done
+    calib 19/20 done
+    calib 20/20 done
+  test: 30 scenarios ...
+    test 1/30 done
+    test 2/30 done
+    test 3/30 done
+    test 4/30 done
+    test 5/30 done
+    test 6/30 done
+    test 7/30 done
+    test 8/30 done
+    test 9/30 done
+    test 10/30 done
+    test 11/30 done
+    test 12/30 done
+    test 13/30 done
+    test 14/30 done
+    test 15/30 done
+    test 16/30 done
+    test 17/30 done
+    test 18/30 done
+    test 19/30 done
+    test 20/30 done
+    test 21/30 done
+    test 22/30 done
+    test 23/30 done
+    test 24/30 done
+    test 25/30 done
+    test 26/30 done
+    test 27/30 done
+    test 28/30 done
+    test 29/30 done
+    test 30/30 done
+  train base rates: {'MeasureCoherence': 0.9064866112650046, 'CommandCoherence': 0.7827562326869806, 'PhysLocalDER': 0.03894275161588181, 'PhysWideArea': 0.8668975069252077}
+
+stage 2: training (gnn, then mlp) ...
+  training gnn ...
+    epoch 1/30 train_loss=2.6080 val_loss=1.0720
+    epoch 2/30 train_loss=1.5183 val_loss=0.5560
+    epoch 3/30 train_loss=0.9279 val_loss=0.4406
+    epoch 4/30 train_loss=0.5319 val_loss=0.4003
