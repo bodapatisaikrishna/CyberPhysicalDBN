@@ -1,0 +1,149 @@
+# Claim C3 adversarial-RL configuration (CLAUDE.md layer [0]/[3], Session 9).
+# `m` for EVAL fidelity is NOT read from configs/base.yaml here -- eval uses
+# the exp01/exp04 delta_t_override directly (see fidelity.eval below), same
+# convention those scripts already use. `p_pos`/`p_neg` mirror exp01/exp04's
+# Table-2 defaults.
+
+attack_graph:
+  # Cyber-only (no physical_evidence): the "proposed system" for this
+  # session is the hard-evidence DBN, matching exp01/exp04 exactly (user-
+  # approved binding decision 2, LAB_NOTEBOOK.md 2026-08-06). No zones/
+  # consequence-classification infrastructure needed -- discretize(zones=None)
+  # already gives a real measured grid_unstable via GridState.unstable.
+  reaction_mode: "memoryless"
+
+fidelity:
+  train:
+    # Coarsest VALID discretization for this graph (LAB_NOTEBOOK.md
+    # 2026-08-06 arithmetic): UnsecCred1/2/UnsecCred's T_bar=1/3 time unit
+    # hard-bounds delta_t<=1/3 (else p_s>1, an invalid CPT). m=0.22 ->
+    # delta_t=1/(0.22*8767/600)=0.311083, max p_s=0.933 (UnsecCred*),
+    # comfortably valid. Horizon (not m) is the real lever for cutting
+    # training cost -- 10.0 time units keeps N_SLICES_TRAIN=round(10/
+    # 0.311083)=32, small enough for thousands of PPO episodes in a
+    # session, while remaining long enough for fast/mid chains to plausibly
+    # complete (the two very-slow branches, T_bar=15/40/50, remain
+    # reachable specifically via the speed_multiplier=2.0 stealth action).
+    m: 0.22
+    horizon_time_units: 10.0
+  eval:
+    # Identical to experiments/exp01_reproduce_paper.py / exp04_closed_loop_c1.py,
+    # unchanged -- the numbers that actually get reported in the
+    # robustness curve.
+    delta_t_override: 0.2768833333333333   # 166.13/600
+    n_slices: 722
+    horizon_time_units: 200.0
+
+analytics:
+  p_pos: 1.0e-4
+  p_neg: 1.0e-4
+
+reward:
+  w_goal: 1.0
+  w_detect: 1.0
+  w_time: 0.1
+
+action_space:
+  speed_multipliers: [0.5, 1.0, 2.0]
+
+knowledge_levels: ["blind", "analytics", "full_dbn"]
+
+ppo:
+  # Same budget for ALL THREE knowledge levels -- unequal training budgets
+  # would confound the robustness curve (LAB_NOTEBOOK.md 2026-08-06).
+  # n_episodes_train == total_timesteps for this bandit env (1 env step ==
+  # 1 episode). REVISE per --smoke's measured real wall-clock time before
+  # committing to the full run; if projected full-run time exceeds ~90 min,
+  # halve this and log the revision explicitly in LAB_NOTEBOOK.md.
+  n_episodes_train: 2048
+  n_steps: 64
+  batch_size: 64
+  n_epochs: 10
+  learning_rate: 3.0e-4
+  gamma: 0.99
+  gae_lambda: 0.95
+  ent_coef: 0.01
+  clip_range: 0.2
+  net_arch: [32, 32]
+
+# Baseline training (Session 6 detectors), ONCE, never per knowledge level,
+# on DEFAULT-scripted-attacker scenarios (never RL-driven -- a defender's
+# training corpus must not be overfit to this session's specific RL
+# policy). Search budgets scoped WAY down from configs/baselines.yaml
+# (baselines are a secondary comparison arm here, not this session's
+# primary contribution) -- same "selected: null until the search actually
+# runs" discipline.
+baseline_training:
+  n_train_scenarios: 20
+  n_val_scenarios: 8
+  rule_based:
+    window_slices_sweep: [1, 5, 10, 20, 63]
+  gbm:
+    n_search_trials: 6
+    search_space:
+      max_iter: [50, 100]
+      max_depth: [null, 5]
+      learning_rate: [0.03, 0.1, 0.3]
+      l2_regularization: [0.0, 1.0]
+      max_leaf_nodes: [15, 31]
+    selected: null
+  lstm_ae:
+    window_slices: 63
+    n_search_trials: 6
+    search_space:
+      hidden_dim: [16, 32]
+      latent_dim: [8, 16]
+      n_layers: [1, 2]
+      dropout: [0.0, 0.1]
+      learning_rate: [1.0e-3, 3.0e-4]
+    n_epochs: 15
+    batch_size: 32
+    grad_clip_norm: 1.0
+    early_stopping_patience_epochs: 5
+    scaler_fit_split: "val_nominal_prefix"
+    selected: null
+  gnn_classifier:
+    n_search_trials: 4
+    search_scenario_subset: {n_train: 6, n_val: 4}
+    search_space:
+      conv_type: ["gat", "sage"]
+      n_layers: [1, 2]
+      hidden: [32, 64]
+      heads: [2, 4]
+      dropout: [0.0, 0.1]
+      sage_aggr: ["mean", "max"]
+      temporal_kernel_size: [5, 9]
+    n_epochs: 8
+    batch_size: 4
+    learning_rate: 1.0e-3
+    weight_decay: 1.0e-5
+    grad_clip_norm: 1.0
+    early_stopping_patience_epochs: 3
+    selected: null
+
+evaluation:
+  # This project's own "minimum 30 scenarios" convention (CLAUDE.md/exp04).
+  n_episodes_per_knowledge_level: 30
+  thresholds_start: 0.05
+  thresholds_stop: 1.0
+  thresholds_step: 0.02
+
+smoke:
+  fidelity_train:
+    horizon_time_units: 3.0
+  ppo:
+    n_episodes_train: 32
+    n_steps: 8
+    batch_size: 8
+    n_epochs: 2
+  baseline_training:
+    n_train_scenarios: 3
+    n_val_scenarios: 2
+    gbm: {n_search_trials: 2}
+    lstm_ae: {n_search_trials: 2, n_epochs: 3}
+    gnn_classifier:
+      n_search_trials: 2
+      search_scenario_subset: {n_train: 2, n_val: 2}
+      n_epochs: 2
+  evaluation:
+    n_episodes_per_knowledge_level: 3

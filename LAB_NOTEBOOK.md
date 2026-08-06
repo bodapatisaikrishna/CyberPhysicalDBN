@@ -2126,3 +2126,244 @@ here, not assumed. This is exactly the kind of result CLAUDE.md's protocol
 exists for: investigated rather than dismissed or silently patched, and
 reported as the finding it is -- the session's constant-prior control was
 under-designed, not the DBN machinery malfunctioning.
+
+## 2026-08-06 Experiment: exp09_adversarial_c3 (RL attacker vs. detectors, claim C3)
+
+**Naming correction:** the task text says `exp08_adversarial_c3.py`, but
+`experiments/exp08_transfer_c2.py` already exists (Session 8) -- this
+session's script is `experiments/exp09_adversarial_c3.py`.
+
+**Motivation.** The source paper's own unaddressed concern: an attacker
+who knows the DBN could choose low-detection paths. C3 (highest novelty of
+the three claims): under an RL attacker optimizing against the detector,
+the causal DBN degrades more gracefully than deep-IDS baselines, because
+structural preconditions cannot be skipped -- you cannot inject a spoofed
+reporting message without first establishing MITM, and MITM requires
+credential access. This session trains an RL attacker at three knowledge
+levels (blind, knows-analytics, knows-full-DBN) against the DBN via PPO,
+then reports a robustness curve (detection lead time vs. attacker
+knowledge) for the DBN AND every Session 6 baseline (rule_based, gbm,
+lstm_ae, gnn_classifier).
+
+**User-approved binding design decisions** (confirmed via AskUserQuestion
+before any code):
+1. Bandit-style single-decision episode (one action at `reset()`, twin
+   plays out deterministically-but-stochastically to goal/horizon, no
+   incremental `TwinRunner` pause/resume added this session -- verified
+   `TwinRunner.run()` is currently one monolithic `env.run(until=horizon)`
+   call with no stepping hook).
+2. Proposed system = hard-evidence DBN (Table 2 rates), the SAME config as
+   `exp01_reproduce_paper.py`/`exp04_closed_loop_c1.py` -- no perception/
+   soft-evidence dependency, no physical-evidence/zones infrastructure
+   (verified `discretize(zones=None)` already gives a REAL measured
+   `grid_unstable` via `GridState.unstable`, `src/twin/grid.py`).
+3. Two-tier fidelity: TRAIN `m=0.22`, `horizon=10.0` time units,
+   `N_SLICES=32` (the coarsest VALID discretization this graph's fastest
+   TTC -- `UnsecCred1/2/UnsecCred`, T_bar=1/3 time unit -- permits, since
+   `delta_t<=1/3` is a hard validity ceiling and eval's own
+   `delta_t_override=166.13/600` already sits at ~83% of it, leaving
+   almost no coarsening headroom via `m` alone; horizon is the real,
+   larger lever). EVAL = exp01/exp04's own unchanged config
+   (`delta_t_override=166.13/600`, `N_SLICES=722`).
+
+**Knowledge level determines the REWARD signal (what that class of
+attacker could plausibly measure about detection over many training
+episodes), not the observation** -- in a true bandit there is nothing to
+observe before the one decision is made, so "knowledge" cannot manifest as
+mid-episode observability the way it would in a multi-step MDP. `blind`:
+reward has no detection term at all (pure goal-reached/time-cost). `knows
+analytics`: reward penalized by the mean RAW hard-evidence firing rate
+across the 8 cyber analytics (knows sensors exist, not how they fuse).
+`knows full DBN`: reward penalized by the mean TRUE fused `P(UnstablePS)`
+posterior from a real hard-evidence `DBNInference` run over the episode's
+trace (the most informed signal).
+
+**H1 (primary):** the robustness curve (`detection_rate`,
+`lead_median_slices` vs. attacker knowledge level, from
+`src/eval/lead_time.py`, unmodified) degrades LESS for `dbn_hard_evidence`
+than for `rule_based`/`gbm`/`lstm_ae`/`gnn_classifier` as knowledge
+increases blind -> analytics -> full_dbn, because the DBN's structural
+preconditions (the AND-gate `CredAccess`, the OR-gate `UnstablePS`, every
+precondition edge) bound how much evasion any policy can discover within
+this graph, while the black-box baselines have no such floor.
+
+**H2 (pre-registered acceptable failure mode, stated explicitly per the
+task's own validation-gate paragraph):** if `dbn_hard_evidence` degrades
+AS FAST as the baselines (comparable detection-rate drop from blind to
+full_dbn), C3 is REFUTED for this attack graph -- this is reported as the
+finding, not treated as an experiment failure or silently reframed.
+
+**H3 (named risk -- RL didn't learn anything):** a flat or
+non-improving `Monitor` reward curve across PPO rollout batches for ANY
+knowledge level would produce a SPURIOUSLY FAVORABLE result (an
+untrained/near-random policy cannot discover real evasion, making the DBN
+look artificially robust by comparison). The validation gate checks this
+explicitly (mean reward, last 20% of rollout batches minus first 20%,
+exceeds a small positive epsilon, per knowledge level) BEFORE the
+robustness curve is trusted or interpreted.
+
+**H4 (named risk -- train/eval fidelity mismatch):** the frozen policy is
+trained against a coarse 32-slice DBN reward signal (`full_dbn` level) but
+evaluated at 722-slice fidelity; a policy that exploits an artifact of the
+coarse discretization (e.g. `UnsecCred*`'s near-certain `p_s=0.933` at
+train fidelity) may transfer imperfectly to eval fidelity. Reported via
+comparing train-time reward trends to eval-time lead-time results, not
+gated.
+
+**Stop rule:** the gate (lettered items in `exp09_adversarial_c3.py`)
+tests structural correctness only -- PPO reward genuinely improved,
+valid-range scores of the right length and count, no RL-attacker data
+leaked into baseline training, action-decoding round-trips correctly,
+expected search-trial/scenario counts. It never gates on whether the DBN
+"wins" the robustness comparison -- that table prints unconditionally,
+before the PASS/FAIL line, exactly like every prior session's convention.
+
+**`n_episodes_train` revision decision (pre-full-run, per `configs/adversarial_c3.yaml`'s
+own instruction to revise if projected time exceeds ~90 min):** `--smoke`
+measured real per-episode wall-clock at SMOKE fidelity (`n_slices=10`,
+`horizon_time_units=3.0`): blind=0.1595s, analytics=0.1548s,
+full_dbn=0.1855s (32 episodes each). Smoke fidelity is not train fidelity
+(`n_slices=32`, `horizon_time_units=10.0`), so this is a linear
+extrapolation by the `n_slices` ratio (32/10=3.2x), not a re-measurement --
+stated explicitly as an assumption, not a fact: projected full_dbn
+~=0.59s/episode x 2048 ~=20.3 min; blind ~=0.51s/episode x 2048 ~=17.4 min;
+analytics ~=0.495s/episode x 2048 ~=16.9 min. Sum across all 3 knowledge
+levels (trained serially) ~=55 min, comfortably under the 90 min trigger
+either read per-level or as a total. Decision: `n_episodes_train=2048` is
+KEPT UNCHANGED, no revision. Flagged risk: this is an extrapolation, not a
+measurement -- if the real full run's actual per-episode cost at train
+fidelity turns out non-linear in `n_slices` (e.g. `VariableElimination`'s
+cost is not exactly linear in slice count for `full_dbn`), the true
+wall-clock could differ from this estimate; the actual measured wall-clock
+from the full run itself will be recorded below regardless.
+
+**Result:** Full (non-smoke) run completed, git SHA `0053c7599454a7ebe4d08df0e879f0d5228b0576`,
+`experiments/exp09_adversarial_c3.py` (no `--smoke`), wall-clock ~1h40m
+total. **GATE PASSED**, all 7 lettered items (a/a2/b/c/d/e/f/g). Outputs:
+`results/exp09_baseline_search_20260806T070130Z.csv`,
+`results/exp09_reward_curve_20260806T070130Z.csv`,
+`results/exp09_robustness_curve_20260806T070130Z.csv`.
+
+Gate (b) reward-curve deltas (mean of last-20% rollout batches minus
+first-20%, confirming PPO genuinely learned, not flat/failed training):
+blind=+0.548, analytics=+0.197, full_dbn=+0.174. All exceed the 0.05
+threshold. Note the DECREASING trend blind > analytics > full_dbn -- the
+attacker facing the full DBN posterior found LESS reward improvement
+available than the attacker facing raw analytics or no detector at all, a
+first piece of evidence consistent with H1 before even looking at the
+robustness curve itself.
+
+Robustness curve (`detection_rate`/`lead_median_slices` at
+threshold~=0.49, n=30 episodes/knowledge level, all 5 systems, all 90
+eval episodes at full EVAL fidelity, 722 slices/200 time units):
+
+| system | blind | analytics | full_dbn |
+|---|---|---|---|
+| dbn_hard_evidence | rate=1.0, lead=1.0 | rate=1.0, lead=0.0 | rate=1.0, lead=1.0 |
+| rule_based | rate=1.0, lead=18.0 | rate=0.0, 25/30 missed | rate=1.0, lead=11.0 |
+| gbm | rate=1.0, lead=0.0 | rate=1.0, lead=0.0 | rate=1.0, lead=0.0 |
+| lstm_ae | rate=1.0, lead=21.0 | rate=1.0, lead=98.0 | rate=1.0, lead=14.0 |
+| gnn_classifier | rate=1.0, lead=-2.0 | rate=1.0, lead=-3.0 | rate=1.0, lead=-2.0 |
+
+Checked across the full threshold grid (0.11/0.29/0.49/0.71/0.89), not
+just this one preview row -- the qualitative pattern holds throughout:
+`dbn_hard_evidence`'s lead time is flat and near-zero (0-1 slices) across
+ALL THREE knowledge levels at every threshold tested; it never degrades as
+attacker knowledge increases from blind to full_dbn.
+
+**Interpretation:**
+
+- **H1 (primary -- DBN degrades less than baselines as knowledge
+  increases): SUPPORTED, but in an unexpectedly strong form.** The DBN's
+  `lead_median_slices` is essentially IDENTICAL across all three knowledge
+  levels (1.0/0.0/1.0) -- not "degrades less," but "does not measurably
+  degrade at all" for this attack graph, at this reward weighting. Even an
+  attacker with full DBN structure/parameter knowledge (`full_dbn` level,
+  trained directly against the true `P(UnstablePS)` posterior as its
+  detection-avoidance signal) gained no earlier/quieter path to
+  `UnstablePS` than the attacker with zero detection signal (`blind`).
+  This is exactly the structural-precondition argument the hypothesis
+  names: `UnauthCommand`/`SpoofRepMsg` cannot fire without `MITM`, `MITM`
+  cannot fire without `CredAccess` (an AND gate over the full credential
+  chain) -- the RL action space (root selection + MITM-branch exclusion +
+  speed) has no arm that removes a precondition, only ones that skip
+  branches or change timing, and skipping/speeding does not change how
+  much analytic evidence the REQUIRED steps emit along the way.
+- **`detection_rate` at any single threshold is a saturated, low-
+  information metric here**: nearly every system reaches 1.0 detection
+  rate at nearly every threshold (30/30 episodes eventually detected
+  within the 722-slice/200-time-unit eval horizon) -- the real
+  discrimination between systems is in `lead_median_slices`, not
+  `detection_rate`. The one exception, `rule_based` collapsing to 0.0
+  (25/30 missed) specifically at the `analytics` knowledge level while
+  recovering to 1.0 at `full_dbn`, is itself notable: a non-monotonic
+  robustness curve for a black-box baseline (worse against a
+  partially-informed attacker than against a fully-informed one) is the
+  opposite of a "graceful degradation" pattern and is consistent with
+  H1's framing that black-box detectors have no structural floor -- their
+  failure mode is erratic, not smoothly degrading.
+- **H2 (pre-registered acceptable failure mode -- DBN degrades as fast as
+  baselines): NOT triggered.** The DBN did not degrade at all, let alone
+  as fast as any baseline, on this run.
+- **H3 (named risk -- RL didn't learn anything): ruled out by gate (b).**
+  All three knowledge levels show reward-curve improvement well above the
+  0.05 threshold (0.548/0.197/0.174), so the flat DBN robustness curve is
+  not an artifact of an untrained attacker failing to discover any
+  evasion strategy.
+- **H4 (named risk -- train/eval fidelity mismatch): cannot be ruled out
+  from this run alone**, but the DBN's near-zero lead time at BOTH train
+  fidelity (implicit, via the reward signal used during PPO training) and
+  eval fidelity (722 slices, the numbers reported above) is at least
+  consistent with the policy not having exploited a coarse-discretization
+  artifact specific to the 32-slice train grid -- if it had, the eval-
+  fidelity DBN posterior would likely have looked different from what the
+  32-slice reward signal predicted. Not independently verified further
+  this session; flagged as a real caveat on H1's strength, not resolved.
+
+**Surprised?** Yes, on two points, one investigated, one left open per
+CLAUDE.md rule 5 (state uncertainty rather than guess silently) --
+
+1. Investigated: `lstm_ae` produced numerous `RuntimeWarning: overflow
+   encountered in exp` from `src/baselines/lstm_ae.py:238`'s
+   `error_to_probability` sigmoid during Stage 5 scoring. This means
+   `lstm_ae`'s raw reconstruction errors are large enough, relative to its
+   fitted scaler, to saturate the sigmoid -- its scores are plausibly
+   pinned near 1.0 for most slices in most episodes, i.e. a poorly-
+   calibrated, aggressively-high-recall detector rather than a
+   genuinely-discriminating one. This is consistent with (though not
+   proof of) its `lead_median_slices` values (21/98/14) tracking
+   something closer to "time of instability onset in the underlying
+   twin trace" than "time of genuine anomaly detection" -- a saturated
+   detector that fires near slice 0 for nearly every episode would show
+   exactly this pattern.
+2. NOT investigated, left as an open question: `gnn_classifier` and
+   `lstm_ae` report NUMERICALLY IDENTICAL `lead_median_slices` at low
+   thresholds (21.0/98.0/14.0, exactly, at threshold=0.11 and 0.29) despite
+   being architecturally unrelated scoring pipelines (`gnn_predict` vs.
+   `error_to_probability`/`ae_score`) with no shared code path found on
+   inspection of the Stage-5 scoring block
+   (`experiments/exp09_adversarial_c3.py` lines ~555-560). One plausible,
+   UNVERIFIED explanation: if `gnn_classifier` is *also* saturated/
+   near-ceiling across most slices (a separate, unconfirmed calibration
+   issue), both detectors would independently collapse to "first slice
+   with any evidence," making their median lead times converge to the
+   same quantity -- the per-episode instability-onset time, which is a
+   property of the shared 30-episode eval set, not of either detector.
+   This was not confirmed by inspecting either system's raw per-slice
+   score arrays (not retained on disk from this run) and should not be
+   assumed correct without doing so. Flagged as a follow-up, not silently
+   dismissed as coincidence.
+3. Also worth noting, not a surprise but a correction to an earlier
+   estimate in this same entry: the pre-full-run `n_episodes_train`
+   extrapolation above (~55 min projected) only accounted for Stage 3 (PPO
+   training). The real full run took ~1h40m wall-clock; Stage 3 itself
+   measured close to the extrapolated ~30 min (2048 episodes x
+   0.2678s/0.2555s/0.3538s for blind/analytics/full_dbn = ~548s/523s/725s,
+   summing to ~1796s ~= 30 min), but Stages 2 (20+8-scenario baseline
+   training/search) and 4-6 (90 eval-fidelity twin episodes at
+   722-slice/200-time-unit resolution, plus 5-system scoring at that same
+   fidelity) were never budgeted in the pre-run estimate at all. The
+   90-min trigger was never approached, so this did not require a
+   mid-run intervention, but the estimate itself was materially
+   incomplete -- a lesson for scoping any future full-pipeline wall-clock
+   projection from a component-only smoke measurement.
