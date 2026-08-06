@@ -2367,3 +2367,106 @@ CLAUDE.md rule 5 (state uncertainty rather than guess silently) --
    mid-run intervention, but the estimate itself was materially
    incomplete -- a lesson for scoping any future full-pipeline wall-clock
    projection from a component-only smoke measurement.
+
+## 2026-08-06 Experiment: exp10_m_sweep + exp11_perception_ablation (full ablation sweep, reproducibility check, consolidation, audit)
+
+**Motivation:** nine sessions each tested one claim in isolation. This
+session runs the full ablation set CLAUDE.md/the source paper call for,
+verifies reproducibility of two prior logged experiments, consolidates every
+session's results into `results/summary/`, and audits the whole repo for
+untraceable numbers. Three read-only Explore agents mapped the existing
+ablation infrastructure before any code was written (see the approved plan
+at `/Users/bodapati/.claude/plans/read-claude-md-fully-before-temporal-wadler.md`
+for full findings): 4 of 6 ablation axes (open/closed loop = exp04,
+expert/learned TTC = exp08, calibrated/uncalibrated/hard evidence = exp05
+stage 5, EX-vs-FF clustering = exp01) are already covered by existing
+single scripts that run all arms on the same scenarios -- no new code, pure
+re-presentation in the consolidated tables. CL clustering is explicitly
+out of scope (CLAUDE.md's own rejected-directions list). Two axes need new
+code this session:
+
+- **GNN vs. per-asset MLP perception encoder** (exp11) -- isolates whether
+  the GNN's graph structure is what drives detection, or whether an
+  encoder with zero message-passing does just as well on the same
+  per-asset features.
+- **Discretization m sweep** (exp10, source paper Section IV-B) -- no prior
+  experiment has ever varied `m`; `exp01_reproduce_paper.py` hardcodes
+  `DELTA_T_OVERRIDE` directly from Cerotti et al. Table 5's own m=1 value
+  rather than computing it from `m` via the general Eq. 3 formula (a
+  deliberate Session-1 choice, documented in that script at lines 67-80: the
+  general formula gives a delta_t ~4x smaller than every one of Table 5's
+  six published m-values, and the exact TTC subset that would reproduce
+  Table 5's number couldn't be uniquely determined -- a brute-force 2^11
+  subset search in Session 1 found multiple structurally-unrelated
+  node-sets tied on the identical sum). exp10 uses the general formula
+  across `m in (1/3, 1)` instead, and states explicitly that it will NOT
+  reproduce Table 5's absolute MB/seconds figures -- it tests the
+  qualitative m-dependence Section IV-B describes, not a byte-exact replay
+  of the paper's calibrated numbers.
+
+**H1 (m sweep, primary):** for EX clustering, peak memory and mean
+per-slice latency increase monotonically as `m` increases from 1/3 to 1
+(finer discretization -> more slices -> more retained state), while `M_KL(EX||FF)`
+at a given m is dominated by FF's own approximation error, not by m itself
+(consistent with CLAUDE.md's reference table treating FF's KL bound as a
+property of the clustering, not of m).
+
+**H2 (m sweep, pre-registered acceptable failure mode):** if latency/memory
+do NOT increase monotonically with m, or if KL(EX||FF) varies substantially
+with m (suggesting FF's approximation quality itself depends on
+discretization fineness, not just clustering choice), that is a valid,
+reportable finding, not a bug to be silently patched -- investigate before
+concluding either way.
+
+**H3 (GNN-vs-MLP, primary):** the GNN (`encoder_type="gnn"`) achieves
+higher perception-level AUC-PR than the per-asset MLP (`encoder_type="mlp"`)
+specifically on `PhysWideArea` (the target the encoder module's own
+docstring identifies as needing the 3-hop message-passing route between
+bus-17/bus-32-adjacent DERs and `host` -- `src/perception/encoder.py` lines
+30-36), because that signal is structurally unavailable to a
+zero-message-passing encoder. Smaller or no GNN-vs-MLP gap is expected on
+`MeasureCoherence`/`CommandCoherence` (more locally-observable at a single
+asset) and `PhysLocalDER` (local by construction).
+
+**H4 (GNN-vs-MLP, pre-registered acceptable failure mode):** if the MLP
+matches or beats the GNN on `PhysWideArea` too, that refutes H3's specific
+mechanism and is reported as the finding -- per CLAUDE.md rule 3, this is
+never gated as pass/fail, only reported.
+
+**H5 (reproducibility check):** re-running `experiments/exp01_reproduce_paper.py`
+and `experiments/exp03_twin_open_loop.py` from their existing configs/seeds
+reproduces their canonical logged CSVs' numeric columns within `rtol=1e-9`.
+Both scripts were independently assessed (2nd Explore agent) as free of
+GPU/multiprocessing/non-deterministic-BLAS risk; deviation beyond float
+tolerance would indicate an undocumented source of non-determinism and
+must be investigated, not dismissed as "close enough."
+
+**H6 (audit):** the audit already performed this session by a 3rd read-only
+Explore agent (before any plan was written, informing scope) found zero
+SUSPICIOUS hardcoded-numeric findings in docstrings/README/print-based
+summaries across the whole repo -- every result-looking decimal traced to a
+source-paper Table-2/3 constant, a config default, a test's hand-computed
+expected value, a round pre-registered gate threshold, or (for the two
+genuinely specific decimals found, `0.5079` and `0.548/0.197/0.174`) an
+exact cross-verification against both `LAB_NOTEBOOK.md` and the underlying
+`results/*.csv`. Two adjacent, real findings outside the strict
+"hardcoded numerics" definition are recorded as report-only per this
+session's binding decisions: `experiments/exp08_transfer_c2.py`'s 6 result
+CSVs have no `seed` column (CLAUDE.md rule-4 gap, not fixed this session --
+fixing means re-running its ~40 min pipeline); and the pre-provenance-fix
+`git_sha` in exp01's canonical CSV is known-wrong (predates the
+`src/eval/provenance.py` fix documented 2026-08-01), unfixable
+retroactively.
+
+**Stop rule:** exp10/exp11's own lettered gates test structural correctness
+only (valid CPTs/scores, matched splits, sufficient scenario counts) --
+never "does the GNN win" or "does m=1 look better than m=1/3." Those
+comparisons print unconditionally, reported not gated, per CLAUDE.md rule
+3. The reproducibility check (H5) and audit (H6) DO have real pass/fail
+criteria (numeric drift beyond tolerance; any newly-found SUSPICIOUS
+hardcoded numeric) -- per the user's own stated validation gate for this
+session, a failure there must be reported clearly, not hidden or
+downgraded.
+
+**Result:** _(filled in after exp10, exp11, the reproducibility check, and
+the consolidation script all complete)_

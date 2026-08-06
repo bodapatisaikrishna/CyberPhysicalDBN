@@ -211,6 +211,37 @@ class SpatialEncoder(nn.Module):
         return h
 
 
+class SpatialEncoderMLP(nn.Module):
+    """Ablation encoder (Session 10, GNN-vs-MLP axis): per-node-type MLP with
+    NO message passing, satisfying the identical `forward(x_dict,
+    edge_index_dict) -> h_dict` contract as `SpatialEncoder`. `edge_types`,
+    `heads`, and `n_layers` are accepted only to keep the constructor
+    drop-in compatible with `SpatialEncoder`'s call sites -- they are
+    otherwise unused, since there is no graph convolution to configure.
+    `edge_index_dict` is accepted but never read: this is the point of the
+    ablation, not an oversight."""
+
+    def __init__(
+        self,
+        node_types: Sequence[str],
+        edge_types: Sequence[tuple[str, str, str]],
+        *,
+        hidden: int = HIDDEN_DIM,
+        heads: int = GNN_HEADS,
+        n_layers: int = N_GNN_LAYERS,
+    ):
+        super().__init__()
+        self.node_types = list(node_types)
+        self.mlps = nn.ModuleDict(
+            {t: nn.Sequential(nn.LazyLinear(hidden), nn.GELU(), nn.LayerNorm(hidden)) for t in node_types}
+        )
+
+    def forward(
+        self, x_dict: dict[str, torch.Tensor], edge_index_dict: dict[tuple[str, str, str], torch.Tensor]
+    ) -> dict[str, torch.Tensor]:
+        return {t: self.mlps[t](x_dict[t]) for t in self.node_types}
+
+
 # --- Stage 2: typed readout --------------------------------------------------
 
 
@@ -315,6 +346,8 @@ class EncoderConfig:
     tcn_kernel_size: int = TCN_KERNEL_SIZE
     tcn_dilations: tuple[int, ...] = TCN_DILATIONS
     dropout: float = TCN_DROPOUT
+    encoder_type: str = "gnn"  # "gnn" (SpatialEncoder) or "mlp" (SpatialEncoderMLP,
+                                # Session 10 GNN-vs-MLP ablation, no message passing)
 
 
 class PerceptionEncoder(nn.Module):
@@ -323,8 +356,11 @@ class PerceptionEncoder(nn.Module):
 
     def __init__(self, config: EncoderConfig):
         super().__init__()
+        if config.encoder_type not in ("gnn", "mlp"):
+            raise ValueError(f"encoder_type must be 'gnn' or 'mlp', got {config.encoder_type!r}")
         self.config = config
-        self.spatial = SpatialEncoder(
+        spatial_cls = SpatialEncoderMLP if config.encoder_type == "mlp" else SpatialEncoder
+        self.spatial = spatial_cls(
             config.node_types, config.edge_types,
             hidden=config.hidden, heads=config.heads, n_layers=config.n_gnn_layers,
         )

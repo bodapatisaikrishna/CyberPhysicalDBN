@@ -22,6 +22,7 @@ from src.perception.encoder import (
     EncoderConfig,
     Readout,
     SpatialEncoder,
+    SpatialEncoderMLP,
     TARGETS,
     combine_static_dynamic,
     flatten_for_spatial,
@@ -350,3 +351,85 @@ class TestScaffolding:
     def test_stack_scenarios_rejects_empty(self):
         with pytest.raises(ValueError):
             stack_scenarios([])
+
+
+def _model_of_type(encoder_type: str, seed: int = 1) -> PerceptionEncoder:
+    torch.manual_seed(seed)
+    ei = _edge_index_dict(np.random.default_rng(0))
+    cfg = EncoderConfig(node_types=tuple(NODE_TYPES), edge_types=tuple(ei.keys()), encoder_type=encoder_type)
+    model = PerceptionEncoder(cfg)
+    model.eval()
+    return model
+
+
+class TestSpatialEncoderMLP:
+    def test_output_shape_matches_spatial_encoder(self):
+        torch.manual_seed(0)
+        ei = _edge_index_dict(np.random.default_rng(0))
+        gnn = SpatialEncoder(NODE_TYPES, tuple(ei.keys()))
+        mlp = SpatialEncoderMLP(NODE_TYPES, tuple(ei.keys()))
+        x_dict, _, _ = _random_inputs(S=5)
+        flat, num_nodes, B, S = flatten_for_spatial(x_dict)
+        rep_edges = replicate_static_graph(ei, num_nodes, B * S)
+        with torch.no_grad():
+            gnn_out = gnn(flat, rep_edges)
+            mlp_out = mlp(flat, rep_edges)
+        assert set(gnn_out) == set(mlp_out) == set(NODE_TYPES)
+        for t in NODE_TYPES:
+            assert mlp_out[t].shape == gnn_out[t].shape
+
+    def test_neighbor_features_do_not_affect_output_unlike_gnn(self):
+        """Mechanical proof of 'zero message passing': perturbing a
+        NEIGHBOR node's features changes SpatialEncoder's output for a
+        given node (it aggregates over edges) but leaves
+        SpatialEncoderMLP's output for that node bit-identical (each
+        node type's MLP only ever reads that type's own tensor)."""
+        torch.manual_seed(0)
+        ei = _edge_index_dict(np.random.default_rng(0))
+        gnn = SpatialEncoder(NODE_TYPES, tuple(ei.keys()))
+        mlp = SpatialEncoderMLP(NODE_TYPES, tuple(ei.keys()))
+        gnn.eval()
+        mlp.eval()
+        x_dict, _, _ = _random_inputs(S=4)
+        flat, num_nodes, B, S = flatten_for_spatial(x_dict)
+        rep_edges = replicate_static_graph(ei, num_nodes, B * S)
+
+        # Perturb a bus node that's an ACTUAL source of a bus->DER edge in
+        # block 0 (only 2 such edges exist out of 33 bus nodes -- picking
+        # node 0 blindly would likely miss the DER's real neighborhood).
+        bus_der_src = int(ei[("bus", "electrical_coupling", "DER")][0, 0])
+        x_perturbed = {t: v.clone() for t, v in flat.items()}
+        x_perturbed["bus"][bus_der_src] += 10.0
+
+        with torch.no_grad():
+            gnn_before = gnn(flat, rep_edges)["DER"]
+            gnn_after = gnn(x_perturbed, rep_edges)["DER"]
+            mlp_before = mlp(flat, rep_edges)["DER"]
+            mlp_after = mlp(x_perturbed, rep_edges)["DER"]
+
+        assert not torch.allclose(gnn_before, gnn_after), "GNN should be affected by a neighbor's features"
+        torch.testing.assert_close(mlp_before, mlp_after)
+
+    def test_perception_encoder_runs_end_to_end_with_mlp(self):
+        model = _model_of_type("mlp")
+        x_dict, ei, globals_ = _random_inputs(S=12)
+        with torch.no_grad():
+            out = model(x_dict, ei, globals_)
+        assert set(out) == set(TARGETS)
+        for tensor in out.values():
+            assert tensor.shape == (1, 12)
+
+    def test_default_encoder_type_is_gnn_regression(self):
+        cfg = EncoderConfig(node_types=tuple(NODE_TYPES), edge_types=(("bus", "electrical_coupling", "bus"),))
+        assert cfg.encoder_type == "gnn"
+        model = PerceptionEncoder(cfg)
+        assert isinstance(model.spatial, SpatialEncoder)
+
+    def test_invalid_encoder_type_raises(self):
+        cfg = EncoderConfig(
+            node_types=tuple(NODE_TYPES),
+            edge_types=(("bus", "electrical_coupling", "bus"),),
+            encoder_type="not_a_real_type",
+        )
+        with pytest.raises(ValueError):
+            PerceptionEncoder(cfg)
