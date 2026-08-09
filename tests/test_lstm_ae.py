@@ -10,6 +10,7 @@ tests exactly.
 from __future__ import annotations
 
 import inspect
+import warnings
 
 import numpy as np
 import pytest
@@ -226,3 +227,24 @@ class TestReconErrorScaler:
         # scoring arbitrary "test" data must not mutate the frozen scaler
         _ = error_to_probability(np.array([999.0, -999.0]), scaler)
         assert (scaler.mean_err, scaler.std_err) == before
+
+    def test_float32_input_does_not_overflow_or_saturate_to_exact_zero(self):
+        """Regression: `score_trajectory` returns torch's float32, and a
+        hand-rolled `1/(1+exp(-z))` overflows float32 for |z| > ~88 even
+        under the +-500 clip, driving the probability to EXACTLY 0.0
+        (log-based metrics then go infinite) and creating blocks of tied
+        scores. Observed as a RuntimeWarning in exp09's Session-10 log."""
+        scaler = ReconErrorScaler(mean_err=1.0, std_err=1e-3, fit_split="val_nominal_prefix")
+        errors = np.array([0.0, 1.0, 100.0], dtype=np.float32)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", RuntimeWarning)
+            probs = error_to_probability(errors, scaler)
+        assert not np.any(probs == 0.0), "probability saturated to exactly 0.0"
+        assert np.all(np.isfinite(probs))
+
+    def test_float32_and_float64_inputs_agree_exactly(self):
+        scaler = ReconErrorScaler(mean_err=1.0, std_err=1e-3, fit_split="val_nominal_prefix")
+        raw = [0.0, 0.5, 1.0, 2.0, 100.0]
+        p32 = error_to_probability(np.array(raw, dtype=np.float32), scaler)
+        p64 = error_to_probability(np.array(raw, dtype=np.float64), scaler)
+        np.testing.assert_array_equal(p32, p64)

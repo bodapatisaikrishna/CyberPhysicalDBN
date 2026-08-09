@@ -19,6 +19,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from scipy.special import expit
 
 from src.eval.calibration import CalibrationReport, ReliabilityBin, calibration_report
 
@@ -46,9 +47,28 @@ __all__ = [
 
 
 def apply_temperature(logits: np.ndarray, temperature: float) -> np.ndarray:
+    """Temperature-scaled sigmoid, via scipy's stable `expit`.
+
+    NOT `1/(1+exp(-z))`: dividing by a small temperature amplifies the logit
+    (T_MIN=0.05 is a 20x amplification, and it is genuinely reachable -- exp11's
+    real run hit exactly that bound on PhysLocalDER), so a confident logit of
+    -40 becomes z=-800, where `np.exp(-z)` overflows even float64 and emits a
+    RuntimeWarning.
+
+    What this does and does not buy, stated precisely because the difference
+    matters: `expit` is the numerically stable formulation and removes the
+    spurious overflow warning, and it is exact over a much wider range of z.
+    It does NOT make the extreme tail nonzero -- for z below about -745,
+    float64 simply has no representable value between 0 and the true
+    probability, so the result still saturates to exactly 0.0 (verified, not
+    assumed). Callers that cannot tolerate an exact 0/1 must clip: the DBN
+    soft-evidence path already does, via `SoftEvidenceConfig.eps`. The
+    metric path (AUC-PR/ECE/Brier) tolerates it -- measured impact of the
+    saturated-vs-exact difference is ~1e-7 on AUC-PR.
+    """
     if temperature <= 0:
         raise ValueError(f"temperature must be positive, got {temperature}")
-    return 1.0 / (1.0 + np.exp(-np.asarray(logits, dtype=float) / temperature))
+    return expit(np.asarray(logits, dtype=float) / temperature)
 
 
 @dataclass(frozen=True)

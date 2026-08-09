@@ -41,6 +41,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from scipy.special import expit
 
 from src.perception.encoder import TCN_DILATIONS, TCN_KERNEL_SIZE, receptive_field
 
@@ -234,5 +235,17 @@ def error_to_probability(mse: np.ndarray, scaler: ReconErrorScaler) -> np.ndarra
     answer a narrower question ("how well does this sigmoid map error to
     frequency") than the DBN's calibration claim.
     """
-    z = np.clip((mse - scaler.mean_err) / scaler.std_err, -500.0, 500.0)
-    return 1.0 / (1.0 + np.exp(-z))
+    # float64 + scipy's stable expit, deliberately, NOT `1/(1+exp(-z))` on the
+    # incoming dtype. `score_trajectory` returns `errors.numpy()` off a torch
+    # tensor, i.e. float32, and a hand-rolled sigmoid overflows float32 for
+    # |z| > ~88 (exp(88)~=1.7e38 against a float32 max of 3.4e38) even though
+    # the old +-500 clip is perfectly safe in float64. The overflow was not
+    # cosmetic: it drove `np.exp(-z)` to inf and saturated the returned
+    # probability to EXACTLY 0.0 / 1.0 rather than 7e-218 / 1-eps, which makes
+    # any log-based metric infinite and creates large blocks of exactly-tied
+    # scores. Observed as `RuntimeWarning: overflow encountered in exp` in
+    # exp09's Session-10 run log.
+    z = np.clip(
+        (np.asarray(mse, dtype=np.float64) - scaler.mean_err) / scaler.std_err, -500.0, 500.0
+    )
+    return expit(z)
