@@ -2651,3 +2651,118 @@ section, none left as an unexplained "huh, weird":
    a BLAS-level floating-point non-determinism issue, rather than
    guessing. Not independently confirmed by forcing single-threaded BLAS
    and re-running (flagged as the natural follow-up, out of scope here).
+
+## 2026-08-09 Maintenance: full-codebase debugging pass (not an experiment)
+
+**Motivation:** requested sweep of the whole codebase (13,436 lines across
+`src/`, `experiments/`, `scripts/`, `tests/`) for latent errors. No
+hypothesis to pre-register -- this is a defect hunt, not a claim test, so it
+is logged as maintenance. Baseline before the pass: 528 tests passing, every
+`.py` file compiling clean.
+
+**Method:** `py_compile` over every source file; full pytest suite; grep
+sweeps for known bug classes (mutable default args, bare excepts, float
+equality, integer division, hand-rolled `exp`/`log`/sigmoid, torch->numpy
+dtype crossings); and direct reading of the numerical core
+(`src/dbn/parameterization.py`, `src/dbn/inference.py`, `src/eval/*.py`,
+`src/twin/runner.py::discretize`, `src/baselines/lstm_ae.py`).
+
+**Result -- one live bug found and fixed, two latent failure modes guarded,
+three non-issues dismissed after verification.**
+
+**LIVE BUG (fixed): float32 sigmoid overflow in
+`src/baselines/lstm_ae.py::error_to_probability`.** The function computed
+`1/(1+np.exp(-z))` with `z` clipped to +-500. That clip is safe in float64
+but NOT in float32, where `exp` overflows above ~88 (float32 max 3.4e38 vs
+exp(500)=1.4e217). `score_trajectory` returns `errors.numpy()` off a torch
+tensor, i.e. **float32**, so the real exp06/exp09 pipelines hit this. Verified
+directly: float32 input returned EXACTLY 0.0 where float64 returned 7.12e-218,
+with `RuntimeWarning: overflow encountered in exp` -- the same warning that
+appears in `results/exp09_full_run_20260806T070125Z.log` and that Session 10's
+own entry noted but attributed only to "a saturated detector". The saturation
+was in fact this bug. Fixed by computing in float64 through `scipy.special.expit`;
+float32 and float64 inputs now agree bit-for-bit. Two regression tests added
+(`tests/test_lstm_ae.py::TestReconErrorScaler::test_float32_input_does_not_
+overflow_or_saturate_to_exact_zero` and `..._agree_exactly`).
+
+**Impact on already-reported numbers: negligible, quantified, no re-run
+required.** Measured on a synthetic saturating case (4000 samples, ~2200 of
+them exactly-0.0 under the bug): AUC-PR moves by -2.4e-7 and Brier by
++4.7e-11. ECE is unaffected in principle (0.0 and 7e-218 fall in the same
+bin). So exp06's and exp09's published lstm_ae figures stand at the 4-decimal
+precision they are reported to; the bug's real cost was warning noise plus
+exactly-tied score blocks, not wrong headline numbers. Stated as a measured
+bound, not an assumption.
+
+**SAME BUG CLASS, second site (fixed):
+`src/perception/calibration.py::apply_temperature`** used the same
+hand-rolled sigmoid with NO clip at all. Dividing by a small temperature
+amplifies the logit, and `T_MIN=0.05` (a 20x amplification) was genuinely
+reached in exp11's real run on PhysLocalDER, so a logit of -40 gives z=-800
+and overflows even float64. Verified: overflow warning at logit=-40, T=0.05.
+Switched to `expit`. **Correction to my own first claim while fixing it:** I
+initially wrote in the docstring that this makes the tail "degrade smoothly
+instead of collapsing to a hard zero." Direct verification disproved that --
+`expit` still returns exactly 0.0 below z~=-745, because float64 has no
+representable value there. The docstring was corrected to state precisely
+what the change does buy (stable formulation, no spurious warning, exact over
+a far wider range) and what it does not (the extreme tail still saturates;
+callers needing a nonzero floor must clip, as the DBN soft-evidence path
+already does via `SoftEvidenceConfig.eps`). Recording the wrong first claim
+here rather than quietly deleting it.
+
+**LATENT (guarded, not live): hard evidence on an interface node crashed with
+a bare `KeyError`.** `DBNInference.step` excludes evidenced nodes from
+`query_nodes`, but the `next_belief` loop then still reads
+`report[(name, ULTERIOR)]` for every cluster member. Confirmed reachable only
+by direct call (`step(belief, {'MITM': 1})` -> `KeyError: ('MITM', 1)`);
+confirmed NOT reachable through the normal `discretize()` -> `step()` path,
+because no observable node self-loops in any graph configuration
+(`observable & self_looping == {}` for all three configurations tested).
+Replaced with an explicit `NotImplementedError` naming the offending nodes
+and stating why the case needs a design decision (what it means for an
+observation to replace a propagated belief) rather than a lookup fix.
+
+**LATENT (guarded): `compute_ps` could return p_s > 1.** Eq. 3 is only valid
+while `delta_t <= min_i(T_bar_i)`; past that the CPT column carries a negative
+`P(inactive)`. pgmpy did catch this downstream, but as `"CPD values must be
+non-negative"` several frames away with no hint of the real cause (m too small
+for the graph's fastest TTC). exp09 and exp10 each pre-check `max_p_s` in
+their own gate code -- duplicated precisely because the library did not
+enforce it. Now raised in `compute_ps` itself with the diagnosis in the
+message.
+
+**Dismissed after verification (recorded so they are not re-investigated):**
+- *Latency instrumentation excludes `VariableElimination` construction.*
+  Measured: the unreported overhead is ~1% of true `step()` wall-clock
+  (0.0011s of 0.1035s with evidence; 0.0012s of 0.2154s without). Not
+  material to exp01's comparison against the paper's ~0.03s/0.22s.
+- *`_pct` in `src/eval/lead_time.py` uses floor indexing, not an interpolated
+  percentile.* Real definitional difference from `numpy.median` on even counts,
+  but applied identically to every arm, so it cannot bias any reported
+  comparison. Left as-is.
+- *Broad `except Exception` in `GridModel.solve`.* Intentional and documented
+  (pandapower non-convergence), followed by an explicit
+  `converged and bool(net["converged"])` re-check. Could in principle mask a
+  genuine coding error as a non-convergence; noted, not changed.
+
+**Interpretation:** the two real defects were the same defect twice -- a
+hand-rolled sigmoid meeting a dtype or a scale its clip was not chosen for.
+Both sat in *baseline/perception scoring* code, i.e. the parts that convert a
+model's raw output into a probability, and neither was caught by 528 tests
+because every existing test exercised them in float64 at moderate scale. The
+DBN core, the twin, and the eval metrics came through the pass clean. Worth
+noting for the record that the Session-10 entry's "saturated detector"
+explanation for `lstm_ae`'s behaviour was directionally right but stopped one
+level too early: it described the symptom and attributed it to calibration,
+where the actual cause was a float32 overflow.
+
+**Surprised?** Yes, once. I expected any real defect to be in the DBN
+inference or the twin's feedback loop -- the places with the most subtle
+semantics and the most hand-written math. Both were clean. The defects were
+in a one-line utility function that looks too simple to be wrong, duplicated
+in two files, and the thing that made it wrong was invisible at the call site
+(a dtype set three modules away by `torch.Tensor.numpy()`). Checked before
+concluding: confirmed the dtype really is float32 in the live path, confirmed
+the overflow really fires, and quantified the downstream impact rather than
+assuming it was either negligible or serious.

@@ -260,6 +260,25 @@ class DBNInference:
         `soft` -- fusing a node with itself twice is not a meaningful
         operation and almost certainly a caller bug.
         """
+        # An interface (self-looping) node given as hard evidence is excluded
+        # from `query_nodes` below, but the next_belief loop then still asks
+        # `report[(name, ULTERIOR)]` for every cluster member -- a bare
+        # KeyError several statements later. Unreachable through the normal
+        # discretize() -> step() path (no analytic or physical_evidence node
+        # self-loops in any graph configuration), so this guards a future
+        # caller (a "known compromise" input, a counterfactual query) rather
+        # than a live bug; it is the belief-propagation semantics, not the
+        # lookup, that would need designing for that case.
+        evidenced_interface = sorted(set(evidence) & set(self.interface_nodes))
+        if evidenced_interface:
+            raise NotImplementedError(
+                f"hard evidence on interface (self-looping) node(s) "
+                f"{evidenced_interface} is not supported: the forward filter "
+                "would need a defined rule for how an observed value replaces "
+                "that node's propagated belief. Evidence belongs on analytic / "
+                "physical_evidence nodes."
+            )
+
         self._attach_belief_as_prior(belief)
         ve_evidence = {(name, ULTERIOR): value for name, value in evidence.items()}
         soft_inputs: dict[str, float] = {}

@@ -54,10 +54,26 @@ def compute_ps(ttc: float, delta_t: float) -> float:
     """Per-step attack success probability (Cerotti et al. Eq. 3, Sec. III-E).
 
         p_s = delta_t / T_bar_s
+
+    Raises if the result exceeds 1. Eq. 3's uniformization is only valid while
+    delta_t <= min_i(T_bar_i); past that the "probability" is not one, and the
+    resulting CPT column would carry a negative P(inactive) = 1 - p_s. pgmpy
+    does reject that downstream ("CPD values must be non-negative"), but from a
+    call site several frames away and with no hint of the real cause, which is
+    always the same: m is too small for this graph's fastest TTC. Callers that
+    sweep m (experiments/exp09, exp10) pre-check this themselves; this makes
+    the invariant hold for every caller instead of by convention.
     """
     if ttc <= 0:
         raise ValueError(f"TTC must be positive, got {ttc}")
-    return delta_t / ttc
+    p_s = delta_t / ttc
+    if p_s > 1.0:
+        raise ValueError(
+            f"p_s = delta_t/TTC = {delta_t}/{ttc} = {p_s:.6g} > 1, which is not a "
+            "probability: Eq. 3's uniformization requires delta_t <= the smallest "
+            "TTC in the graph. Increase m (or lower delta_t_override)."
+        )
+    return p_s
 
 
 def _parent_slice(ag: nx.DiGraph, parent: str, node: str) -> int:
