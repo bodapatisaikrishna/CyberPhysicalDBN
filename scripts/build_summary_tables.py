@@ -58,8 +58,13 @@ CANONICAL = {
     "exp05_dbn_calibration": RESULTS_DIR / "exp05_dbn_calibration_20260802T185037Z.csv",
     "exp08_transfer_eval": RESULTS_DIR / "exp08_transfer_eval_20260806T044635Z.csv",
     "exp08_lead_time_summary": RESULTS_DIR / "exp08_lead_time_summary_20260806T044635Z.csv",
-    "exp09_robustness_curve": RESULTS_DIR / "exp09_robustness_curve_20260806T070130Z.csv",
-    "exp09_reward_curve": RESULTS_DIR / "exp09_reward_curve_20260806T070130Z.csv",
+    # 2026-08-10: repointed to the post-float32-fix rerun
+    # (results/exp09_rerun_20260810T091530Z.log), confirmed to reproduce
+    # the original 20260806T070130Z run's numbers exactly (see
+    # LAB_NOTEBOOK.md's 2026-08-10 entry) -- this is the more current
+    # citation now that both runs are on record, not a value correction.
+    "exp09_robustness_curve": RESULTS_DIR / "exp09_robustness_curve_20260810T091537Z.csv",
+    "exp09_reward_curve": RESULTS_DIR / "exp09_reward_curve_20260810T091537Z.csv",
 }
 
 AXES: dict[str, list[tuple[str, Path | None]]] = {
