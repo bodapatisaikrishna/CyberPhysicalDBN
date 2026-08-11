@@ -23,6 +23,16 @@ dependencies = [
     "matplotlib==3.11.1",
 ]
 
+# Demo-only presentation layer (webapp/app.py) -- never imported by src/,
+# experiments/, or tests/. Not part of the research pipeline's dependency
+# surface; kept as an extra so the pinned research stack above is never
+# entangled with it.
+[project.optional-dependencies]
+demo = [
+    "streamlit==1.61.1",
+    "plotly==6.9.0",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
