@@ -1,0 +1,4 @@
+target,m_kl,argmax_slice,adjusted_rand_score,heuristic_coverage_buses,gnn_coverage_buses,git_sha
+PhysLocalDER,5.025801799647522,24.0,0.0898850865008208,14,33,976bac8745d968f1c38cbc1c456a0f5ae2277d0f-dirty
+PhysWideArea,0.14310084364067324,15.0,0.0898850865008208,14,33,976bac8745d968f1c38cbc1c456a0f5ae2277d0f-dirty
+UnstablePS_posterior,2.817878852668863,,0.0898850865008208,14,33,976bac8745d968f1c38cbc1c456a0f5ae2277d0f-dirty
