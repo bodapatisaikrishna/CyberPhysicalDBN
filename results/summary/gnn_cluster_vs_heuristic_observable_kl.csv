@@ -1,0 +1,3 @@
+target,m_kl,argmax_slice,git_sha,source_file,ablation_axis
+PhysLocalDER,5.025801799647522,24,976bac8745d968f1c38cbc1c456a0f5ae2277d0f-dirty,exp12_observable_kl_20260813T104934Z.csv,gnn_cluster_vs_heuristic
+PhysWideArea,0.1431008436406732,15,976bac8745d968f1c38cbc1c456a0f5ae2277d0f-dirty,exp12_observable_kl_20260813T104934Z.csv,gnn_cluster_vs_heuristic

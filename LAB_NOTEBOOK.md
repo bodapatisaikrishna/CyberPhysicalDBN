@@ -2902,3 +2902,148 @@ CLAUDE.md has enforced since session 1, not a coincidence. The one finding
 (the summary-table staleness) was exactly the kind of thing a systematic
 pass is for -- small, real, and easy to miss without checking every
 citation against what's actually newest on disk.
+
+## 2026-08-11 Experiment: exp12_gnn_cluster_vs_heuristic (KL divergence, GNN-derived clustering vs. heuristic zoning)
+
+**Motivation:** faculty feedback (relayed by the user, not part of the
+original CLAUDE.md Prompt Pack): "Try the 'KL Divergence' comparison to
+measure the accuracy loss between your GNN-derived clusters and
+traditional heuristic groupings." User confirmed building this (Session
+12, new scope beyond Sessions 0-10).
+
+**What this maps to, concretely (design decisions, stated before any
+code):** the project's one existing heuristic bus grouping is `ZoneMap`
+(`src/twin/consequence.py`, built via `build_zone_map` from
+`voltage_sensitivity()`'s DER-x-bus linearized sensitivity, a dominance-
+share threshold rule). The project's GNN (`SpatialEncoder`,
+`src/perception/encoder.py`) already produces a per-bus learned embedding
+(`h_dict["bus"]`, `[B,S,33,64]` on case33bw) as an intermediate of the
+perception pipeline; nothing has ever clustered it or compared it to
+`ZoneMap`. This session does exactly that.
+
+- GNN bus embeddings are averaged over each test scenario's PRE-ATTACK
+  window only (every attack-step node's `ground_truth` still 0), matching
+  `ZoneMap`'s own construction from a small-perturbation linearization
+  around the nominal operating point -- an attack-contaminated embedding
+  would not be a fair comparison to a heuristic computed at nominal
+  conditions.
+- `k=2` for `KMeans`, matching `ZoneMap`'s zone count (`n_der=2`) exactly
+  -- the only apples-to-apples cardinality. Sensitivity to k is explicitly
+  NOT swept this session (a stated limitation, not silently avoided).
+- Two hard partitions of the same 33 buses do not have a well-defined raw
+  KL divergence against each other (no canonical label correspondence
+  between two independent clusterings) -- this is why the literature uses
+  Adjusted Rand Index / NMI for comparing partitions, not KL. Stated here
+  explicitly rather than computing a meaningless number. What DOES have a
+  well-defined KL: the DOWNSTREAM OBSERVABLE DISTRIBUTIONS each zoning
+  induces via the SAME `classify()` function on the SAME twin traces
+  (`zones` is the only thing that differs; nothing is re-simulated).
+- Three measures, reusing existing tested project machinery exactly:
+  (1) `adjusted_rand_score` (partition agreement, the methodologically
+  correct complement to KL); (2) `binary_kl`/`m_kl` on pooled
+  `PHYS_LOCAL_DER`/`PHYS_WIDE_AREA` rates, heuristic zoning as P (matching
+  this project's EX-as-P convention), GNN zoning as Q, mirroring exp01's
+  `KL(EX||FF)` construction exactly; (3) per-scenario `M_KL` on the
+  downstream `UnstablePS` hard-evidence DBN posterior (heuristic-zoned
+  evidence as P), mean across the 30 test scenarios -- exp08's own
+  "mean M_KL across N held-out graphs" aggregation convention.
+- No trained-model checkpoint exists anywhere in this project (confirmed:
+  neither exp05 nor exp11 calls `torch.save`) -- this session retrains a
+  fresh `PerceptionEncoder(encoder_type="gnn")` via `exp05_perception.py`'s
+  exact module-level functions (imported by path, same pattern
+  `exp06_baselines.py`/`exp11_perception_ablation.py` already use), same
+  60/20/20/30 split and hyperparameters as every prior perception result.
+
+**H1:** the GNN-cluster zoning and heuristic zoning produce a measurably
+nonzero KL on the pooled `PHYS_LOCAL_DER`/`PHYS_WIDE_AREA` rates.
+Direction/magnitude not asserted in advance.
+
+**H2 (pre-registered possible null):** given Session 5's own finding that
+DBN posteriors barely move between hard/soft/calibrated evidence once
+perception is near-ceiling accurate, the downstream `UnstablePS` posterior
+KL may be SMALL even if raw partition agreement (ARI) is low -- the two
+zonings could disagree on bus membership while still producing similar
+detection behavior, because `classify()`'s LOCALIZED/WIDESPREAD split only
+needs a zone-COUNT (1 vs. >1 hit), not exact membership.
+
+**H3 (structural, true by construction, reported not tested):** the
+GNN-cluster zoning covers all 33 buses (`KMeans` assigns every point);
+the heuristic zoning leaves some buses in `unassigned_buses` (dominance-
+share threshold). This is a real, expected difference in COVERAGE between
+the two partitions, not something to reconcile.
+
+**Stop rule:** the gate tests structural correctness only (embedding
+shape/NaN-free, KMeans-determinism, both zonings applied to the identical
+already-simulated trace, finite KL values, `n_test>=30`). It never gates
+on whether the GNN clustering "looks like" the heuristic one -- the
+KL/ARI numbers print unconditionally, reported not gated, per CLAUDE.md
+rule 3.
+
+**Result:** Full run (n=30 test scenarios, not smoke), git SHA and seed logged
+in `results/exp12_full_run_20260813T104930Z.log` and the three CSVs it wrote
+(`exp12_cluster_assignment_20260813T104934Z.csv`,
+`exp12_observable_kl_20260813T104934Z.csv`,
+`exp12_posterior_kl_20260813T104934Z.csv`,
+`results/summaries/exp12_summary_20260813T104934Z.csv`). GATE PASSED, all six
+lettered checks (a)-(f) pass.
+
+- **Partition agreement:** `adjusted_rand_score(heuristic, gnn) = 0.0899` --
+  near zero, i.e. the two zonings agree with the partition structure barely
+  above chance.
+- **Coverage (H3, confirmed as expected):** heuristic `ZoneMap` leaves 19/33
+  buses unassigned (buses 0-8, 18-27); GNN `KMeans(k=2)` covers all 33/33 by
+  construction. But the GNN partition itself is highly imbalanced:
+  `gnn_cluster_0` = 31 buses, `gnn_cluster_1` = only 2 buses (17, 32) --
+  effectively close to a degenerate 1-cluster solution rather than two
+  balanced zones.
+- **Observable-level KL (Stage 3, heuristic as P, GNN as Q):**
+  `M_KL(PhysLocalDER) = 5.025802` @ slice 24; `M_KL(PhysWideArea) = 0.143101`
+  @ slice 15. The large `PhysLocalDER` value is driven almost entirely by
+  `binary_kl`'s clip mechanism firing repeatedly across slices/scenarios
+  (heuristic p>0, GNN q=0 at the same slice) -- a direct, mechanical
+  consequence of the GNN's near-degenerate 31-vs-2 clustering producing
+  almost no `LOCALIZED` (single-zone) classifications, while the heuristic's
+  14-bus, better-separated zoning does produce them.
+- **Downstream posterior KL (Stage 4, heuristic as P, GNN as Q):** mean
+  `M_KL(UnstablePS) = 2.817879` across 30 scenarios, but the per-scenario
+  distribution is sharply BIMODAL, not uniformly small or uniformly large:
+  9/30 scenarios at `10.053024` (near the clip ceiling), ~7/30 in a mid band
+  (`0.44`-`0.49`), and the remaining ~14/30 essentially at `0.0` (three of
+  those at exactly `0.000000`, the rest at `~3e-6`, i.e. numerically
+  indistinguishable from agreement).
+
+**Interpretation:** H1 confirmed -- the divergence is real and nonzero, not
+a rounding artifact (every clip event was individually logged and each one
+reflects a genuine p>0/q=0 disagreement, not a floating-point fluke). H2 is
+REFUTED in the strict sense (the mean posterior KL of 2.82 is not small), but
+the bimodal shape it hides is itself the more informative finding: on the
+~47% of scenarios where the GNN's degenerate 2-vs-31 clustering still lands
+on the same LOCALIZED/WIDESPREAD call as the heuristic zoning for that
+scenario's actual violated buses, the downstream posterior is essentially
+unaffected (KL near 0), exactly as H2's `classify()`-only-needs-zone-count
+reasoning predicted. On the other ~53%, the disagreement is severe (KL near
+the ceiling), because the GNN's 2-bus minority cluster rarely intersects the
+specific buses each scenario perturbs, so it almost always reports
+`WIDESPREAD` where the heuristic reports `LOCALIZED` (or vice versa) --
+i.e. the mean alone would have been misleading; the per-scenario spread is
+the real finding. H3 confirmed exactly as stated in advance.
+
+**Root cause, stated plainly:** the GNN's pre-attack bus embedding does not
+recover two balanced electrical zones under unsupervised `k=2` KMeans on
+this feeder -- it separates 2 buses (17, 32, both feeder extremities) from
+the other 31. This is a legitimate, reportable negative/mixed result about
+what an untrained/task-agnostic GNN embedding clusters into, not a bug: the
+embedding was never trained with a clustering or zone-recovery objective,
+only via the perception encoder's own supervised analytic-prediction task.
+
+**Surprised?** Yes, on one count: I expected (per H2) the two zonings to
+mostly agree downstream despite disagreeing on membership, given Session 5's
+near-ceiling-perception finding that generic evidence-quality differences
+wash out at the DBN level. Checked before writing this: the effect here is
+different in kind, not degree -- it is not noisy/miscalibrated evidence
+diluting through fusion (Session 5's case), it is a structurally near-
+degenerate zoning (31-vs-2) systematically producing the wrong zone-COUNT
+call on a majority of scenarios. `classify()`'s use of zone-count as the
+only signal, which was expected to make the comparison forgiving, instead
+makes it sensitive to exactly this kind of imbalance once one cluster is
+too small to ever be "the other zone" a violated bus set lands in.

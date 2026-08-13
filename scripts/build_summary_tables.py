@@ -65,6 +65,9 @@ CANONICAL = {
     # citation now that both runs are on record, not a value correction.
     "exp09_robustness_curve": RESULTS_DIR / "exp09_robustness_curve_20260810T091537Z.csv",
     "exp09_reward_curve": RESULTS_DIR / "exp09_reward_curve_20260810T091537Z.csv",
+    "exp12_cluster_assignment": RESULTS_DIR / "exp12_cluster_assignment_20260813T104934Z.csv",
+    "exp12_observable_kl": RESULTS_DIR / "exp12_observable_kl_20260813T104934Z.csv",
+    "exp12_posterior_kl": RESULTS_DIR / "exp12_posterior_kl_20260813T104934Z.csv",
 }
 
 AXES: dict[str, list[tuple[str, Path | None]]] = {
@@ -95,6 +98,11 @@ AXES: dict[str, list[tuple[str, Path | None]]] = {
     "m_sweep": [
         ("perf", newest_nonsmoke(RESULTS_DIR, "exp10_m_sweep_perf_*.csv")),
         ("kl", newest_nonsmoke(RESULTS_DIR, "exp10_m_sweep_kl_*.csv")),
+    ],
+    "gnn_cluster_vs_heuristic": [
+        ("cluster_assignment", CANONICAL["exp12_cluster_assignment"]),
+        ("observable_kl", CANONICAL["exp12_observable_kl"]),
+        ("posterior_kl", CANONICAL["exp12_posterior_kl"]),
     ],
 }
 
