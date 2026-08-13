@@ -634,6 +634,52 @@ untraceable numbers. If the audit finds any, list them.
 
 ---
 
+## Session 12 — GNN-cluster vs. heuristic-zone comparison (post-Prompt-Pack, faculty-requested)
+
+Beyond the original Sessions 0–10. Faculty feedback requested a KL-divergence
+comparison between GNN-derived clusters and the project's heuristic zoning.
+Built as `experiments/exp12_gnn_cluster_vs_heuristic.py`. Full run (n=30 test
+scenarios, git SHA and seed logged, `results/exp12_full_run_20260813T104930Z.log`):
+
+- **Partition agreement:** `adjusted_rand_score(heuristic, gnn) = 0.0899` —
+  near-chance. The GNN's unsupervised `KMeans(k=2)` clustering of pre-attack
+  bus embeddings barely agrees with the heuristic `ZoneMap`'s threshold-rule
+  zoning on which of the 33 buses group together.
+- **Coverage (expected, structural, not a bug):** heuristic `ZoneMap` leaves
+  19/33 buses unassigned (dominance-share threshold); GNN `KMeans` covers all
+  33/33 by construction.
+- **GNN clustering is degenerate on this feeder:** the two KMeans clusters
+  split 31 buses vs. 2 buses (bus 17, 32 — feeder extremities), not a
+  balanced two-zone partition. The perception encoder was never trained with
+  a clustering or zone-recovery objective — this is a legitimate byproduct
+  of its actual (analytic-prediction) training task, not an implementation
+  defect.
+- **Observable-level KL** (heuristic as P, GNN as Q; `binary_kl`/`m_kl`):
+  `M_KL(PhysLocalDER) = 5.026`, `M_KL(PhysWideArea) = 0.143`. The large
+  `PhysLocalDER` divergence traces mechanically to the GNN's imbalanced
+  clustering rarely producing a `LOCALIZED` (single-zone) call, while the
+  heuristic's better-separated zoning does.
+- **Downstream posterior KL:** mean `M_KL(UnstablePS) = 2.818` across 30
+  scenarios, but the per-scenario distribution is sharply bimodal (9/30 near
+  the clip ceiling at 10.05, ~7/30 mid-band 0.44–0.49, ~14/30 near zero) —
+  not uniformly small or large. `classify()`'s LOCALIZED/WIDESPREAD split
+  depends only on zone-COUNT, not exact membership, so scenarios where the
+  GNN's 2-bus minority cluster happens to give the same zone-count call as
+  the heuristic show near-zero posterior divergence; scenarios where it
+  doesn't diverge sharply.
+
+**Takeaway:** measurable, mechanistically explained accuracy loss between the
+two zonings — not noise. Root cause is the GNN embedding's unsupervised
+clustering finding an imbalanced (31-vs-2) split rather than two electrically
+balanced zones, since nothing in its training objective asks for zone
+recovery. Full Result/Interpretation/Surprised entry in `LAB_NOTEBOOK.md`
+("2026-08-11/13 Experiment: exp12_gnn_cluster_vs_heuristic"). Per-run CSVs
+under `results/exp12_*_20260813T104934Z.csv`; consolidated into
+`results/summary/gnn_cluster_vs_heuristic_*.csv` via
+`scripts/build_summary_tables.py`.
+
+---
+
 # PART 3 — Operating rules for these sessions
 
 **One session per phase.** Long sessions degrade; Claude Code loses track of
