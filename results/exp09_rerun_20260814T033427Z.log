@@ -1,0 +1,103 @@
+/Users/bodapati/Downloads/CyberPhysicalDBN/.venv/lib/python3.11/site-packages/pgmpy/estimators/__init__.py:4: FutureWarning: `pgmpy.estimators.StructureScore` is deprecated and will be removed in v1.3.0. Use `pgmpy.structure_score` instead.
+  from .StructureScore import (
+stage 0: fidelity resolution ...
+  train: delta_t=0.311084 n_slices=32 horizon=10.0 max_p_s=0.9333
+  eval:  delta_t=0.276883 n_slices=722 horizon=200.0
+
+stage 1: asset graph ...
+
+stage 2: baseline training (default-scripted scenarios) ...
+  baseline_train: 20 scenarios ...
+    baseline_train 1/20 done
+    baseline_train 2/20 done
+    baseline_train 3/20 done
+    baseline_train 4/20 done
+    baseline_train 5/20 done
+    baseline_train 6/20 done
+    baseline_train 7/20 done
+    baseline_train 8/20 done
+    baseline_train 9/20 done
+    baseline_train 10/20 done
+    baseline_train 11/20 done
+    baseline_train 12/20 done
+    baseline_train 13/20 done
+    baseline_train 14/20 done
+    baseline_train 15/20 done
+    baseline_train 16/20 done
+    baseline_train 17/20 done
+    baseline_train 18/20 done
+    baseline_train 19/20 done
+    baseline_train 20/20 done
+  baseline_val: 8 scenarios ...
+    baseline_val 1/8 done
+    baseline_val 2/8 done
+    baseline_val 3/8 done
+    baseline_val 4/8 done
+    baseline_val 5/8 done
+    baseline_val 6/8 done
+    baseline_val 7/8 done
+    baseline_val 8/8 done
+  rule_based ...
+    selected: {'window_slices': 5}
+  gbm ...
+    selected: {'max_iter': 100, 'max_depth': None, 'learning_rate': 0.3, 'l2_regularization': 1.0, 'max_leaf_nodes': 15}
+  lstm_ae ...
+    selected: {'hidden_dim': 32, 'latent_dim': 8, 'n_layers': 2, 'dropout': 0.0, 'learning_rate': 0.001}
+  gnn_classifier ...
+    selected: {'conv_type': 'gat', 'n_layers': 2, 'hidden': 32, 'heads': 4, 'dropout': 0.0, 'temporal_kernel_size': 9}
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp09_baseline_search_20260814T033430Z.csv
+
+stage 3: PPO training (3 knowledge levels) ...
+    blind: 2048 episodes in 728.3s (0.3556s/episode)
+    analytics: 2048 episodes in 980.3s (0.4786s/episode)
+    full_dbn: 2048 episodes in 1141.6s (0.5574s/episode)
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp09_reward_curve_20260814T033430Z.csv
+
+stage 4: evaluation-episode generation ...
+  blind: 30 evaluation episodes generated
+  analytics: 30 evaluation episodes generated
+  full_dbn: 30 evaluation episodes generated
+
+stage 5: scoring all 5 systems ...
+  blind: scored
+  analytics: scored
+  full_dbn: scored
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp09_raw_eval_scores_20260814T033430Z.csv
+
+stage 6: robustness curve (REPORTED, not gated) ...
+
+  *** ROBUSTNESS CURVE (detection_rate at threshold=0.49, vs. attacker knowledge) ***
+           system knowledge_level  detection_rate  lead_median_slices  n_missed
+dbn_hard_evidence           blind             1.0                 1.0         0
+dbn_hard_evidence       analytics             1.0                 0.0         0
+dbn_hard_evidence        full_dbn             1.0                 1.0         0
+       rule_based           blind             1.0                18.0         0
+       rule_based       analytics             0.0                 NaN        25
+       rule_based        full_dbn             1.0                11.0         0
+              gbm           blind             1.0                 0.0         0
+              gbm       analytics             1.0                 0.0         0
+              gbm        full_dbn             1.0                 0.0         0
+          lstm_ae           blind             1.0                21.0         0
+          lstm_ae       analytics             1.0                98.0         0
+          lstm_ae        full_dbn             1.0                14.0         0
+   gnn_classifier           blind             1.0                -2.0         0
+   gnn_classifier       analytics             1.0                -3.0         0
+   gnn_classifier        full_dbn             1.0                -2.0         0
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp09_robustness_curve_20260814T033430Z.csv
+
+=== VALIDATION GATE ===
+(a) AttackerConfig()/excluded_nodes regression ................ PASS (asserted in tests/test_twin.py::TestExcludedNodes)
+(a2) RL-episode traces obey precondition ordering .............. PASS
+    blind: first-20% mean=0.0629 last-20% mean=0.6109 delta=0.5480
+    analytics: first-20% mean=-0.1609 last-20% mean=0.0362 delta=0.1970
+    full_dbn: first-20% mean=-0.0084 last-20% mean=0.1658 delta=0.1742
+(b) PPO reward curve genuinely improved (>0.05) per knowledge level PASS
+(c) every score is a valid [0,1] posterior of length n_slices_eval  PASS
+(d) baseline-training / PPO / eval seed streams disjoint ..... PASS
+(e) action-decoding round-trip ................................ PASS (asserted in tests/test_rl_attacker.py)
+(f) baseline search CSV non-empty ............................. PASS
+(g) n_episodes_per_knowledge_level >= 30 ...................... PASS (n=30)
+
+NOTE: the robustness curve above (which system degrades faster as attacker knowledge increases) is REPORTED, not gated (CLAUDE.md rule 3). If dbn_hard_evidence degrades as fast as the baselines, C3 is refuted for this attack graph -- that is a valid, reportable result, not a gate failure. See LAB_NOTEBOOK.md H1/H2.
+
+GATE PASSED

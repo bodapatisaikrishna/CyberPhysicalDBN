@@ -619,13 +619,19 @@ def main() -> int:
         float(baselines_cfg["common"]["thresholds_step"]),
     ))
 
-    summary_rows, lt_rows = [], []
+    summary_rows, lt_rows, raw_score_rows = [], [], []
     for system_name, scores_by_run in all_systems.items():
         y_true = np.concatenate([test_unstable[s.run_id] for s in test_scenarios])
         y_prob = np.concatenate([scores_by_run[s.run_id] for s in test_scenarios])
         run_ids = np.concatenate([np.full(N_SLICES, s.run_id) for s in test_scenarios])
         ap = float(average_precision_score(y_true, y_prob)) if len(np.unique(y_true)) > 1 else float("nan")
         report = calibration_report(y_true, y_prob, run_ids, n_bootstrap=1000, rng=np.random.default_rng(seed))
+
+        # raw per-slice (y_true, y_prob) on the test split -- persisted so a
+        # real precision-recall curve can be drawn later without
+        # recomputing/rerunning anything (CLAUDE.md rule 2).
+        for rid, yt, yp in zip(run_ids.tolist(), y_true.tolist(), y_prob.tolist()):
+            raw_score_rows.append({"system": system_name, "run_id": int(rid), "y_true": int(yt), "y_prob": float(yp)})
 
         n_search_trials = n_search.get(system_name, 0)
         budget_note = TUNING_BUDGET_NOTE_DBN if system_name == "dbn_soft_calibrated" else TUNING_BUDGET_NOTE_BASELINE
@@ -653,6 +659,12 @@ def main() -> int:
     summary_path = RESULTS_DIR / f"exp06_{tag}comparison_summary_{timestamp}.csv"
     summary_df.to_csv(summary_path, index=False)
     print(f"  wrote {summary_path}")
+
+    raw_scores_df = pd.DataFrame(raw_score_rows)
+    raw_scores_df["git_sha"] = sha
+    raw_scores_path = RESULTS_DIR / f"exp06_{tag}raw_test_scores_{timestamp}.csv"
+    raw_scores_df.to_csv(raw_scores_path, index=False)
+    print(f"  wrote {raw_scores_path}")
 
     lt_detail_df = pd.DataFrame(lt_rows)
     lt_summary_rows = []

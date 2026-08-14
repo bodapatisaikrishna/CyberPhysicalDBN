@@ -1,0 +1,70 @@
+stage 0: locating Sherlock data ...
+  data_dir: /Users/bodapati/Downloads/CyberPhysicalDBN/data/sherlock/01-Basic/01-Basic
+  train_glob 'train.*.state.gz' matched: ['train.n302.state.gz']
+  test_glob 'test.*.state.gz' matched: ['test.n302.state.gz']
+
+stage 1: parsing real state files ...
+  train: 43204 records, test: 43204 records
+  train cadence check: PASS (median gap=1.0000s)
+  test cadence check: PASS (median gap=1.0000s)
+  train base rate: 0.000000, test base rate: 0.132974
+  bus indices (derived): (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
+  train: 25922 slices, base_rate=0.000000
+  val: 8641 slices, base_rate=0.000000
+  calib: 8641 slices, base_rate=0.000000
+  test: 43204 slices, base_rate=0.132974
+
+stage 2: training ...
+    epoch 1/30 train_loss=194255.5938 val_loss=36413.6133
+    epoch 2/30 train_loss=49435.0391 val_loss=13158.8682
+    epoch 3/30 train_loss=11449.6279 val_loss=3812.3315
+    epoch 4/30 train_loss=2307.0193 val_loss=4.5936
+    epoch 5/30 train_loss=40.7007 val_loss=0.0000
+    epoch 6/30 train_loss=0.0000 val_loss=0.0000
+    epoch 7/30 train_loss=0.0000 val_loss=0.0000
+    epoch 8/30 train_loss=0.0000 val_loss=0.0000
+    epoch 9/30 train_loss=0.0000 val_loss=0.0000
+    epoch 10/30 train_loss=0.0000 val_loss=0.0000
+    early stopping
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp07_training_20260814T033430Z.csv
+
+stage 3: evaluation on Sherlock test ...
+  WARNING: temperature for 'malicious_binary' hit its bound (T=20, n_fit=8641) -- likely an underdetermined fit (too few calib slices or too extreme a base rate), not a meaningful calibration. Reported as-is, not silently trusted.
+  fitted temperature: 20.0000
+  before_temp  AUC-PR=0.1330 (base_rate=0.1330) ECE=0.1330
+  after_temp   AUC-PR=0.1330 (base_rate=0.1330) ECE=0.1330
+  NOTE: test data is a single continuous stream (run_ids constant) -- the calibration bootstrap's run-level resampling is degenerate here (n_runs=1); interpret any reported CI width accordingly.
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp07_perception_metrics_20260814T033430Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp07_raw_test_scores_20260814T033430Z.csv
+
+stage 4: bidirectional transfer (shared bus-voltage subspace) ...
+  training on Sherlock, evaluating on twin ...
+    twin transfer scenario 1/10 done
+    twin transfer scenario 2/10 done
+    twin transfer scenario 3/10 done
+    twin transfer scenario 4/10 done
+    twin transfer scenario 5/10 done
+    twin transfer scenario 6/10 done
+    twin transfer scenario 7/10 done
+    twin transfer scenario 8/10 done
+    twin transfer scenario 9/10 done
+    twin transfer scenario 10/10 done
+  Sherlock-trained -> twin-eval AUC-PR: 0.9873 (mean over 10 twin scenarios)
+  training on twin, evaluating on Sherlock ...
+  twin-trained -> Sherlock-eval AUC-PR: 0.1692
+
+  *** twin<->Sherlock transfer gap is REPORTED, not gated. A large gap is a finding about twin realism (LAB_NOTEBOOK.md H2), not a failure to hide. ***
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp07_transfer_20260814T033430Z.csv
+
+=== VALIDATION GATE ===
+(a) leak guard .............................. PASS (asserted in tests/test_sherlock_loader.py)
+(b) primary label direct from real malicious field PASS (build_labels, no interval computation)
+(c) calib temperature finite ................. PASS
+(d) every test q finite ....................... PASS
+(e) train/val/calib chronologically disjoint . PASS (chronological_chunks, non-overlapping by construction)
+(f) test split from SEPARATE real file ........ PASS (test_file=test.n302.state.gz, train_file=train.n302.state.gz)
+(g) label provenance recomputed ............... PASS
+
+NOTE: AUC-PR/ECE on Sherlock and the twin<->Sherlock transfer gap above are REPORTED, not gated (CLAUDE.md rule 3).
+
+GATE PASSED

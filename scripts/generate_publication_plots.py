@@ -23,6 +23,7 @@ import numpy as np
 import pandapower.networks as pn
 import pandas as pd
 from matplotlib.patches import FancyArrow, FancyBboxPatch
+from sklearn.metrics import PrecisionRecallDisplay, average_precision_score
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
@@ -112,6 +113,61 @@ def exp09_robustness_sweep() -> None:
     axes[-1].legend(loc="upper right", fontsize=8)
     fig.suptitle(f"C3 robustness: lead time vs. threshold, per attacker-knowledge level\nsource: {path.name}")
     savefig(fig, "exp09_robustness_full_sweep.png")
+
+
+# -------------------------------------------------------- PR curves -----
+
+def exp06_pr_curve() -> None:
+    path = newest_nonsmoke(RESULTS_DIR, "exp06_raw_test_scores_*.csv")
+    if path is None:
+        print("  skipping exp06 PR curve: source CSV not found")
+        return
+    df = pd.read_csv(path)
+    fig, ax = plt.subplots(figsize=(7, 6))
+    for system, group in df.groupby("system"):
+        ap = average_precision_score(group["y_true"], group["y_prob"])
+        PrecisionRecallDisplay.from_predictions(group["y_true"], group["y_prob"],
+                                                 name=system, ax=ax)
+    ax.set_title(f"Precision-recall curves, test split\nsource: {path.name}")
+    savefig(fig, "exp06_pr_curve.png")
+
+
+def exp09_pr_curve() -> None:
+    path = newest_nonsmoke(RESULTS_DIR, "exp09_raw_eval_scores_*.csv")
+    if path is None:
+        print("  skipping exp09 PR curve: source CSV not found")
+        return
+    df = pd.read_csv(path)
+    order = ["blind", "analytics", "full_dbn"]
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5.2), sharey=True)
+    for ax, kl in zip(axes, order):
+        sub = df[df["knowledge_level"] == kl]
+        for system, group in sub.groupby("system"):
+            ap = average_precision_score(group["y_true"], group["y_prob"])
+            PrecisionRecallDisplay.from_predictions(group["y_true"], group["y_prob"],
+                                                     name=system, ax=ax)
+        ax.set_title(f"attacker knowledge: {kl}")
+        ax.legend(fontsize=6, loc="lower left")
+    fig.suptitle(f"Precision-recall curves, evaluation episodes, per attacker-knowledge level\nsource: {path.name}")
+    savefig(fig, "exp09_pr_curve.png")
+
+
+def exp07_pr_curve() -> None:
+    path = newest_nonsmoke(RESULTS_DIR, "exp07_raw_test_scores_*.csv")
+    if path is None:
+        print("  skipping exp07 PR curve: source CSV not found")
+        return
+    df = pd.read_csv(path)
+    fig, ax = plt.subplots(figsize=(6.5, 5.5))
+    for stage, group in df.groupby("stage"):
+        if len(group["y_true"].unique()) < 2:
+            print(f"  skipping exp07 PR curve for stage={stage}: single-class y_true (base_rate degenerate)")
+            continue
+        ap = average_precision_score(group["y_true"], group["y_prob"])
+        PrecisionRecallDisplay.from_predictions(group["y_true"], group["y_prob"],
+                                                 name=stage, ax=ax)
+    ax.set_title(f"Precision-recall curve, Sherlock test split\nsource: {path.name}")
+    savefig(fig, "exp07_pr_curve.png")
 
 
 # ----------------------------------------------------- exp12 spatial map -
@@ -274,6 +330,10 @@ def main() -> int:
     exp06_leadtime_sweep()
     exp08_leadtime_sweep()
     exp09_robustness_sweep()
+    print("precision-recall curves ...")
+    exp06_pr_curve()
+    exp09_pr_curve()
+    exp07_pr_curve()
     print("exp12 spatial zone map ...")
     exp12_spatial_zone_map()
     print("architecture diagram ...")
