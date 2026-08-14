@@ -115,6 +115,106 @@ def exp09_robustness_sweep() -> None:
     savefig(fig, "exp09_robustness_full_sweep.png")
 
 
+# -------------------------------------------------------- exp01 ---------
+
+def exp01_reproduction_gate() -> None:
+    """CLAUDE.md's own Phase-1 reference table (KL / latency targets for
+    EX/CL/FF) vs. this project's measured numbers. Reference values are
+    copy-pasted from CLAUDE.md's own text, not invented here."""
+    path = CANONICAL["exp01_summary"]
+    if not path.exists():
+        print("  skipping exp01 reproduction gate: source CSV not found")
+        return
+    df = pd.read_csv(path)
+
+    kl_rows = df[df["node"].isin(["UnstablePS", "CorrReact", "MITM"])]
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+    scenarios = sorted(kl_rows["scenario"].unique())
+    nodes = sorted(kl_rows["node"].unique())
+    width = 0.25
+    x = np.arange(len(nodes))
+    for i, sc in enumerate(scenarios):
+        vals = [kl_rows[(kl_rows["scenario"] == sc) & (kl_rows["node"] == n)]["m_kl"].iloc[0] for n in nodes]
+        axes[0].bar(x + (i - 0.5) * width, vals, width=width, label=sc)
+    axes[0].axhline(2e-2, color="red", linestyle="--", linewidth=1, label="paper's FF target (2e-2)")
+    axes[0].set_xticks(x)
+    axes[0].set_xticklabels(nodes)
+    axes[0].set_ylabel("M_KL(EX‖FF)")
+    axes[0].set_yscale("log")
+    axes[0].set_title("Measured FF KL vs. paper's reference target")
+    axes[0].legend(fontsize=7)
+
+    perf_rows = df[df["node"].isin(["__FF_perf__", "__EX_perf__"])].copy()
+    perf_rows["clustering"] = perf_rows["node"].map({"__FF_perf__": "FF", "__EX_perf__": "EX"})
+    perf_rows["latency_s"] = perf_rows["m_kl"]
+    for i, sc in enumerate(scenarios):
+        sub = perf_rows[perf_rows["scenario"] == sc]
+        axes[1].bar([f"{c}\n({sc})" for c in sub["clustering"]], sub["latency_s"],
+                    color=["#5285e0" if c == "FF" else "#e05252" for c in sub["clustering"]])
+    axes[1].axhline(0.22, color="red", linestyle="--", linewidth=1, label="paper's EX target (~0.22s)")
+    axes[1].axhline(0.03, color="green", linestyle="--", linewidth=1, label="paper's FF target (~0.03s)")
+    axes[1].set_ylabel("mean per-slice latency (s)")
+    axes[1].set_title("Measured EX/FF latency vs. paper's reference target")
+    axes[1].tick_params(axis="x", labelsize=7)
+    axes[1].legend(fontsize=7)
+
+    fig.suptitle(f"Phase-1 paper-reproduction gate: measured vs. CLAUDE.md reference table\nsource: {path.name}")
+    savefig(fig, "exp01_reproduction_gate.png")
+
+
+# -------------------------------------------------------- exp04 ---------
+
+def exp04_calibration_bars() -> None:
+    path = CANONICAL["exp04_calibration"]
+    if not path.exists():
+        print("  skipping exp04 calibration: source CSV not found")
+        return
+    df = pd.read_csv(path)
+    sub = df[(df["n_bins"] == df["n_bins"].min()) & (df["strategy"] == "uniform")]
+    if sub.empty:
+        sub = df[df["strategy"] == "uniform"]
+    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+    axes[0].bar(sub["arm"], sub["ece"], color="#e0a02a")
+    axes[0].set_ylabel("ECE (uniform bins)")
+    axes[0].set_title("Calibration error")
+    axes[0].tick_params(axis="x", rotation=20)
+    axes[1].bar(sub["arm"], sub["brier_skill_score"], color="#3fb37f")
+    axes[1].set_ylabel("Brier skill score")
+    axes[1].set_title("Brier skill score")
+    axes[1].tick_params(axis="x", rotation=20)
+    fig.suptitle(f"C1: open- vs. closed-loop calibration\nsource: {path.name}")
+    savefig(fig, "exp04_calibration.png")
+
+
+# -------------------------------------------------------- exp08 ---------
+
+def exp08_ttc_fit_scatter() -> None:
+    path = CANONICAL["exp08_transfer_eval"]
+    if not path.exists():
+        print("  skipping exp08 TTC fit scatter: source CSV not found")
+        return
+    df = pd.read_csv(path).drop_duplicates(subset=["graph_id", "arm"])
+    fig, ax = plt.subplots(figsize=(6.5, 6.5))
+    colors = {"amortized": "#5285e0", "table3": "#e0a02a", "constant_prior": "#e05252"}
+    for arm, group in df.groupby("arm"):
+        ax.scatter(group["oracle_delta_t"], group["arm_delta_t"], label=arm,
+                   color=colors.get(arm), alpha=0.75, s=40)
+    lims = [df[["oracle_delta_t", "arm_delta_t"]].min().min() * 0.8,
+            df[["oracle_delta_t", "arm_delta_t"]].max().max() * 1.2]
+    ax.plot(lims, lims, color="black", linewidth=1, linestyle="--", label="perfect prediction")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(lims)
+    ax.set_ylim(lims)
+    ax.set_xlabel("oracle Δt (from true TTCs)")
+    ax.set_ylabel("arm's predicted Δt")
+    ax.set_title(f"C2: predicted vs. oracle Δt, 25 held-out test graphs\n"
+                 f"(zero expert input for 'amortized')\nsource: {path.name}")
+    ax.legend(fontsize=8)
+    savefig(fig, "exp08_ttc_fit_scatter.png")
+
+
 # -------------------------------------------------------- exp11 ---------
 
 def exp11_leadtime_and_calibration() -> None:
@@ -369,6 +469,12 @@ def claims_summary() -> None:
 
 def main() -> int:
     FIGURES_DIR.mkdir(exist_ok=True, parents=True)
+    print("exp01 reproduction gate ...")
+    exp01_reproduction_gate()
+    print("exp04 calibration ...")
+    exp04_calibration_bars()
+    print("exp08 TTC fit scatter ...")
+    exp08_ttc_fit_scatter()
     print("threshold sweeps ...")
     exp06_leadtime_sweep()
     exp08_leadtime_sweep()
