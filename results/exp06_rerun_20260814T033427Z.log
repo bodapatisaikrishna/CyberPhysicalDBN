@@ -1,0 +1,235 @@
+/Users/bodapati/Downloads/CyberPhysicalDBN/.venv/lib/python3.11/site-packages/pgmpy/estimators/__init__.py:4: FutureWarning: `pgmpy.estimators.StructureScore` is deprecated and will be removed in v1.3.0. Use `pgmpy.structure_score` instead.
+  from .StructureScore import (
+stage 0: asset graph ...
+
+stage 1: data generation (identical seeds to exp05) ...
+  train: 60 scenarios ...
+    train 1/60 done
+    train 2/60 done
+    train 3/60 done
+    train 4/60 done
+    train 5/60 done
+    train 6/60 done
+    train 7/60 done
+    train 8/60 done
+    train 9/60 done
+    train 10/60 done
+    train 11/60 done
+    train 12/60 done
+    train 13/60 done
+    train 14/60 done
+    train 15/60 done
+    train 16/60 done
+    train 17/60 done
+    train 18/60 done
+    train 19/60 done
+    train 20/60 done
+    train 21/60 done
+    train 22/60 done
+    train 23/60 done
+    train 24/60 done
+    train 25/60 done
+    train 26/60 done
+    train 27/60 done
+    train 28/60 done
+    train 29/60 done
+    train 30/60 done
+    train 31/60 done
+    train 32/60 done
+    train 33/60 done
+    train 34/60 done
+    train 35/60 done
+    train 36/60 done
+    train 37/60 done
+    train 38/60 done
+    train 39/60 done
+    train 40/60 done
+    train 41/60 done
+    train 42/60 done
+    train 43/60 done
+    train 44/60 done
+    train 45/60 done
+    train 46/60 done
+    train 47/60 done
+    train 48/60 done
+    train 49/60 done
+    train 50/60 done
+    train 51/60 done
+    train 52/60 done
+    train 53/60 done
+    train 54/60 done
+    train 55/60 done
+    train 56/60 done
+    train 57/60 done
+    train 58/60 done
+    train 59/60 done
+    train 60/60 done
+  val: 20 scenarios ...
+    val 1/20 done
+    val 2/20 done
+    val 3/20 done
+    val 4/20 done
+    val 5/20 done
+    val 6/20 done
+    val 7/20 done
+    val 8/20 done
+    val 9/20 done
+    val 10/20 done
+    val 11/20 done
+    val 12/20 done
+    val 13/20 done
+    val 14/20 done
+    val 15/20 done
+    val 16/20 done
+    val 17/20 done
+    val 18/20 done
+    val 19/20 done
+    val 20/20 done
+  calib: 20 scenarios ...
+    calib 1/20 done
+    calib 2/20 done
+    calib 3/20 done
+    calib 4/20 done
+    calib 5/20 done
+    calib 6/20 done
+    calib 7/20 done
+    calib 8/20 done
+    calib 9/20 done
+    calib 10/20 done
+    calib 11/20 done
+    calib 12/20 done
+    calib 13/20 done
+    calib 14/20 done
+    calib 15/20 done
+    calib 16/20 done
+    calib 17/20 done
+    calib 18/20 done
+    calib 19/20 done
+    calib 20/20 done
+  test: 30 scenarios ...
+    test 1/30 done
+    test 2/30 done
+    test 3/30 done
+    test 4/30 done
+    test 5/30 done
+    test 6/30 done
+    test 7/30 done
+    test 8/30 done
+    test 9/30 done
+    test 10/30 done
+    test 11/30 done
+    test 12/30 done
+    test 13/30 done
+    test 14/30 done
+    test 15/30 done
+    test 16/30 done
+    test 17/30 done
+    test 18/30 done
+    test 19/30 done
+    test 20/30 done
+    test 21/30 done
+    test 22/30 done
+    test 23/30 done
+    test 24/30 done
+    test 25/30 done
+    test 26/30 done
+    test 27/30 done
+    test 28/30 done
+    test 29/30 done
+    test 30/30 done
+
+stage 2: proposed system (perception + DBN soft_calibrated) ...
+    epoch 1/30 train_loss=2.4145 val_loss=0.8931
+    epoch 2/30 train_loss=2.0054 val_loss=0.5919
+    epoch 3/30 train_loss=0.9471 val_loss=0.3847
+    epoch 4/30 train_loss=0.5155 val_loss=0.4852
+    epoch 5/30 train_loss=0.3456 val_loss=0.2690
+    epoch 6/30 train_loss=0.2487 val_loss=0.2392
+    epoch 7/30 train_loss=0.2056 val_loss=0.2090
+    epoch 8/30 train_loss=0.2020 val_loss=0.2079
+    epoch 9/30 train_loss=0.2123 val_loss=0.2060
+    epoch 10/30 train_loss=0.1757 val_loss=0.1200
+    epoch 11/30 train_loss=0.1722 val_loss=0.1811
+    epoch 12/30 train_loss=0.1581 val_loss=0.1162
+    epoch 13/30 train_loss=0.1449 val_loss=0.2120
+    epoch 14/30 train_loss=0.1643 val_loss=0.1250
+    epoch 15/30 train_loss=0.1482 val_loss=0.1342
+    epoch 16/30 train_loss=0.1546 val_loss=0.1264
+    epoch 17/30 train_loss=0.1376 val_loss=0.1536
+    early stopping
+  WARNING: temperature for 'PhysWideArea' hit its bound (T=0.05, n_fit=14440) -- likely an underdetermined fit (too few calib slices or too extreme a base rate), not a meaningful calibration. Reported as-is, not silently trusted.
+  DBN proposed-system scenario 1/30 done
+  DBN proposed-system scenario 2/30 done
+  DBN proposed-system scenario 3/30 done
+  DBN proposed-system scenario 4/30 done
+  DBN proposed-system scenario 5/30 done
+  DBN proposed-system scenario 6/30 done
+  DBN proposed-system scenario 7/30 done
+  DBN proposed-system scenario 8/30 done
+  DBN proposed-system scenario 9/30 done
+  DBN proposed-system scenario 10/30 done
+  DBN proposed-system scenario 11/30 done
+  DBN proposed-system scenario 12/30 done
+  DBN proposed-system scenario 13/30 done
+  DBN proposed-system scenario 14/30 done
+  DBN proposed-system scenario 15/30 done
+  DBN proposed-system scenario 16/30 done
+  DBN proposed-system scenario 17/30 done
+  DBN proposed-system scenario 18/30 done
+  DBN proposed-system scenario 19/30 done
+  DBN proposed-system scenario 20/30 done
+  DBN proposed-system scenario 21/30 done
+  DBN proposed-system scenario 22/30 done
+  DBN proposed-system scenario 23/30 done
+  DBN proposed-system scenario 24/30 done
+  DBN proposed-system scenario 25/30 done
+  DBN proposed-system scenario 26/30 done
+  DBN proposed-system scenario 27/30 done
+  DBN proposed-system scenario 28/30 done
+  DBN proposed-system scenario 29/30 done
+  DBN proposed-system scenario 30/30 done
+
+stage 3: baseline hyperparameter searches ...
+  rule_based ...
+    selected: {'window_slices': 63}
+  gbm ...
+    selected: {'max_iter': 200, 'max_depth': 5, 'learning_rate': 0.1, 'l2_regularization': 1.0, 'max_leaf_nodes': 15}
+  lstm_ae ...
+    train nominal windows: 20, val nominal windows: 8
+    selected: {'hidden_dim': 16, 'latent_dim': 8, 'n_layers': 2, 'dropout': 0.1, 'learning_rate': 0.0003}
+  gnn_classifier ...
+    search subset: 15 train / 8 val (final model retrained on full 60/20)
+    selected: {'conv_type': 'gat', 'n_layers': 2, 'hidden': 64, 'heads': 2, 'dropout': 0.3, 'temporal_kernel_size': 5}
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp06_search_20260814T033430Z.csv
+
+stage 4: unified evaluation ...
+  dbn_soft_calibrated      AUC-PR=1.0000 ECE=0.0047 Brier=0.0020 BSS=+0.9809
+  rule_based               AUC-PR=0.9992 ECE=0.1517 Brier=0.0514 BSS=+0.5083
+  gbm                      AUC-PR=1.0000 ECE=0.0000 Brier=0.0000 BSS=+1.0000
+  lstm_ae                  AUC-PR=0.9856 ECE=0.0999 Brier=0.0891 BSS=+0.1482
+  gnn_classifier           AUC-PR=1.0000 ECE=0.0009 Brier=0.0007 BSS=+0.9934
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp06_comparison_summary_20260814T033430Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp06_raw_test_scores_20260814T033430Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp06_comparison_leadtime_20260814T033430Z.csv
+
+=== VALIDATION GATE ===
+(a) leak guard (LSTM-AE cutoff/feature disjointness) .. PASS (asserted in tests/test_lstm_ae.py)
+(b) GNN causality + block-diagonal replication ........ PASS (asserted in tests/test_gnn_classifier.py)
+(c) splits pairwise disjoint (spawn keys) .............. PASS
+(d) every search CSV has its expected trial count ...... PASS
+(e) AE scaler fit-split provenance ...................... PASS (fit_split='val_nominal_prefix')
+(f) every system's test-split score finite .............. PASS
+(g) n_test >= 30 ......................................... PASS (n=30)
+
+=== AUC-PR RANKING (all systems, sorted; NOT a gate criterion, CLAUDE.md rule 3) ===
+  #1 dbn_soft_calibrated      AUC-PR=1.0000  <-- PROPOSED SYSTEM
+  #2 gbm                      AUC-PR=1.0000
+  #3 gnn_classifier           AUC-PR=1.0000
+  #4 rule_based               AUC-PR=0.9992
+  #5 lstm_ae                  AUC-PR=0.9856
+
+  The proposed system leads on raw AUC-PR too, on this test split.
+
+NOTE: AUC-PR/ECE/lead-time numbers above are REPORTED, not gated. A baseline beating the DBN does NOT fail this gate (CLAUDE.md rule 3).
+
+GATE PASSED

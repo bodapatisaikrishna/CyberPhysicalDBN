@@ -440,10 +440,16 @@ def main() -> int:
     run_ids = np.zeros(len(test_labels_arr), dtype=int)
 
     metrics_rows = []
+    raw_score_rows = []
     for stage, q in (
         ("before_temp", apply_temperature(test_logits, 1.0)),
         ("after_temp", apply_temperature(test_logits, scaler.temperatures["malicious_binary"])),
     ):
+        # raw per-sample (y_true, y_prob) on the Sherlock test split --
+        # persisted so a real precision-recall curve can be drawn later
+        # without recomputing/rerunning anything (CLAUDE.md rule 2).
+        for yt, yp in zip(test_labels_arr.tolist(), q.tolist()):
+            raw_score_rows.append({"target": "malicious_binary", "stage": stage, "y_true": int(yt), "y_prob": float(yp)})
         base_rate = float(test_labels_arr.mean())
         ap = average_precision_score(test_labels_arr, q) if len(np.unique(test_labels_arr)) > 1 else float("nan")
         report = perception_calibration_report(test_labels_arr, q, run_ids, n_bootstrap=1000, rng=np.random.default_rng(seed))
@@ -462,6 +468,12 @@ def main() -> int:
     metrics_path = RESULTS_DIR / f"exp07_{tag}perception_metrics_{timestamp}.csv"
     metrics_df.to_csv(metrics_path, index=False)
     print(f"  wrote {metrics_path}")
+
+    raw_scores_df = pd.DataFrame(raw_score_rows)
+    raw_scores_df["git_sha"] = sha
+    raw_scores_path = RESULTS_DIR / f"exp07_{tag}raw_test_scores_{timestamp}.csv"
+    raw_scores_df.to_csv(raw_scores_path, index=False)
+    print(f"  wrote {raw_scores_path}")
 
     # === stage 4: bidirectional transfer =====================================
     transfer_rows = []

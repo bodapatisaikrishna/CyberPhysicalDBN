@@ -560,6 +560,26 @@ def main() -> int:
             scores["gnn_classifier"][kl][s.run_id] = gnn_predict(baseline_final["gnn_classifier"], s)
         print(f"  {kl}: scored", flush=True)
 
+    # raw per-slice (y_true, y_prob) on the evaluation episodes -- persisted
+    # so a real precision-recall curve can be drawn later without
+    # recomputing/rerunning anything (CLAUDE.md rule 2).
+    raw_score_rows = []
+    for kl in KNOWLEDGE_LEVELS:
+        for s in eval_episodes[kl]:
+            y_true = [int(r.grid_unstable) for r in s.discrete.records]
+            for sys_name in SYSTEMS:
+                y_prob = scores[sys_name][kl][s.run_id]
+                for yt, yp in zip(y_true, y_prob.tolist()):
+                    raw_score_rows.append({
+                        "system": sys_name, "knowledge_level": kl, "run_id": s.run_id,
+                        "y_true": yt, "y_prob": float(yp),
+                    })
+    raw_scores_df = pd.DataFrame(raw_score_rows)
+    raw_scores_df["git_sha"] = sha
+    raw_scores_path = RESULTS_DIR / f"exp09_{tag}raw_eval_scores_{timestamp}.csv"
+    raw_scores_df.to_csv(raw_scores_path, index=False)
+    print(f"  wrote {raw_scores_path}")
+
     # === stage 6: robustness curve ============================================
     print("\nstage 6: robustness curve (REPORTED, not gated) ...", flush=True)
     thresholds = tuple(round(t, 2) for t in np.arange(
