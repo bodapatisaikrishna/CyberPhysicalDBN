@@ -3047,3 +3047,54 @@ call on a majority of scenarios. `classify()`'s use of zone-count as the
 only signal, which was expected to make the comparison forgiving, instead
 makes it sensitive to exactly this kind of imbalance once one cluster is
 too small to ever be "the other zone" a violated bus set lands in.
+
+## 2026-08-14 Publication-figure pass + raw-score persistence rerun (exp06/exp07/exp09)
+
+**Motivation:** user asked for a full publication-figure pass across every
+experiment, then specifically for real precision-recall curves. No raw
+per-sample `(y_true, y_prob)` had ever been persisted for exp06/exp07/exp09
+-- only scalar AUC-PR -- so a real PR curve could not be drawn without
+either fabricating one (forbidden, CLAUDE.md rule 1) or rerunning with new
+logging added.
+
+**Change (additive only, no existing metric touched):** added raw-score
+CSV output to `experiments/exp06_baselines.py`, `exp07_sherlock.py`, and
+`exp09_adversarial_c3.py` (`exp0N_raw_{test,eval}_scores_<ts>.csv`, one row
+per sample: system/knowledge_level/run_id/y_true/y_prob/git_sha). Full test
+suite (530/530) and all three `--smoke` runs passed before rerunning any
+full experiment.
+
+**Result:** all three full reruns (`results/exp0{6,7,9}_rerun_20260814T033427Z.log`)
+GATE PASSED. Reproducibility confirmed explicitly, not assumed: exp06's
+AUC-PR ranking and exp09's robustness-curve preview table are BIT-IDENTICAL
+between the 2026-08-10 rerun and this 2026-08-14 rerun (same seed, same
+config, additive-only code change) -- diffed both logs side by side before
+writing this entry.
+
+**New figures** (all read directly from already-logged CSVs, git SHA and
+timestamp traceable, nothing recomputed): `scripts/generate_journal_plots.py`
+(12 figures: exp06/07/08/09/10/12 previously had zero or partial plots) and
+`scripts/generate_publication_plots.py` (13 figures: full threshold sweeps
+replacing single-theta bars, exp12's zoning comparison drawn on the real
+case33bw topology via kamada-kawai layout, an illustrative architecture
+diagram, a combined C1/C2/C3 claims summary, real PR curves for exp06/07/09,
+exp11's previously-missing lead-time/calibration figures, exp01's measured
+numbers plotted against CLAUDE.md's own Phase-1 reference-table targets,
+exp04's previously-unplotted calibration bars, and exp08's predicted-vs-
+oracle-Δt scatter on all 25 held-out test graphs -- the clearest single
+visual for C2's zero-expert-input transfer claim, since `amortized` visibly
+clusters tighter to the y=x line than `table3` (expert) or `constant_prior`).
+
+**Interpretation:** the project's plotting layer is now complete across all
+12 experiments plus 3 cross-cutting figures (architecture, claims summary),
+26 total. No new experimental finding here beyond the reproducibility
+confirmation above -- this entry exists because CLAUDE.md's own protocol
+treats "ran an experiment" as notebook-worthy regardless of whether the
+motivating task was itself a new claim, and a rerun with the raw-score-CSV
+change unverified against the prior run would be a silent, undisclosed
+provenance change otherwise.
+
+**Surprised?** No -- bit-identical reproduction across a 4-day gap with
+unrelated code changes elsewhere in the repo is the expected outcome given
+explicit seeding, and is exactly what CLAUDE.md rule 4's seed-logging
+requirement is for. Recorded as confirmation, not surprise.
