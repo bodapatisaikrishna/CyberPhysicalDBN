@@ -115,6 +115,49 @@ def exp09_robustness_sweep() -> None:
     savefig(fig, "exp09_robustness_full_sweep.png")
 
 
+# -------------------------------------------------------- exp11 ---------
+
+def exp11_leadtime_and_calibration() -> None:
+    lt_path = newest_nonsmoke(RESULTS_DIR, "exp11_dbn_lead_time_*.csv")
+    cal_path = newest_nonsmoke(RESULTS_DIR, "exp11_dbn_calibration_*.csv")
+    if lt_path is None or cal_path is None:
+        print("  skipping exp11 lead-time/calibration: source CSV not found")
+        return
+
+    lt = pd.read_csv(lt_path)
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.8))
+    for arm, group in lt.groupby("arm"):
+        group = group.sort_values("threshold")
+        axes[0].plot(group["threshold"], group["detection_rate"], marker="o", label=arm)
+        axes[1].plot(group["threshold"], group["lead_mean_slices"], marker="o", label=arm)
+    axes[0].set_xlabel("threshold θ")
+    axes[0].set_ylabel("detection rate")
+    axes[0].set_title("Detection rate vs. threshold")
+    axes[0].legend(fontsize=8)
+    axes[1].axhline(0, color="black", linewidth=0.8)
+    axes[1].set_xlabel("threshold θ")
+    axes[1].set_ylabel("mean lead time (slices)")
+    axes[1].set_title("Lead time vs. threshold")
+    fig.suptitle(f"GNN vs. MLP perception encoder: does graph structure help lead time?\nsource: {lt_path.name}")
+    savefig(fig, "exp11_leadtime_vs_threshold.png")
+
+    cal = pd.read_csv(cal_path)
+    cal_uniform = cal[(cal["n_bins"] == cal["n_bins"].min()) & (cal["strategy"] == "uniform")]
+    if cal_uniform.empty:
+        cal_uniform = cal[cal["strategy"] == "uniform"]
+    fig, axes = plt.subplots(1, 2, figsize=(9, 4.8))
+    axes[0].bar(cal_uniform["arm"], cal_uniform["ece"], color="#e0a02a")
+    axes[0].set_ylabel("ECE (uniform bins)")
+    axes[0].set_title("Calibration error")
+    axes[0].tick_params(axis="x", rotation=20)
+    axes[1].bar(cal_uniform["arm"], cal_uniform["brier_skill_score"], color="#3fb37f")
+    axes[1].set_ylabel("Brier skill score")
+    axes[1].set_title("Brier skill score")
+    axes[1].tick_params(axis="x", rotation=20)
+    fig.suptitle(f"GNN vs. MLP perception encoder: calibration\nsource: {cal_path.name}")
+    savefig(fig, "exp11_calibration.png")
+
+
 # -------------------------------------------------------- PR curves -----
 
 def exp06_pr_curve() -> None:
@@ -334,6 +377,8 @@ def main() -> int:
     exp06_pr_curve()
     exp09_pr_curve()
     exp07_pr_curve()
+    print("exp11 lead-time/calibration ...")
+    exp11_leadtime_and_calibration()
     print("exp12 spatial zone map ...")
     exp12_spatial_zone_map()
     print("architecture diagram ...")
