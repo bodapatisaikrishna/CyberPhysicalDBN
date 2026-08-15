@@ -3098,3 +3098,123 @@ provenance change otherwise.
 unrelated code changes elsewhere in the repo is the expected outcome given
 explicit seeding, and is exactly what CLAUDE.md rule 4's seed-logging
 requirement is for. Recorded as confirmation, not surprise.
+
+## 2026-08-14 Experiment: exp12 zone-recovery auxiliary loss ablation (attempted fix for the ARI=0.09 finding)
+
+**Motivation:** the 2026-08-11/13 exp12 experiment found the GNN's
+unsupervised KMeans clustering barely agrees with the heuristic ZoneMap
+(ARI=0.09) because the bus embedding was never trained with any
+zone-relevant objective -- only the encoder's ordinary analytic-prediction
+task. User asked for a solution to improve this. Root-cause-targeted fix
+(vs. cheaper workarounds like balanced-KMeans or clustering on the raw
+sensitivity matrix instead of the embedding, which were also considered and
+rejected here as not actually testing whether the EMBEDDING can be made to
+encode zone structure): add a joint auxiliary loss during encoder training
+that supervises the embedding directly against the heuristic zone labels.
+
+**Design:** train TWO arms from the same data/seeds for a genuine
+comparison, not a replacement (matching this project's own GNN-vs-MLP
+ablation pattern from exp11):
+- **baseline arm**: unchanged, `exp05_perception.py`'s existing
+  `train_model` (BCE loss on the 8 analytic targets only) -- reproduces
+  the 2026-08-11/13 result exactly under the same seed.
+- **zone_aux arm**: a NEW training loop, local to
+  `exp12_gnn_cluster_vs_heuristic.py` only (exp05.train_model itself is
+  NOT modified, to avoid any risk to exp06/exp07/exp09/exp11's shared
+  training path) that adds a small linear zone-classification head on top
+  of `model.spatial`'s per-bus embedding (mean-pooled over the batch's
+  scenarios and time slices, since zone identity is a static per-bus
+  property, not time-varying), trained via cross-entropy against the
+  heuristic `ZoneMap`'s own bus->zone labels (assigned buses only --
+  `unassigned_buses` are masked out of this loss, same status-quo
+  treatment as everywhere else this project uses `ZoneMap`). Combined loss
+  = analytic BCE + 1.0 * zone-classification CE (equal weighting, NOT
+  swept -- a stated limitation, consistent with how `m` and other
+  constants were handled elsewhere in this project without a formal
+  sweep).
+
+**H4:** the zone_aux arm's ARI against the heuristic zoning will be higher
+than the baseline arm's 0.0899, and its downstream posterior KL will be
+lower, because the embedding is now explicitly supervised toward the same
+structural signal `ZoneMap` encodes.
+
+**H5 (pre-registered possible null):** the auxiliary signal may not
+transfer to TEST-scenario bus embeddings if it overfits the 14/33-bus,
+2-class, class-imbalanced training label (only 14 of 33 buses carry a
+heuristic label at all) -- particularly likely to show up at `--smoke`
+scale (4 scenarios, 1 epoch) but possible even at full scale given how
+little supervised signal `ZoneMap` itself provides. Reported either way,
+not treated as an implementation bug if it occurs.
+
+**Stop rule:** structural gate only (embedding/loss finite, KMeans
+deterministic, arm trained without diverging) -- never gated on whether
+zone_aux's ARI/KL numbers "look better" than baseline's, per CLAUDE.md rule
+3. Both arms' numbers are reported side by side unconditionally.
+
+**Result:** full run (n=30 test scenarios, both arms trained from identical
+data/init, git SHA and seed logged,
+`results/exp12_zone_aux_full_run_20260814T162745Z.log`). GATE PASSED for
+both arms.
+
+- **Partition structure (H4, partially confirmed):**
+  `adjusted_rand_score` improved from `0.0899` (baseline) to `0.2180`
+  (zone_aux) -- more than doubled. More importantly, the DEGENERATE split
+  itself is fixed: baseline's clusters were 31-vs-2 buses (`{0-16,18-31}`
+  vs. `{17,32}`); zone_aux's clusters are 13-vs-20
+  (`{7-16,19-21}` vs. `{0-6,17,18,22-32}`) -- a genuinely more balanced
+  partition, not just a marginally-higher-ARI variant of the same
+  degenerate split. Confirmed by directly diffing both
+  `exp12_cluster_assignment_{arm}_20260814T162749Z.csv` files.
+- **Downstream KL (H4, REFUTED):** `mean_posterior_kl` is
+  `2.817879` for BOTH arms -- bit-identical to 6 decimal places.
+  `observable_kl` (`PhysLocalDER`, `PhysWideArea`) is also bit-identical
+  between arms. Checked this was not a code bug before writing this entry:
+  `zones_gnn` is a function-local variable inside `evaluate_zoning()`,
+  rebuilt fresh from that arm's own `bus_matrix`/`labels_1` on every call,
+  and the two arms' `cluster_assignment` CSVs are confirmed to differ
+  (see above) -- so the identical downstream numbers are not an artifact
+  of accidentally reusing one arm's zoning for both.
+
+**Interpretation:** H4 is a MIXED result, and the mixture itself is the
+finding. The auxiliary loss achieved exactly what it was designed to do --
+it stopped the embedding from collapsing into a near-single-cluster
+solution and produced a materially more balanced, more heuristic-aligned
+partition (ARI more than doubled). But this partition-level improvement
+had ZERO effect on the metric that actually matters for detection
+(`classify()`'s downstream `PHYS_LOCAL_DER`/`PHYS_WIDE_AREA`/`UnstablePS`
+KL). The most likely mechanism, consistent with everything already known
+about this feeder (H2's own finding that `classify()` only needs a
+zone-COUNT, not exact membership): this project's actual attack scenarios
+produce SMALL, topologically-clustered sets of violated buses (a few
+adjacent buses near one DER), and on a radial feeder, small adjacent bus
+sets tend to land inside a single cluster under ANY reasonable 2-way
+partition -- not just the specific one either arm happens to produce. If
+that is correct, `classify()`'s LOCALIZED/WIDESPREAD call for this
+project's actual scenarios is largely INSENSITIVE to which reasonable
+k=2 partition is used, so improving raw partition quality (ARI) does not
+translate into improving the downstream signal that the DBN actually
+consumes. This was not independently re-verified against raw per-slice
+`classify()` outputs (not persisted to disk) -- stated as an inference
+from the aggregate evidence, not a directly confirmed mechanism, and
+flagged as a good next check if this line of investigation continues.
+
+**Root cause of the original ARI=0.09 finding: genuinely improved**, but
+**root cause of low downstream detection fidelity: NOT the clustering
+degeneracy** -- this reframes the earlier 2026-08-11/13 finding. The
+practical implication for the project: if faithful zoning matters for
+something OTHER than this specific `classify()` consumption pattern (e.g.
+a future feature that reads zone membership directly, not just zone
+count), the zone_aux fix is worth keeping. For the CURRENT downstream use
+(`PHYS_LOCAL_DER`/`PHYS_WIDE_AREA` evidence into the DBN), it makes no
+measurable difference.
+
+**Surprised?** Yes, genuinely. H4 predicted the KL would also improve
+alongside ARI; instead it did not move AT ALL, to 6 decimal places, across
+every one of 30 scenarios and both observable targets. Checked for a bug
+before accepting this as a real result (see above) rather than assuming
+either "the fix didn't work" or "there's a bug" on first look -- the
+partition genuinely changed, the downstream metric genuinely didn't. This
+is a stronger, more specific version of H5's pre-registered null than
+anticipated: not "the aux signal fails to transfer," but "the aux signal
+transfers and measurably changes the partition, and the downstream metric
+still doesn't care."
