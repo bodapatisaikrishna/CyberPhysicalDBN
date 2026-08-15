@@ -1,0 +1,562 @@
+/Users/bodapati/Downloads/CyberPhysicalDBN/.venv/lib/python3.11/site-packages/pgmpy/estimators/__init__.py:4: FutureWarning: `pgmpy.estimators.StructureScore` is deprecated and will be removed in v1.3.0. Use `pgmpy.structure_score` instead.
+  from .StructureScore import (
+stage 0: asset graph + heuristic zones ...
+  heuristic zones: [('DER_17', [9, 10, 11, 12, 13, 14, 15, 16, 17]), ('DER_32', [28, 29, 30, 31, 32])]
+  heuristic unassigned_buses: [0, 1, 2, 3, 4, 5, 6, 7, 8, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+
+stage 1: data generation ...
+  train: 60 scenarios ...
+    train 1/60 done
+    train 2/60 done
+    train 3/60 done
+    train 4/60 done
+    train 5/60 done
+    train 6/60 done
+    train 7/60 done
+    train 8/60 done
+    train 9/60 done
+    train 10/60 done
+    train 11/60 done
+    train 12/60 done
+    train 13/60 done
+    train 14/60 done
+    train 15/60 done
+    train 16/60 done
+    train 17/60 done
+    train 18/60 done
+    train 19/60 done
+    train 20/60 done
+    train 21/60 done
+    train 22/60 done
+    train 23/60 done
+    train 24/60 done
+    train 25/60 done
+    train 26/60 done
+    train 27/60 done
+    train 28/60 done
+    train 29/60 done
+    train 30/60 done
+    train 31/60 done
+    train 32/60 done
+    train 33/60 done
+    train 34/60 done
+    train 35/60 done
+    train 36/60 done
+    train 37/60 done
+    train 38/60 done
+    train 39/60 done
+    train 40/60 done
+    train 41/60 done
+    train 42/60 done
+    train 43/60 done
+    train 44/60 done
+    train 45/60 done
+    train 46/60 done
+    train 47/60 done
+    train 48/60 done
+    train 49/60 done
+    train 50/60 done
+    train 51/60 done
+    train 52/60 done
+    train 53/60 done
+    train 54/60 done
+    train 55/60 done
+    train 56/60 done
+    train 57/60 done
+    train 58/60 done
+    train 59/60 done
+    train 60/60 done
+  val: 20 scenarios ...
+    val 1/20 done
+    val 2/20 done
+    val 3/20 done
+    val 4/20 done
+    val 5/20 done
+    val 6/20 done
+    val 7/20 done
+    val 8/20 done
+    val 9/20 done
+    val 10/20 done
+    val 11/20 done
+    val 12/20 done
+    val 13/20 done
+    val 14/20 done
+    val 15/20 done
+    val 16/20 done
+    val 17/20 done
+    val 18/20 done
+    val 19/20 done
+    val 20/20 done
+  test: 30 scenarios ...
+    test 1/30 done
+    test 2/30 done
+    test 3/30 done
+    test 4/30 done
+    test 5/30 done
+    test 6/30 done
+    test 7/30 done
+    test 8/30 done
+    test 9/30 done
+    test 10/30 done
+    test 11/30 done
+    test 12/30 done
+    test 13/30 done
+    test 14/30 done
+    test 15/30 done
+    test 16/30 done
+    test 17/30 done
+    test 18/30 done
+    test 19/30 done
+    test 20/30 done
+    test 21/30 done
+    test 22/30 done
+    test 23/30 done
+    test 24/30 done
+    test 25/30 done
+    test 26/30 done
+    test 27/30 done
+    test 28/30 done
+    test 29/30 done
+    test 30/30 done
+  zone_labels: 14/33 buses carry a heuristic-zone training label
+
+stage 2: training arm=baseline ...
+    epoch 1/30 train_loss=2.5235 val_loss=1.0180
+    epoch 2/30 train_loss=1.3251 val_loss=0.5900
+    epoch 3/30 train_loss=0.9108 val_loss=0.3865
+    epoch 4/30 train_loss=0.4834 val_loss=0.3979
+    epoch 5/30 train_loss=0.2972 val_loss=0.2402
+    epoch 6/30 train_loss=0.2502 val_loss=0.2460
+    epoch 7/30 train_loss=0.2136 val_loss=0.2193
+    epoch 8/30 train_loss=0.2359 val_loss=0.2606
+    epoch 9/30 train_loss=0.2139 val_loss=0.2237
+    epoch 10/30 train_loss=0.2167 val_loss=0.1544
+    epoch 11/30 train_loss=0.1993 val_loss=0.1993
+    epoch 12/30 train_loss=0.1791 val_loss=0.1348
+    epoch 13/30 train_loss=0.1535 val_loss=0.2297
+    epoch 14/30 train_loss=0.1697 val_loss=0.1321
+    epoch 15/30 train_loss=0.1572 val_loss=0.1420
+    epoch 16/30 train_loss=0.1501 val_loss=0.1429
+    epoch 17/30 train_loss=0.1471 val_loss=0.1631
+    epoch 18/30 train_loss=0.1525 val_loss=0.1471
+    epoch 19/30 train_loss=0.1522 val_loss=0.1184
+    epoch 20/30 train_loss=0.1468 val_loss=0.1199
+    epoch 21/30 train_loss=0.1583 val_loss=0.1451
+    epoch 22/30 train_loss=0.1442 val_loss=0.1500
+    epoch 23/30 train_loss=0.1368 val_loss=0.1193
+    epoch 24/30 train_loss=0.1300 val_loss=0.2179
+    early stopping
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp12_training_baseline_20260814T162749Z.csv
+
+stage 2: training arm=zone_aux ...
+    [zone_aux] epoch 1/30 train_main=2.7251 train_zone=0.6391 val_main=1.0401 val_zone=0.5808
+    [zone_aux] epoch 2/30 train_main=1.4756 train_zone=0.5449 val_main=0.6785 val_zone=0.4905
+    [zone_aux] epoch 3/30 train_main=0.9693 train_zone=0.3606 val_main=0.3841 val_zone=0.1287
+    [zone_aux] epoch 4/30 train_main=0.4152 train_zone=0.0476 val_main=0.2356 val_zone=0.0222
+    [zone_aux] epoch 5/30 train_main=0.2275 train_zone=0.0147 val_main=0.1838 val_zone=0.0090
+    [zone_aux] epoch 6/30 train_main=0.2242 train_zone=0.0072 val_main=0.1605 val_zone=0.0048
+    [zone_aux] epoch 7/30 train_main=0.1962 train_zone=0.0041 val_main=0.1514 val_zone=0.0032
+    [zone_aux] epoch 8/30 train_main=0.1809 train_zone=0.0031 val_main=0.1876 val_zone=0.0026
+    [zone_aux] epoch 9/30 train_main=0.1980 train_zone=0.0024 val_main=0.1641 val_zone=0.0025
+    [zone_aux] epoch 10/30 train_main=0.1756 train_zone=0.0035 val_main=0.1178 val_zone=0.0020
+    [zone_aux] epoch 11/30 train_main=0.1791 train_zone=0.0017 val_main=0.1738 val_zone=0.0015
+    [zone_aux] epoch 12/30 train_main=0.1667 train_zone=0.0012 val_main=0.1210 val_zone=0.0009
+    [zone_aux] epoch 13/30 train_main=0.1491 train_zone=0.0010 val_main=0.2074 val_zone=0.0009
+    [zone_aux] epoch 14/30 train_main=0.1689 train_zone=0.0009 val_main=0.1328 val_zone=0.0007
+    [zone_aux] epoch 15/30 train_main=0.1630 train_zone=0.0007 val_main=0.1409 val_zone=0.0006
+    [zone_aux] early stopping
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp12_training_zone_aux_20260814T162749Z.csv
+
+--- evaluating arm=baseline ---
+python(16212) MallocStackLogging: can't turn off malloc stack logging because it was not enabled.
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.2 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.2 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.2 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.2 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.2 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+  [baseline] GNN clusters: [('gnn_cluster_0', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]), ('gnn_cluster_1', [17, 32])]
+  [baseline] adjusted_rand_score(heuristic, gnn) = 0.0899
+  [baseline] wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp12_cluster_assignment_baseline_20260814T162749Z.csv
+  [baseline] PhysLocalDER       M_KL(heuristic||gnn) = 5.025802 @ slice 24
+  [baseline] PhysWideArea       M_KL(heuristic||gnn) = 0.143101 @ slice 15
+  [baseline] wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp12_observable_kl_baseline_20260814T162749Z.csv
+  [baseline] scored 30 scenarios
+  [baseline] wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp12_posterior_kl_baseline_20260814T162749Z.csv
+  [baseline] mean M_KL(UnstablePS) across 30 scenarios = 2.817879
+
+--- evaluating arm=zone_aux ---
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.2 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.2 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.2 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.2 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.2 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.16666666666666666 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.1 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.13333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.06666666666666667 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+binary_kl: clipping triggered with p1=0.03333333333333333 q1=0.0 (non-trivial mass on a state the other distribution treats as impossible)
+  [zone_aux] GNN clusters: [('gnn_cluster_0', [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20, 21]), ('gnn_cluster_1', [0, 1, 2, 3, 4, 5, 6, 17, 18, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32])]
+  [zone_aux] adjusted_rand_score(heuristic, gnn) = 0.2180
+  [zone_aux] wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp12_cluster_assignment_zone_aux_20260814T162749Z.csv
+  [zone_aux] PhysLocalDER       M_KL(heuristic||gnn) = 5.025802 @ slice 24
+  [zone_aux] PhysWideArea       M_KL(heuristic||gnn) = 0.143101 @ slice 15
+  [zone_aux] wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp12_observable_kl_zone_aux_20260814T162749Z.csv
+  [zone_aux] scored 30 scenarios
+  [zone_aux] wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp12_posterior_kl_zone_aux_20260814T162749Z.csv
+  [zone_aux] mean M_KL(UnstablePS) across 30 scenarios = 2.817879
+
+=== ARM COMPARISON (reported unconditionally, CLAUDE.md rule 3) ===
+                  ARI    mean_posterior_KL
+baseline       0.0899             2.817879
+zone_aux       0.2180             2.817879
+
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/summaries/exp12_summary_20260814T162749Z.csv
+
+=== VALIDATION GATE ===
+(a:baseline) bus embedding shape [33,64], finite ... PASS
+(b:baseline) KMeans deterministic given fixed seed ... PASS
+(d:baseline) both zonings discretized the IDENTICAL ContinuousTrace (never re-simulated) ... PASS
+(e:baseline) every KL value finite ... PASS
+(a:zone_aux) bus embedding shape [33,64], finite ... PASS
+(b:zone_aux) KMeans deterministic given fixed seed ... PASS
+(d:zone_aux) both zonings discretized the IDENTICAL ContinuousTrace (never re-simulated) ... PASS
+(e:zone_aux) every KL value finite ... PASS
+(c) GNN partition covers all 33/33 buses (both arms); heuristic unassigned=19 (reported, not asserted)
+(f) n_test >= 30 (30)  PASS
+
+NOTE: the KL/ARI numbers above (how much each GNN-derived clustering diverges from the heuristic ZoneMap, and whether zone_aux improves on baseline) are REPORTED, not gated (CLAUDE.md rule 3). zone_aux failing to improve on baseline is a valid, reportable finding, not a failure. See LAB_NOTEBOOK.md H1-H5.
+
+GATE PASSED
