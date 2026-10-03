@@ -24,6 +24,28 @@ scripts/download_sherlock.sh --scenario 03-Rural      # 1.9 GB, opt-in
 scripts/download_sherlock.sh --scenario all --with-paper
 ```
 
+**Slow link, small disk? Use the parallel downloader** (added 2026-09-28; the
+single-stream `curl` above needs ~4 h uninterrupted for 02-Semiurban because
+Zenodo throttles each connection to ~0.25-0.3 MB/s, and cannot resume):
+
+```bash
+# every member the experiments read (all *.state.gz + every member <= 20 MB
+# compressed): ~0.7 GB for 02, ~0.65 GB for 03; each verified by its zip CRC-32
+scripts/download_sherlock_parallel.py --scenario 02-Semiurban --essential --workers 6
+scripts/download_sherlock_parallel.py --scenario 03-Rural --essential --workers 6
+# the complete zips, md5-gated against the hashes below, then extracted (needs
+# zip + extracted size free at once: 01 0.7+3.2 GB, 02 4.7+6.1 GB, 03 1.9+2.5 GB)
+scripts/download_sherlock_parallel.py --scenario 02-Semiurban
+```
+Resumable (`<file>.done`), retries a dropped connection for hours instead of
+aborting, stdlib only. `--essential` skips ~5 GB of raw captures
+(`raw/*/physical.zip`, `raw/*/control-center.zip`, the largest pcaps) that no
+experiment in this repository reads; `--all-members` then fetches every
+remaining member one at a time, CRC-32 verified, with no whole zip kept. It was
+run for 02 and 03 on 2026-10-03 (exit 0, no mismatches; 02 = 5.6 GB, 03 = 2.3 GB
+on disk). Nested `physical.zip` / `control-center.zip` are stored as zips,
+not unpacked.
+
 Running this script downloads real bytes from the internet and is an
 explicit-permission action (CLAUDE.md safety rules) — a human, or an agent
 that has just been told in chat exactly which file/source/size to fetch,
@@ -151,3 +173,41 @@ and `experiments/exp07_sherlock.py` therefore use a topology-FREE
 `CausalTCN` classifier over an aggregate per-slice feature vector, not the
 twin's HGTConv `PerceptionEncoder` pipeline — a stated architectural
 divergence, not a silent downgrade.
+
+
+## Scenarios 02-Semiurban and 03-Rural — what the real files contain (2026-09-28)
+
+Verified by opening the extracted files (LAB_NOTEBOOK.md 2026-09-28,
+`experiments/exp13_sherlock_full.py`, stage 0 inventory), not taken from the
+site's prose:
+
+| scenario | state file(s) at the root | records (1 Hz) | state keys | real attacks in the export | notes |
+|---|---|---|---|---|---|
+| 01-Basic | `train.n302`, `test.n302` | 43,204 + 43,204 | 470 | 0 / 18 | complete; the paper's 12 h |
+| 02-Semiurban | `train.n406`, `test.n406` | 11,116 + 10,803 | 3,565 | 0 / **7 of 29** | **truncated export**, see below |
+| 03-Rural | `train.n402` only | 43,206 | 1,894 | 28 / 28 | the "train" file is the ATTACK data; no clean split |
+
+- **02-Semiurban's state export is truncated.** The paper (Table 1) gives 12 h
+   for each of train and test and 29 test attacks. The shipped files hold
+   ~3.1 h and ~3.0 h, and each ends in a JSON line cut off mid-number (2,819 and
+   35,153 characters). The dataset's own event catalog (`ipal/test/events.json`)
+   lists 29 attacks; only the first 7 start inside the exported window. Both
+   files are ~300 MB, which looks like an export size cap. The raw
+   `physical.zip` (1.46 GB, vs 316 MB for 01-Basic) plausibly holds the full
+   timeline; that is unverified; it is now on disk but no experiment has read it.
+- **03-Rural has no clean data.** Its one state file is named `train.n402...`,
+   but its labels are 23% attack (28 real attacks, 37 distinct raw labels) and
+   the archive carries only `raw/test` and `ipal/test`. It can only be an
+   evaluation target, as the dataset paper describes (Sec. 3.2.3: "providing no
+   training data").
+- **The state is network-observed, not simulator truth** (paper Sec. 3.6): a
+   passive vantage point rebuilds it from intercepted IEC-104 packets. A denial
+   of service therefore appears as frozen values and a measurement
+   manipulation as the manipulated value.
+- **Attack catalog.** `ipal/<split>/events.json` gives, per event, the attack
+    type (`industroyer`, `drift-off`, `control-and-freeze`, `arp-spoof-dos`, or a
+    benign `control center:*` maintenance event), the manipulated state points,
+    and `start`/`end`/`recovery` unix times. exp13 checks that every labelled
+    attack starts within 2 s of its catalogued start (worst observed: 1.66 s).
+    The paper recommends ignoring alarms during the `[end, recovery)` window;
+    exp13 reports metrics both as shipped and with that window excluded.

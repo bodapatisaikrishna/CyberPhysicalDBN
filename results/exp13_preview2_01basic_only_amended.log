@@ -1,0 +1,82 @@
+exp13 seed=42 git_sha=1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty smoke=False window=63
+
+stage 0: locating and parsing every Sherlock file present ...
+  01-Basic: /Users/bodapati/Downloads/CyberPhysicalDBN/data/sherlock/01-Basic/01-Basic
+    train_glob 'train.*.state.gz' matched: ['train.n302.state.gz']
+    cache hit: 01-Basic__train.n302.state.gz.npz
+    test_glob 'test.*.state.gz' matched: ['test.n302.state.gz']
+    cache hit: 01-Basic__test.n302.state.gz.npz
+    event catalog: ipal/test/events.json
+  02-Semiurban: /Users/bodapati/Downloads/CyberPhysicalDBN/data/sherlock/02-Semiurban/02-Semiurban
+    NOT PRESENT on disk -- skipped (see docs/sherlock_download.md)
+  03-Rural: /Users/bodapati/Downloads/CyberPhysicalDBN/data/sherlock/03-Rural/03-Rural
+    NOT PRESENT on disk -- skipped (see docs/sherlock_download.md)
+  01-Basic/train            43204 records, 470 keys, cadence median 1.000s (0 gaps out of tol), base rate 0.000000, 0 attack events, role=clean_train
+      raw labels (top): {'False': 43165, 'benign-event': 39}
+      components: {'bus': 60, 'external_grid': 2, 'line': 120, 'switch': 64, 'load': 72, 'trafo': 28, 'sgen': 104, 'storage': 20}
+  01-Basic/test             43204 records, 470 keys, cadence median 1.000s (0 gaps out of tol), base rate 0.132974, 18 attack events, role=attack_file
+      raw labels (top): {'False': 37005, '14': 595, '20': 562, '10': 551, '23': 498, '9': 495}
+      components: {'bus': 60, 'external_grid': 2, 'line': 120, 'switch': 64, 'load': 72, 'trafo': 28, 'sgen': 104, 'storage': 20}
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_inventory_20260928T121133Z.csv
+
+arm A: unsupervised anomaly detection, in-domain (clean-train only) ...
+  [01-Basic] clean-train file train.n302.state.gz: 43204 slices -> blocked split (1800-slice blocks, pattern ['fit', 'fit', 'fit', 'val', 'calib']): fit 27000 (15 blocks), val 9000 (5), calib 7204 (5)
+  [01-Basic] AE windows: train (3368, 63, 11), val (1125, 63, 11) (stride 8)
+  [01-Basic] AE trained: 30 epochs in 18s, final val loss 0.19123
+  [01-Basic] lstm_ae          AUC-PR=0.3831 (base 0.1330, lift 2.88x) ROC-AUC=0.7005 ECE=0.8314 | ignoring recovery windows (3.1% of slices): AUC-PR=0.5069 (base 0.1372) ROC-AUC=0.7099 | FPR non-attack 0.922 (as shipped 0.924)
+  [01-Basic] zscore_mean_abs  AUC-PR=0.3758 (base 0.1330, lift 2.83x) ROC-AUC=0.7205 ECE=0.4927 | ignoring recovery windows (3.1% of slices): AUC-PR=0.4945 (base 0.1372) ROC-AUC=0.7300 | FPR non-attack 0.001 (as shipped 0.015)
+  [01-Basic] lstm_ae          events detected 17/18
+  [01-Basic] zscore_mean_abs  events detected 9/18
+
+arm B: zero-shot cross-network transfer ...
+
+arm C: supervised transfer matrix (shared bus-voltage subspace) ...
+  building twin scenarios (same call as exp07 stage 4) ...
+    twin transfer scenario 1/10 done
+    twin transfer scenario 2/10 done
+    twin transfer scenario 3/10 done
+    twin transfer scenario 4/10 done
+    twin transfer scenario 5/10 done
+    twin transfer scenario 6/10 done
+    twin transfer scenario 7/10 done
+    twin transfer scenario 8/10 done
+    twin transfer scenario 9/10 done
+    twin transfer scenario 10/10 done
+  train=twin          eval=01-Basic      AUC-PR=0.1692 (base 0.1330, lift 1.27x)
+  train=01-Basic      eval=twin          AUC-PR=1.0000 (base 0.9992, lift 1.00x)
+
+attack-type breakdown (events alarmed / events), lstm_ae:
+  01-Basic      arp-spoof:arp-spoof-dos            1/2 (mean alarmed fraction 0.50, ~0.0 attack points)
+  01-Basic      control-and-freeze:control-and-freeze 5/5 (mean alarmed fraction 0.99, ~0.0 attack points)
+  01-Basic      drift-off:drift-off                4/4 (mean alarmed fraction 1.00, ~0.0 attack points)
+  01-Basic      industroyer:industroyer            7/7 (mean alarmed fraction 0.98, ~1.7 attack points)
+
+writing outputs ...
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_anomaly_metrics_20260928T121133Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_events_20260928T121133Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_attack_type_summary_20260928T121133Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_attack_feature_profile_20260928T121133Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_training_20260928T121133Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_cross_network_20260928T121133Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_transfer_matrix_20260928T121133Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_raw_scores_20260928T121133Z.npz
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/summaries/exp13_summary_20260928T121133Z.csv
+
+exp07 cross-check: twin -> 01-Basic AUC-PR here = 0.1692012237; exp07's logged twin_to_sherlock = 0.1692012238 (results/exp07_transfer_20260805T153324Z.csv). Small differences are expected from the streamed mean-voltage aggregate vs. exp07's per-bus mean.
+
+=== VALIDATION GATE ===
+(a) every raw `malicious` label classifiable (False / benign / numeric id), all files ... PASS
+(b) cadence verified uniform (1.0s) on every file ... PASS
+(c) feature tensors finite, all files ... PASS
+(d) event runs partition exactly the positive slices, every file ... PASS
+(e) every in-domain source trained on a file with ZERO real attack slices ... PASS
+(f) all detector scores finite ... PASS
+(g) in-domain metrics finite (skipped under --smoke: a 6k prefix may hold no attack) ... PASS
+(h) AE scoring deterministic (same weights, same input, twice) ... PASS
+(i) at least one in-domain (clean-train, attack-file) scenario evaluated (1) ... PASS
+(k) every labelled attack run is in the dataset's own event catalog and starts within 2 s of its catalogued start (uncatalogued runs=0, worst offset=1.663s) ... PASS
+(j) seed/git sha logged in every output row (seed=42, sha=1fe7fa9e) ... PASS
+
+NOTE: AUC-PR / ROC-AUC / lift above are REPORTED, not gated (CLAUDE.md rule 3). A null on H1 (no better than base rate) is a valid result, not a gate failure. See LAB_NOTEBOOK.md 2026-09-28.
+
+GATE PASSED

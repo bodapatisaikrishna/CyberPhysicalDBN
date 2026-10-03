@@ -1,0 +1,498 @@
+==> 02-Semiurban (essential members only)
+  181 essential members, 668 MB compressed; skipping 8 large members (4.01 GB); 10.3 GiB free
+  02-Semiurban/train.n406.state.gz: already present and CRC-verified
+  02-Semiurban/test.n406.state.gz: already present and CRC-verified
+  02-Semiurban/raw/test/pcap/switch-n502-pcap-mir3.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n502-pcap-mir3.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n532-pcap-mir2.pcap: already present and CRC-verified
+  02-Semiurban/raw/test/pcap/switch-n532-pcap-mir2.pcap: already present and CRC-verified
+  02-Semiurban/raw/test/pcap/switch-n523-pcap-mir4.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n407-pcap-mir5.pcap: already present and CRC-verified
+  02-Semiurban/raw/test/pcap/switch-n407-pcap-mir5.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n523-pcap-mir2.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/docs/combined.pdf: already present and CRC-verified
+  02-Semiurban/raw/test/docs/combined.pdf: already present and CRC-verified
+  02-Semiurban/raw/test/docs/network.pdf: already present and CRC-verified
+  02-Semiurban/raw/train/docs/network.pdf: already present and CRC-verified
+  02-Semiurban/raw/test/events.jsonl: already present and CRC-verified
+  02-Semiurban/raw/test/log/mtu-n1-vcc-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/docs/power-grid.pdf: already present and CRC-verified
+  02-Semiurban/raw/train/docs/power-grid.pdf: already present and CRC-verified
+  02-Semiurban/raw/train/log/mtu-n1-vcc-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/docs/combined.svg: already present and CRC-verified
+  02-Semiurban/raw/train/docs/combined.svg: already present and CRC-verified
+  02-Semiurban/raw/test/docs/power-grid.svg: already present and CRC-verified
+  02-Semiurban/raw/train/docs/power-grid.svg: already present and CRC-verified
+  02-Semiurban/raw/train/data-point-map.json: already present and CRC-verified
+  02-Semiurban/raw/test/data-point-map.json: already present and CRC-verified
+  02-Semiurban/ipal/test/initial_state.json: already present and CRC-verified
+  02-Semiurban/ipal/train/initial_state.json: already present and CRC-verified
+  02-Semiurban/ipal/rules.py: already present and CRC-verified
+  02-Semiurban/raw/test/log/mtu-n1-ccx-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/docs/network.svg: already present and CRC-verified
+  02-Semiurban/raw/train/docs/network.svg: already present and CRC-verified
+  02-Semiurban/raw/train/log/mtu-n1-ccx-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/sherlock-config.yml: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n120-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n151-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n150-rtu-service.log: already present and CRC-verified
+  02-Semiurban/ipal/test/events.json: already present and CRC-verified
+  02-Semiurban/raw/train/events.jsonl: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n137-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n119-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n118-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n138-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n127-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n163-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n155-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n171-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n156-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n104-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n104-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n134-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n134-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n167-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n167-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n154-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n154-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n136-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n136-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n147-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n147-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n116-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n116-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n145-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n145-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n154-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n154-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n150-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n150-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n109-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n109-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n167-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n167-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n159-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n159-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n115-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n115-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n126-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n126-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n165-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n165-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n146-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n146-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n153-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n153-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n128-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n128-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n127-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n127-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n139-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n139-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n104-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n104-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n105-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n105-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n159-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n159-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n113-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n113-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n111-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n111-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n169-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n169-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n121-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n121-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n148-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n148-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n151-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n151-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n172-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n172-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n172-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n172-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n140-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n140-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n107-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n107-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n171-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n171-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n140-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n140-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n120-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n120-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n110-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n110-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n168-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n168-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n133-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n133-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n131-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n131-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n168-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n168-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n170-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n170-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n135-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n135-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n132-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n132-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n149-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n149-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n107-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n107-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n113-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n113-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n170-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n170-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n111-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n111-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n141-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n141-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n141-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n141-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n112-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n112-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n142-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n142-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n163-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n163-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n148-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n148-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n165-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n165-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n122-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n122-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n121-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n121-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n106-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n106-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n131-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n131-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n143-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n143-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n169-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n169-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n152-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n152-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n133-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n133-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n153-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n153-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n106-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n106-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n126-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n126-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n147-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n147-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n129-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n129-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n124-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n124-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n110-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n110-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n122-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n122-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n145-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n145-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n117-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n117-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n161-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n161-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n132-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n132-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n125-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n125-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n157-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n157-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n144-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n144-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n130-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n130-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n108-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n108-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n123-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n123-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n136-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n136-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n114-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n114-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n123-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n123-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n164-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n164-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n124-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n124-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n125-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n125-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n158-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n158-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n146-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n146-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n152-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n152-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n142-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n142-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n162-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n162-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n160-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n160-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n144-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n144-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n143-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n143-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n137-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n137-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n161-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n161-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n118-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n118-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n128-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n128-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n114-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n114-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n135-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n135-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n164-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n164-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n116-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n116-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n117-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n117-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n160-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n160-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n112-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n112-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n108-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n108-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n105-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n105-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n166-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n166-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n157-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n157-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n155-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n155-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n156-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n156-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n149-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n149-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n109-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n109-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n134-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n134-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n158-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n158-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n115-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n115-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n129-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n129-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n138-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n138-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n166-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n166-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n162-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n162-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n139-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n139-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n130-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n130-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n119-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n119-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n101-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n101-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n102-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n102-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n102-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n102-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n101-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n101-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n103-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n103-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/rtu-n103-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/rtu-n103-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/sherlock-config.yml: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/sherlock-config.yml: 0.0 MB, CRC-32 verified
+  02-Semiurban/ipal/train/events.json: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/ipal/train/events.json: 0.0 MB, CRC-32 verified
+==> 02-Semiurban essential members ready under data/sherlock/02-Semiurban/ (skipped: ['02-Semiurban/raw/test/control-center.zip', '02-Semiurban/raw/test/physical.zip', '02-Semiurban/raw/train/control-center.zip'] ... 8 total)
+Done. See docs/sherlock_download.md for dataset notes.
+==> 03-Rural (essential members only)
+  82 essential members, 644 MB compressed; skipping 3 large members (1.22 GB); 10.2 GiB free
+  03-Rural/train.n402.state.gz: 555.3 MB in 17 chunks, 0 already done, 6 workers
+  03-Rural/train.n402.state.gz:      0.0/555.3 MB   0.00 MB/s  eta 9254580.9 min (finished chunks only)
+  03-Rural/train.n402.state.gz:      0.0/555.3 MB   0.00 MB/s  eta 9254580.9 min (finished chunks only)
+  03-Rural/train.n402.state.gz:     33.6/555.3 MB   0.19 MB/s  eta  46.6 min (finished chunks only)
+  03-Rural/train.n402.state.gz:    201.3/555.3 MB   0.84 MB/s  eta   7.0 min (finished chunks only)
+  03-Rural/train.n402.state.gz:    201.3/555.3 MB   0.67 MB/s  eta   8.8 min (finished chunks only)
+  03-Rural/train.n402.state.gz:    234.9/555.3 MB   0.65 MB/s  eta   8.2 min (finished chunks only)
+  chunk 11 attempt 1 failed (OSError('short read on chunk 11: 33525184 of 33554432 bytes')); retrying in 1s
+  03-Rural/train.n402.state.gz:    369.1/555.3 MB   0.88 MB/s  eta   3.5 min (finished chunks only)
+  03-Rural/train.n402.state.gz:    369.1/555.3 MB   0.77 MB/s  eta   4.0 min (finished chunks only)
+  03-Rural/train.n402.state.gz:    402.7/555.3 MB   0.75 MB/s  eta   3.4 min (finished chunks only)
+  03-Rural/train.n402.state.gz: 580.1 MB, CRC-32 verified
+  03-Rural/raw/test/pcap/switch-n472-pcap-mir4.pcap: 16.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/pcap/switch-n472-pcap-mir4.pcap: 64.1 MB, CRC-32 verified
+  03-Rural/raw/test/pcap/switch-n493-pcap-mir4.pcap: 15.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/pcap/switch-n493-pcap-mir4.pcap: 74.5 MB, CRC-32 verified
+  03-Rural/raw/test/pcap/switch-n477-pcap-mir3.pcap: 14.6 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/pcap/switch-n477-pcap-mir3.pcap: 72.9 MB, CRC-32 verified
+  03-Rural/raw/test/pcap/switch-n484-pcap-mir4.pcap: 12.3 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/pcap/switch-n484-pcap-mir4.pcap: 66.8 MB, CRC-32 verified
+  03-Rural/raw/test/pcap/switch-n468-pcap-mir3.pcap: 11.3 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/pcap/switch-n468-pcap-mir3.pcap: 63.0 MB, CRC-32 verified
+  03-Rural/raw/test/pcap/switch-n502-pcap-mir4.pcap: 11.3 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/pcap/switch-n502-pcap-mir4.pcap: 46.9 MB, CRC-32 verified
+  03-Rural/raw/test/pcap/switch-n403-pcap-mir5.pcap: 5.3 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/pcap/switch-n403-pcap-mir5.pcap: 18.1 MB, CRC-32 verified
+  03-Rural/raw/test/log/mtu-n1-vcc-service.log: 1.3 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/mtu-n1-vcc-service.log: 36.7 MB, CRC-32 verified
+  03-Rural/raw/test/docs/combined.pdf: 0.6 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/docs/combined.pdf: 2.3 MB, CRC-32 verified
+  03-Rural/raw/test/docs/network.pdf: 0.4 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/docs/network.pdf: 2.2 MB, CRC-32 verified
+  03-Rural/raw/test/events.jsonl: 0.2 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/events.jsonl: 2.9 MB, CRC-32 verified
+  03-Rural/raw/test/docs/power-grid.pdf: 0.2 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/docs/power-grid.pdf: 0.2 MB, CRC-32 verified
+  03-Rural/raw/test/docs/combined.svg: 0.1 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/docs/combined.svg: 1.9 MB, CRC-32 verified
+  03-Rural/raw/test/docs/power-grid.svg: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/docs/power-grid.svg: 1.2 MB, CRC-32 verified
+  03-Rural/raw/test/data-point-map.json: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/data-point-map.json: 0.5 MB, CRC-32 verified
+  03-Rural/raw/test/log/mtu-n1-ccx-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/mtu-n1-ccx-service.log: 0.3 MB, CRC-32 verified
+  03-Rural/ipal/test/initial_state.json: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/ipal/test/initial_state.json: 0.1 MB, CRC-32 verified
+  03-Rural/raw/test/docs/network.svg: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/docs/network.svg: 0.6 MB, CRC-32 verified
+  03-Rural/ipal/rules.py: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/ipal/rules.py: 0.2 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n117-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n117-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n143-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n143-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/sherlock-config.yml: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/sherlock-config.yml: 0.0 MB, CRC-32 verified
+  03-Rural/ipal/test/events.json: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/ipal/test/events.json: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n138-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n138-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n112-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n112-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n127-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n127-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n124-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n124-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n152-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n152-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n129-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n129-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n144-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n144-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n123-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n123-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n145-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n145-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n136-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n136-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n106-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n106-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n107-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n107-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n133-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n133-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n115-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n115-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n108-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n108-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n139-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n139-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n110-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n110-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n126-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n126-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n148-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n148-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n109-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n109-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n131-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n131-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n114-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n114-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n141-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n141-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n147-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n147-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n104-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n104-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n105-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n105-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n125-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n125-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n128-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n128-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n113-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n113-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n137-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n137-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n121-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n121-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n151-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n151-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n120-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n120-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n153-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n153-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n154-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n154-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n159-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n159-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n116-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n116-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n135-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n135-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n156-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n156-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n146-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n146-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n134-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n134-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n142-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n142-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n119-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n119-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n158-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n158-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n150-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n150-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n149-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n149-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n122-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n122-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n140-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n140-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n157-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n157-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n130-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n130-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n155-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n155-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n132-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n132-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n118-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n118-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n111-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n111-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n101-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n101-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n102-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n102-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n103-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n103-rtu-service.log: 0.0 MB, CRC-32 verified
+  03-Rural/raw/test/log/rtu-n160-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  03-Rural/raw/test/log/rtu-n160-rtu-service.log: 0.0 MB, CRC-32 verified
+==> 03-Rural essential members ready under data/sherlock/03-Rural/ (skipped: ['03-Rural/raw/test/control-center.zip', '03-Rural/raw/test/physical.zip', '03-Rural/raw/test/pcap/switch-n402-pcap-mir2.pcap'] ... 3 total)
+Done. See docs/sherlock_download.md for dataset notes.
+exit=0

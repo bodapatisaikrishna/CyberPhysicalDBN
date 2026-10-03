@@ -33,7 +33,10 @@ from src.perception.sherlock_loader import (
     parse_state_line,
     per_bus_voltage,
     read_ipal,
+    read_ipal_tolerant,
     read_state_file,
+    shared_subspace_from_mean_voltage,
+    stream_state_file_features,
 )
 
 
@@ -260,6 +263,17 @@ class TestSharedSubspace:
         assert SHARED_TRANSFER_COLUMNS == ("mean_bus_voltage_pu", "delta_mean_bus_voltage_pu")
 
 
+class TestSharedSubspaceFromMeanVoltage:
+    def test_equals_build_shared_subspace_after_bus_mean(self):
+        bv = torch.tensor([[1.00, 1.02], [0.98, 1.00], [1.01, 1.03]])
+        assert torch.equal(build_shared_subspace(bv), shared_subspace_from_mean_voltage(bv.mean(dim=1)))
+
+    def test_hand_computed_delta(self):
+        out = shared_subspace_from_mean_voltage(torch.tensor([1.0, 1.5, 1.25]))
+        assert out[:, 0].tolist() == [1.0, 1.5, 1.25]
+        assert out[:, 1].tolist() == [0.0, 0.5, -0.25]
+
+
 class TestChronologicalChunks:
     def test_fractions_partition_without_overlap(self):
         chunks = chronological_chunks(100, {"train": 0.6, "val": 0.2, "calib": 0.2})
@@ -271,3 +285,136 @@ class TestChronologicalChunks:
         chunks = chronological_chunks(10, {"a": 0.5, "b": 0.5})
         assert chunks["a"][0] == 0
         assert chunks["b"][1] == 10
+
+
+class TestStreamStateFileFeatures:
+    """`stream_state_file_features` must be numerically IDENTICAL to the
+    record-list route (`read_state_file` + `build_global_features` +
+    `build_labels`) -- it exists only to avoid holding every record's dict
+    in memory on the multi-GB scenarios, never to change a number."""
+
+    @staticmethod
+    def _write(tmp_path, lines):
+        p = tmp_path / "x.n4.state.gz"
+        with gzip.open(p, "wt") as f:
+            for raw in lines:
+                f.write(json.dumps(raw) + "\n")
+        return p
+
+    def _mixed_lines(self):
+        no_sgen = _raw_line(timestamp=1001.0)
+        del no_sgen["state"]["sgen.5:active_power"]
+        open_switch = _raw_line(timestamp=1002.0, malicious="27 (benign event)")
+        open_switch["state"]["switch.9:closed"] = False
+        return [
+            _raw_line(timestamp=1000.0),
+            no_sgen,
+            open_switch,
+            _raw_line(timestamp=1003.0, malicious="14"),
+            _raw_line(timestamp=1004.0, malicious="benign-event"),
+        ]
+
+    def test_features_and_labels_identical_to_record_list_route(self, tmp_path):
+        p = self._write(tmp_path, self._mixed_lines())
+        records, labels = read_state_file(p)
+        got = stream_state_file_features(p)
+        assert torch.equal(got.features, build_global_features(records))
+        assert torch.equal(got.labels, build_labels(labels))
+        assert got.event_ids == tuple(l.event_id for l in labels)
+
+    def test_hand_computed_values_and_vocabulary(self, tmp_path):
+        p = self._write(tmp_path, self._mixed_lines())
+        got = stream_state_file_features(p)
+        cols = {c: i for i, c in enumerate(SHERLOCK_GLOBAL_COLUMNS)}
+        assert got.features[0, cols["bus_voltage_pu_mean"]] == pytest.approx((1.02 + 0.99) / 2)
+        assert got.features[1, cols["sgen_active_power_w_mean"]] == 0.0  # sgen absent from that record
+        assert got.features[2, cols["switch_open_fraction"]] == pytest.approx(0.5)
+        # Only the bare numeric id is a real attack; both benign spellings are negatives.
+        assert got.labels.tolist() == [0.0, 0.0, 0.0, 1.0, 0.0]
+        assert got.event_ids == (None, None, None, "14", None)
+        assert got.raw_label_counts == {"False": 2, "27 (benign event)": 1, "14": 1, "benign-event": 1}
+        assert got.timestamps.tolist() == [1000.0, 1001.0, 1002.0, 1003.0, 1004.0]
+
+    def test_component_inventory_from_first_record(self, tmp_path):
+        p = self._write(tmp_path, self._mixed_lines())
+        got = stream_state_file_features(p)
+        assert got.n_state_keys_first_record == len(_raw_line()["state"])
+        assert got.component_key_counts["bus"] == 4  # bus.0/bus.1 x (voltage, voltage_angle)
+        assert got.component_key_counts["switch"] == 1
+
+    def test_max_records_reads_a_real_prefix(self, tmp_path):
+        p = self._write(tmp_path, self._mixed_lines())
+        assert stream_state_file_features(p, max_records=2).features.shape[0] == 2
+
+    def test_empty_file_raises(self, tmp_path):
+        p = self._write(tmp_path, [])
+        with pytest.raises(ValueError, match="no records"):
+            stream_state_file_features(p)
+
+    @pytest.mark.parametrize("split_glob", ["train.*.state.gz", "test.*.state.gz"])
+    def test_identical_on_real_01_basic_prefix(self, split_glob):
+        from pathlib import Path
+
+        matches = sorted(Path("data/sherlock/01-Basic/01-Basic").glob(split_glob))
+        if not matches:
+            pytest.skip("real Sherlock 01-Basic not downloaded (data/ is gitignored)")
+        records, labels = read_state_file_with_cap(matches[0], 400)
+        got = stream_state_file_features(matches[0], max_records=400)
+        assert torch.equal(got.features, build_global_features(records))
+        assert torch.equal(got.labels, build_labels(labels))
+
+
+def read_state_file_with_cap(path, n):
+    """Real prefix via the record-list route (the reference implementation)."""
+    records, labels = [], []
+    for i, raw in enumerate(read_ipal(path), start=1):
+        if i > n:
+            break
+        r, l = parse_state_line(raw, i)
+        records.append(r)
+        labels.append(l)
+    return tuple(records), tuple(labels)
+
+
+class TestTruncatedTail:
+    """Real 02-Semiurban train file: 11,116 complete records, then a final line
+    cut off mid-number. Tolerated (and reported) ONLY at the tail."""
+
+    @staticmethod
+    def _write(tmp_path, lines, tail=""):
+        p = tmp_path / "x.n4.state.gz"
+        with gzip.open(p, "wt") as f:
+            for raw in lines:
+                f.write(json.dumps(raw) + "\n")
+            f.write(tail)
+        return p
+
+    def test_truncated_final_line_is_dropped_and_counted(self, tmp_path):
+        cut = json.dumps(_raw_line(timestamp=1002.0))[:-25]  # ends mid-object
+        p = self._write(tmp_path, [_raw_line(timestamp=1000.0), _raw_line(timestamp=1001.0)], tail=cut + "\n")
+        stats: dict = {}
+        rows = list(read_ipal_tolerant(p, stats))
+        assert [r["timestamp"] for r in rows] == [1000.0, 1001.0]
+        assert stats["truncated_tail_chars"] == len(cut)
+
+    def test_clean_file_reports_nothing_dropped(self, tmp_path):
+        p = self._write(tmp_path, [_raw_line(timestamp=1.0), _raw_line(timestamp=2.0)])
+        stats: dict = {}
+        assert len(list(read_ipal_tolerant(p, stats))) == 2
+        assert "truncated_tail_chars" not in stats
+
+    def test_malformed_line_in_the_middle_still_raises(self, tmp_path):
+        p = tmp_path / "x.state.gz"
+        with gzip.open(p, "wt") as f:
+            f.write(json.dumps(_raw_line(timestamp=1.0)) + "\n")
+            f.write('{"timestamp": 2.0, "state": {"bus.0:volt\n')  # truncated but NOT last
+            f.write(json.dumps(_raw_line(timestamp=3.0)) + "\n")
+        with pytest.raises(json.JSONDecodeError):
+            list(read_ipal_tolerant(p))
+
+    def test_stream_features_survive_and_report_the_truncated_tail(self, tmp_path):
+        cut = json.dumps(_raw_line(timestamp=1002.0))[:-30]
+        p = self._write(tmp_path, [_raw_line(timestamp=1000.0), _raw_line(timestamp=1001.0)], tail=cut)
+        got = stream_state_file_features(p)
+        assert got.features.shape[0] == 2 and got.truncated_tail_chars == len(cut)
+        assert stream_state_file_features(self._write(tmp_path, [_raw_line()])).truncated_tail_chars == 0

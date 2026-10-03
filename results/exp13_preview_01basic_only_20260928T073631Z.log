@@ -1,0 +1,72 @@
+exp13 seed=42 git_sha=1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty smoke=False window=63
+
+stage 0: locating and parsing every Sherlock file present ...
+  01-Basic: /Users/bodapati/Downloads/CyberPhysicalDBN/data/sherlock/01-Basic/01-Basic
+    train_glob 'train.*.state.gz' matched: ['train.n302.state.gz']
+    parsed 43204 records in 8s
+    test_glob 'test.*.state.gz' matched: ['test.n302.state.gz']
+    parsed 43204 records in 9s
+  02-Semiurban: /Users/bodapati/Downloads/CyberPhysicalDBN/data/sherlock/02-Semiurban/02-Semiurban
+    NOT PRESENT on disk -- skipped (see docs/sherlock_download.md)
+  03-Rural: /Users/bodapati/Downloads/CyberPhysicalDBN/data/sherlock/03-Rural/03-Rural
+    NOT PRESENT on disk -- skipped (see docs/sherlock_download.md)
+  01-Basic/train            43204 records, 470 keys, cadence median 1.000s (0 gaps out of tol), base rate 0.000000, 0 attack events, role=clean_train
+      raw labels (top): {'False': 43165, 'benign-event': 39}
+      components: {'bus': 60, 'external_grid': 2, 'line': 120, 'switch': 64, 'load': 72, 'trafo': 28, 'sgen': 104, 'storage': 20}
+  01-Basic/test             43204 records, 470 keys, cadence median 1.000s (0 gaps out of tol), base rate 0.132974, 18 attack events, role=attack_file
+      raw labels (top): {'False': 37005, '14': 595, '20': 562, '10': 551, '23': 498, '9': 495}
+      components: {'bus': 60, 'external_grid': 2, 'line': 120, 'switch': 64, 'load': 72, 'trafo': 28, 'sgen': 104, 'storage': 20}
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_inventory_20260928T073635Z.csv
+
+arm A: unsupervised anomaly detection, in-domain (clean-train only) ...
+  [01-Basic] clean-train file train.n302.state.gz: 43204 slices -> fit [0,25922) val [25922,34563) calib [34563,43204)
+  [01-Basic] AE windows: train (3233, 63, 11), val (1081, 63, 11) (stride 8)
+  [01-Basic] AE trained: 13 epochs in 7s, final val loss 0.34050
+  [01-Basic] lstm_ae          AUC-PR=0.2659 (base 0.1330, lift 2.00x) ROC-AUC=0.6856 ECE=0.7035
+  [01-Basic] zscore_mean_abs  AUC-PR=0.3145 (base 0.1330, lift 2.36x) ROC-AUC=0.6806 ECE=0.5233
+  [01-Basic] lstm_ae          events detected 2/18
+  [01-Basic] zscore_mean_abs  events detected 2/18
+
+arm B: zero-shot cross-network transfer ...
+
+arm C: supervised transfer matrix (shared bus-voltage subspace) ...
+  building twin scenarios (same call as exp07 stage 4) ...
+    twin transfer scenario 1/10 done
+    twin transfer scenario 2/10 done
+    twin transfer scenario 3/10 done
+    twin transfer scenario 4/10 done
+    twin transfer scenario 5/10 done
+    twin transfer scenario 6/10 done
+    twin transfer scenario 7/10 done
+    twin transfer scenario 8/10 done
+    twin transfer scenario 9/10 done
+    twin transfer scenario 10/10 done
+  train=twin          eval=01-Basic      AUC-PR=0.1692 (base 0.1330, lift 1.27x)
+  train=01-Basic      eval=twin          AUC-PR=1.0000 (base 0.9992, lift 1.00x)
+
+writing outputs ...
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_anomaly_metrics_20260928T073635Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_events_20260928T073635Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_training_20260928T073635Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_cross_network_20260928T073635Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_transfer_matrix_20260928T073635Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_raw_scores_20260928T073635Z.npz
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/summaries/exp13_summary_20260928T073635Z.csv
+
+exp07 cross-check: twin -> 01-Basic AUC-PR here = 0.1692012237; exp07's logged twin_to_sherlock = 0.1692012238 (results/exp07_transfer_20260805T153324Z.csv). Small differences are expected from the streamed mean-voltage aggregate vs. exp07's per-bus mean.
+
+=== VALIDATION GATE ===
+(a) every raw `malicious` label classifiable (False / benign / numeric id), all files ... PASS
+(b) cadence verified uniform (1.0s) on every file ... PASS
+(c) feature tensors finite, all files ... PASS
+(d) event runs partition exactly the positive slices, every file ... PASS
+(e) every in-domain source trained on a file with ZERO real attack slices ... PASS
+(f) all detector scores finite ... PASS
+(g) in-domain metrics finite (skipped under --smoke: a 6k prefix may hold no attack) ... PASS
+(h) AE scoring deterministic (same weights, same input, twice) ... PASS
+(i) at least one in-domain (clean-train, attack-file) scenario evaluated (1) ... PASS
+(j) seed/git sha logged in every output row (seed=42, sha=1fe7fa9e) ... PASS
+
+NOTE: AUC-PR / ROC-AUC / lift above are REPORTED, not gated (CLAUDE.md rule 3). A null on H1 (no better than base rate) is a valid result, not a gate failure. See LAB_NOTEBOOK.md 2026-09-28.
+
+GATE PASSED

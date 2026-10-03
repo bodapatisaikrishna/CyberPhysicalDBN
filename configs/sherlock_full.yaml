@@ -1,0 +1,93 @@
+# exp13: all three real Sherlock scenarios (Wagner et al., ACM CODASPY'25),
+# LAB_NOTEBOOK.md 2026-09-28. Extends configs/sherlock.yaml (exp07, 01-Basic
+# only) rather than editing it, so exp07's committed result stays reproducible.
+#
+# Scenario roots are the doubly-nested directories the zips extract to
+# (data/sherlock/<name>/<name>/), verified for 01-Basic; 02/03 verified by
+# exp13 stage 0 against the real extracted tree, not assumed.
+
+data:
+  root: "data/sherlock"
+  cache_dir: "data/sherlock/_feature_cache"   # parsed features, gitignored with data/
+  scenarios:
+    - name: "01-Basic"
+      dir: "01-Basic/01-Basic"
+    - name: "02-Semiurban"
+      dir: "02-Semiurban/02-Semiurban"
+    - name: "03-Rural"
+      dir: "03-Rural/03-Rural"
+  # Real file-name patterns at each scenario root. exp13 stage 0 prints what
+  # each pattern actually matches per scenario; 03-Rural is expected to match
+  # only a "train.*" file (see the notebook entry) and is never assumed to
+  # have a test file.
+  train_glob: "train.*.state.gz"
+  test_glob: "test.*.state.gz"
+
+timebase:
+  expected_cadence_seconds: 1.0
+  cadence_tolerance_seconds: 0.01
+
+splits:
+  # AMENDED 2026-09-28 (LAB_NOTEBOOK.md, "Amendment", before any reportable
+  # run): a chronological 60/20/20 split of ONE 12-hour clean recording put the
+  # calibration chunk in an operating regime (transformer tap 0 -> 127.5, ~82%
+  # of the way in) the fit chunk never saw. Blocks are now dealt out cyclically
+  # so fit / val / calib each span the whole recording:
+  #   fit   -> autoencoder weights + feature standardizer
+  #   val   -> early stopping + reconstruction-error scaler
+  #   calib -> held-out CLEAN chunk: alarm threshold + false-alarm measurement
+  # Never seen by training, early stopping or scaling. Adjacent blocks are
+  # temporally correlated, so clean-vs-clean is an easier comparison than a
+  # genuinely later period (stated limitation; the test file's non-attack
+  # false-alarm rate is reported alongside as the honest check).
+  block_slices: 1800          # 30 min at 1 Hz; a window is 63 slices
+  pattern: [fit, fit, fit, val, calib]
+
+anomaly:
+  # Fixed a priori, NOT searched (stated in the notebook): no claim here is
+  # against a tuned baseline.
+  hidden_dim: 32
+  latent_dim: 8
+  n_layers: 1
+  dropout: 0.0
+  learning_rate: 1.0e-3
+  n_epochs: 30
+  batch_size: 256
+  grad_clip_norm: 1.0
+  early_stopping_patience_epochs: 5
+  # Window length is NOT set here: src.baselines.lstm_ae.WINDOW_SLICES (the
+  # perception TCN's receptive field) is reused so this detector sees the
+  # same causal horizon as every other detector in the project.
+  # Adjacent 1 Hz windows overlap in 62 of 63 rows, so training on every
+  # `train_stride`-th window loses almost no information and cuts cost by
+  # that factor. Scoring always covers EVERY slice.
+  train_stride: 8
+  standardizer_eps: 1.0e-6
+  # |z| clipped here after standardizing (amendment): the eps above only guards
+  # division by zero and must not act as a scale (a feature frozen in the fit
+  # data that later moves would otherwise read ~1e8 sigma).
+  z_clip: 10.0
+  # Alarm threshold = this percentile of reconstruction errors on the
+  # held-out clean `calib` chunk (an a priori 1% clean false-alarm budget).
+  alarm_percentile: 99.0
+  score_batch_size: 4096
+
+transfer:
+  # Identical to configs/sherlock.yaml's transfer block so the twin ->
+  # 01-Basic cell is a like-for-like reproduction of exp07's 0.1692.
+  hidden_dim: 16
+  n_epochs: 15
+  learning_rate: 1.0e-3
+  n_twin_scenarios: 10
+  twin_horizon_time_units: 200
+  # Real-attack-trained models see the first N contiguous slices of their
+  # file only (the 15-epoch full-sequence TCN fit on a 1M+ slice file is
+  # needlessly slow); evaluation on OTHER domains always uses their full file.
+  max_train_slices: 200000
+
+smoke:
+  # A real prefix of each real file (never synthetic), every stage in minutes.
+  # Smoke numbers go to smoke_-prefixed files and are never reported.
+  max_records: 20000   # >= 11 blocks so every split is non-empty
+  n_epochs: 2
+  n_twin_scenarios: 2

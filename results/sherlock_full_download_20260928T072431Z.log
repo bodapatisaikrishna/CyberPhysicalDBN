@@ -1,0 +1,150 @@
+# Sherlock 02-Semiurban + 03-Rural download, parallel-range downloader (2026-09-28T07:24:31Z)
+# source: https://zenodo.org/records/15168928/files/<name> ; md5 published on Zenodo
+/dev/disk3s5   228Gi   185Gi    14Gi    93%    3.2M  147M    2%   /System/Volumes/Data
+=== 02-Semiurban ===
+size=4677487711 chunks=140 already_done=0 workers=16
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+chunk 11 attempt 1 failed (OSError('short read chunk 11: got 16495944 of 33554432')); retry in 1s
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+chunk 0 attempt 1 failed (OSError('short read chunk 0: got 21384416 of 33554432')); retry in 1s
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+    0.00/4.68 GB   0.00 MB/s  eta 77958128.5 min
+chunk 2 attempt 1 failed (OSError('short read chunk 2: got 31790276 of 33554432')); retry in 1s
+    0.03/4.68 GB   0.07 MB/s  eta 1176.6 min
+    0.10/4.68 GB   0.19 MB/s  eta 409.3 min
+    0.30/4.68 GB   0.53 MB/s  eta 137.7 min
+    0.40/4.68 GB   0.67 MB/s  eta 106.2 min
+    0.44/4.68 GB   0.69 MB/s  eta 102.1 min
+    0.44/4.68 GB   0.66 MB/s  eta 107.0 min
+    0.44/4.68 GB   0.63 MB/s  eta 111.8 min
+    0.44/4.68 GB   0.61 MB/s  eta 116.7 min
+    0.44/4.68 GB   0.58 MB/s  eta 121.6 min
+chunk 0 attempt 2 failed (OSError('short read chunk 0: got 28947048 of 33554432')); retry in 2s
+    0.44/4.68 GB   0.56 MB/s  eta 126.4 min
+chunk 11 attempt 2 failed (OSError('short read chunk 11: got 33545544 of 33554432')); retry in 2s
+    0.44/4.68 GB   0.54 MB/s  eta 131.3 min
+    0.44/4.68 GB   0.52 MB/s  eta 136.1 min
+    0.44/4.68 GB   0.50 MB/s  eta 141.0 min
+chunk 24 attempt 1 failed (OSError('short read chunk 24: got 14845180 of 33554432')); retry in 1s
+    0.44/4.68 GB   0.48 MB/s  eta 145.9 min
+    0.47/4.68 GB   0.51 MB/s  eta 138.9 min
+    0.50/4.68 GB   0.52 MB/s  eta 132.7 min
+    0.50/4.68 GB   0.51 MB/s  eta 136.9 min
+    0.54/4.68 GB   0.53 MB/s  eta 131.1 min
+    0.54/4.68 GB   0.51 MB/s  eta 135.0 min
+chunk 11 attempt 3 failed (OSError('short read chunk 11: got 15242876 of 33554432')); retry in 4s
+    0.64/4.68 GB   0.59 MB/s  eta 114.1 min
+    0.64/4.68 GB   0.50 MB/s  eta 133.5 min
+    0.64/4.68 GB   0.16 MB/s  eta 416.3 min
+chunk 22 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 34 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 18 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 25 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 0 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 20 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 24 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 29 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 30 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 26 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 23 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 32 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 33 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 19 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+chunk 11 attempt 4 failed (TimeoutError('The read operation timed out')); retry in 8s
+chunk 31 attempt 1 failed (TimeoutError('The read operation timed out')); retry in 1s
+    0.64/4.68 GB   0.09 MB/s  eta 734.2 min
+    0.64/4.68 GB   0.07 MB/s  eta 984.0 min
+chunk 11 attempt 5 failed (TimeoutError('The read operation timed out')); retry in 16s
+chunk 25 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 0 attempt 4 failed (TimeoutError('The read operation timed out')); retry in 8s
+chunk 20 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 34 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 30 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 22 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 18 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 24 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 19 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 32 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 26 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 29 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 31 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 23 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+chunk 33 attempt 2 failed (TimeoutError('The read operation timed out')); retry in 2s
+    0.64/4.68 GB   0.05 MB/s  eta 1365.0 min
+    0.64/4.68 GB   0.04 MB/s  eta 1751.9 min
+chunk 25 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 31 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 33 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 30 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 32 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 34 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 26 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 24 attempt 4 failed (TimeoutError('The read operation timed out')); retry in 8s
+chunk 23 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 19 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 29 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 22 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 18 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 20 attempt 3 failed (TimeoutError('The read operation timed out')); retry in 4s
+chunk 0 attempt 5 failed (TimeoutError('The read operation timed out')); retry in 16s
+    0.64/4.68 GB   0.04 MB/s  eta 1755.1 min
+chunk 11 attempt 6 failed (TimeoutError('The read operation timed out')); retry in 32s
+    0.64/4.68 GB   0.04 MB/s  eta 1758.3 min
+    0.64/4.68 GB   0.04 MB/s  eta 1761.4 min
+    0.64/4.68 GB   0.04 MB/s  eta 1764.6 min
+    0.64/4.68 GB   0.04 MB/s  eta 1767.8 min
+    0.64/4.68 GB   0.04 MB/s  eta 1770.9 min
+    0.67/4.68 GB   0.04 MB/s  eta 1671.4 min
+    0.67/4.68 GB   0.04 MB/s  eta 1674.4 min
+chunk 32 attempt 4 failed (OSError('short read chunk 32: got 10977880 of 33554432')); retry in 8s
+chunk 25 attempt 4 failed (OSError('short read chunk 25: got 10093880 of 33554432')); retry in 8s
+    0.67/4.68 GB   0.04 MB/s  eta 1677.4 min
+    0.67/4.68 GB   0.04 MB/s  eta 1680.4 min
+chunk 11 attempt 7 failed (OSError('short read chunk 11: got 11629372 of 33554432')); retry in 60s
+    0.67/4.68 GB   0.04 MB/s  eta 1683.3 min
+chunk 23 attempt 4 failed (OSError('short read chunk 23: got 15103936 of 33554432')); retry in 8s
+chunk 30 attempt 4 failed (OSError('short read chunk 30: got 16256648 of 33554432')); retry in 8s
+    0.67/4.68 GB   0.04 MB/s  eta 1686.3 min
+chunk 19 attempt 4 failed (OSError('short read chunk 19: got 17276804 of 33554432')); retry in 8s
+    0.67/4.68 GB   0.04 MB/s  eta 1689.3 min
+chunk 34 attempt 4 failed (OSError('short read chunk 34: got 21837380 of 33554432')); retry in 8s
+    0.67/4.68 GB   0.04 MB/s  eta 1692.3 min
+chunk 26 attempt 4 failed (OSError('short read chunk 26: got 19904652 of 33554432')); retry in 8s
+chunk 29 attempt 4 failed (OSError('short read chunk 29: got 21818516 of 33554432')); retry in 8s
+    0.67/4.68 GB   0.04 MB/s  eta 1695.3 min
+chunk 20 attempt 4 failed (OSError('short read chunk 20: got 20643416 of 33554432')); retry in 8s
+    0.67/4.68 GB   0.04 MB/s  eta 1698.3 min
+    0.67/4.68 GB   0.04 MB/s  eta 1701.2 min
+chunk 33 attempt 4 failed (OSError('short read chunk 33: got 25203372 of 33554432')); retry in 8s
+    0.67/4.68 GB   0.04 MB/s  eta 1704.2 min
+chunk 22 attempt 4 failed (OSError('short read chunk 22: got 25953096 of 33554432')); retry in 8s
+    0.67/4.68 GB   0.04 MB/s  eta 1707.2 min
+chunk 32 attempt 5 failed (OSError('short read chunk 32: got 23232316 of 33554432')); retry in 16s
+    0.67/4.68 GB   0.04 MB/s  eta 1710.2 min
+chunk 31 attempt 4 failed (OSError('short read chunk 31: got 28617652 of 33554432')); retry in 8s
+chunk 35 attempt 1 failed (OSError('short read chunk 35: got 27362088 of 33554432')); retry in 1s
+    0.67/4.68 GB   0.04 MB/s  eta 1713.2 min
+chunk 34 attempt 5 failed (OSError('short read chunk 34: got 14143708 of 33554432')); retry in 16s
+    0.70/4.68 GB   0.04 MB/s  eta 1620.8 min
+chunk 30 attempt 5 failed (OSError('short read chunk 30: got 16901200 of 33554432')); retry in 16s
+    0.74/4.68 GB   0.04 MB/s  eta 1536.7 min
+    0.74/4.68 GB   0.04 MB/s  eta 1539.4 min
+chunk 25 attempt 5 failed (OSError('short read chunk 25: got 32878856 of 33554432')); retry in 16s
+    0.74/4.68 GB   0.04 MB/s  eta 1542.0 min
+chunk 26 attempt 5 failed (OSError('short read chunk 26: got 25673436 of 33554432')); retry in 16s
+    0.74/4.68 GB   0.04 MB/s  eta 1544.7 min
+    0.74/4.68 GB   0.04 MB/s  eta 1547.4 min
+chunk 31 attempt 5 failed (OSError('short read chunk 31: got 19561516 of 33554432')); retry in 16s
+chunk 29 attempt 5 failed (OSError('short read chunk 29: got 29537432 of 33554432')); retry in 16s

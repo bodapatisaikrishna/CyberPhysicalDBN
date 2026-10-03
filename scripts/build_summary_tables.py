@@ -99,6 +99,13 @@ AXES: dict[str, list[tuple[str, Path | None]]] = {
         ("perf", newest_nonsmoke(RESULTS_DIR, "exp10_m_sweep_perf_*.csv")),
         ("kl", newest_nonsmoke(RESULTS_DIR, "exp10_m_sweep_kl_*.csv")),
     ],
+    "sherlock_full": [
+        ("inventory", newest_nonsmoke(RESULTS_DIR, "exp13_inventory_*.csv")),
+        ("anomaly_metrics", newest_nonsmoke(RESULTS_DIR, "exp13_anomaly_metrics_*.csv")),
+        ("attack_type_summary", newest_nonsmoke(RESULTS_DIR, "exp13_attack_type_summary_*.csv")),
+        ("cross_network", newest_nonsmoke(RESULTS_DIR, "exp13_cross_network_*.csv")),
+        ("transfer_matrix", newest_nonsmoke(RESULTS_DIR, "exp13_transfer_matrix_*.csv")),
+    ],
     "gnn_cluster_vs_heuristic": [
         ("cluster_assignment", CANONICAL["exp12_cluster_assignment"]),
         ("observable_kl", CANONICAL["exp12_observable_kl"]),
@@ -115,7 +122,11 @@ def write_axis_tables() -> list[str]:
             if path is None or not path.exists():
                 missing.append(f"{axis}/{metric_name}: source file not found ({path})")
                 continue
-            df = pd.read_csv(path)
+            try:
+                df = pd.read_csv(path)
+            except pd.errors.EmptyDataError:
+                missing.append(f"{axis}/{metric_name}: {path.name} has no rows")
+                continue
             df["source_file"] = path.name
             df["ablation_axis"] = axis
             df.to_csv(dest, index=False)

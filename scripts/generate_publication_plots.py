@@ -258,6 +258,104 @@ def exp11_leadtime_and_calibration() -> None:
     savefig(fig, "exp11_calibration.png")
 
 
+
+# -------------------------------------------------------- exp13 ---------
+
+def exp13_plots() -> None:
+    """All three real Sherlock scenarios (anomaly detection, zero-shot
+    cross-network transfer, supervised transfer matrix). Reads exp13's logged
+    CSVs / raw-score npz unmodified."""
+    m_path = newest_nonsmoke(RESULTS_DIR, "exp13_anomaly_metrics_*.csv")
+    e_path = newest_nonsmoke(RESULTS_DIR, "exp13_events_*.csv")
+    x_path = newest_nonsmoke(RESULTS_DIR, "exp13_cross_network_*.csv")
+    t_path = newest_nonsmoke(RESULTS_DIR, "exp13_transfer_matrix_*.csv")
+    r_path = newest_nonsmoke(RESULTS_DIR, "exp13_raw_scores_*.npz")
+    if m_path is None or r_path is None:
+        print("  skipping exp13: source files not found")
+        return
+    def read_or_none(path):
+        """A table with no rows (e.g. no cross-network pairs in a partial run) is written as an empty file."""
+        if path is None:
+            return None
+        try:
+            return pd.read_csv(path)
+        except pd.errors.EmptyDataError:
+            print(f"  {path.name} is empty -- panel skipped")
+            return None
+
+    metrics = pd.read_csv(m_path)
+    raw = np.load(r_path)
+    scenarios = list(dict.fromkeys(metrics["scenario"]))
+    colors = {"lstm_ae": "#5285e0", "zscore_mean_abs": "#e0a02a"}
+    names = {"lstm_ae": "LSTM autoencoder", "zscore_mean_abs": "mean |z| reference"}
+
+    # 1) in-domain PR curves
+    fig, axes = plt.subplots(1, len(scenarios), figsize=(6 * len(scenarios), 5), squeeze=False)
+    for ax, sc in zip(axes[0], scenarios):
+        for det in ("lstm_ae", "zscore_mean_abs"):
+            y, sco = raw[f"{sc}__{det}__y"], raw[f"{sc}__{det}__score"]
+            row = metrics[(metrics.scenario == sc) & (metrics.detector == det)].iloc[0]
+            PrecisionRecallDisplay.from_predictions(
+                y, sco, ax=ax, curve_kwargs={"color": colors[det]},
+                name=f"{names[det]} (AP={row.auc_pr:.3f}, {row.lift:.1f}x base)")
+        ax.axhline(float(y.mean()), color="gray", linestyle="--", linewidth=1, label=f"base rate {y.mean():.3f}")
+        ax.set_title(f"{sc}: trained on attack-free data only")
+        ax.legend(fontsize=7, loc="upper right")
+    fig.suptitle(f"Real Sherlock, unsupervised anomaly detection (no attack label seen in training)\nsource: {m_path.name}")
+    savefig(fig, "exp13_anomaly_pr_curves.png")
+
+    # 2) per-event alarm rate
+    ev = read_or_none(e_path)
+    if ev is not None:
+        fig, axes = plt.subplots(1, len(scenarios), figsize=(6 * len(scenarios), 4.5), squeeze=False)
+        for ax, sc in zip(axes[0], scenarios):
+            sub = ev[ev.scenario == sc]
+            for k, det in enumerate(("lstm_ae", "zscore_mean_abs")):
+                d = sub[sub.detector == det].sort_values("start").reset_index(drop=True)
+                ax.bar(np.arange(len(d)) + (k - 0.5) * 0.4, d["frac_slices_alarmed"], width=0.4,
+                       color=colors[det], label=f"{names[det]}: {int(d['detected'].sum())}/{len(d)} events alarmed")
+            ax.set_xlabel("attack event (chronological)")
+            ax.set_ylabel("fraction of the event's slices above the alarm threshold")
+            ax.set_ylim(0, 1.02)
+            ax.set_title(f"{sc}: alarm threshold = 99th pct of held-out clean errors")
+            ax.legend(fontsize=7)
+        fig.suptitle(f"Per-attack-event alarm rate\nsource: {e_path.name}")
+        savefig(fig, "exp13_event_alarm_rates.png")
+
+    # 3) lift heatmaps: zero-shot cross-network (both detectors) + supervised transfer matrix
+    panels = []
+    cross = read_or_none(x_path)
+    if cross is not None:
+        for det in ("lstm_ae", "zscore_mean_abs"):
+            sub = cross[cross.detector == det]
+            if len(sub):
+                panels.append((f"zero-shot: {names[det]}", sub.pivot(index="source", columns="target", values="lift"),
+                               sub.pivot(index="source", columns="target", values="auc_pr")))
+    tm = read_or_none(t_path)
+    if tm is not None:
+        panels.append(("supervised, 2-col bus-voltage subspace", tm.pivot(index="train_domain", columns="eval_domain", values="lift"),
+                       tm.pivot(index="train_domain", columns="eval_domain", values="auc_pr")))
+    if panels:
+        fig, axes = plt.subplots(1, len(panels), figsize=(5.4 * len(panels), 4.6), squeeze=False)
+        for ax, (title, lift, ap) in zip(axes[0], panels):
+            im = ax.imshow(lift.to_numpy(dtype=float), cmap="Blues", vmin=0.0)
+            ax.set_xticks(range(lift.shape[1])); ax.set_xticklabels(lift.columns, rotation=25, ha="right")
+            ax.set_yticks(range(lift.shape[0])); ax.set_yticklabels(lift.index)
+            ax.set_xlabel("evaluated on"); ax.set_ylabel("trained on")
+            for i in range(lift.shape[0]):
+                for j in range(lift.shape[1]):
+                    v, a = lift.iloc[i, j], ap.iloc[i, j]
+                    if np.isfinite(v):
+                        ax.text(j, i, f"{v:.2f}x\nAP {a:.2f}", ha="center", va="center", fontsize=8,
+                                color="white" if v > np.nanmax(lift.to_numpy(dtype=float)) * 0.6 else "black")
+            ax.set_title(title, fontsize=9)
+            ax.grid(False)
+            fig.colorbar(im, ax=ax, fraction=0.046, label="AUC-PR / base rate (lift)")
+        fig.suptitle("Real-data transfer on Sherlock: lift over the evaluation set's own base rate\n"
+                     f"sources: {', '.join(p.name for p in (x_path, t_path) if p is not None)}")
+        savefig(fig, "exp13_transfer_lift_heatmaps.png")
+
+
 # -------------------------------------------------------- PR curves -----
 
 def exp06_pr_curve() -> None:
@@ -485,6 +583,8 @@ def main() -> int:
     exp07_pr_curve()
     print("exp11 lead-time/calibration ...")
     exp11_leadtime_and_calibration()
+    print("exp13 real Sherlock (all scenarios) ...")
+    exp13_plots()
     print("exp12 spatial zone map ...")
     exp12_spatial_zone_map()
     print("architecture diagram ...")

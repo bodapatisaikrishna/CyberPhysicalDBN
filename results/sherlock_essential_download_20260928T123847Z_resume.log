@@ -1,0 +1,128 @@
+==> 02-Semiurban (essential members only)
+  181 essential members, 668 MB compressed; skipping 8 large members (4.01 GB); 10.3 GiB free
+  02-Semiurban/train.n406.state.gz: already present and CRC-verified
+  02-Semiurban/test.n406.state.gz: already present and CRC-verified
+  02-Semiurban/raw/test/pcap/switch-n502-pcap-mir3.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n502-pcap-mir3.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n532-pcap-mir2.pcap: already present and CRC-verified
+  02-Semiurban/raw/test/pcap/switch-n532-pcap-mir2.pcap: already present and CRC-verified
+  02-Semiurban/raw/test/pcap/switch-n523-pcap-mir4.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n407-pcap-mir5.pcap: already present and CRC-verified
+  02-Semiurban/raw/test/pcap/switch-n407-pcap-mir5.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n523-pcap-mir2.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/docs/combined.pdf: already present and CRC-verified
+  02-Semiurban/raw/test/docs/combined.pdf: already present and CRC-verified
+  02-Semiurban/raw/test/docs/network.pdf: already present and CRC-verified
+  02-Semiurban/raw/train/docs/network.pdf: already present and CRC-verified
+  02-Semiurban/raw/test/events.jsonl: already present and CRC-verified
+  02-Semiurban/raw/test/log/mtu-n1-vcc-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/docs/power-grid.pdf: already present and CRC-verified
+  02-Semiurban/raw/train/docs/power-grid.pdf: already present and CRC-verified
+  02-Semiurban/raw/train/log/mtu-n1-vcc-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/docs/combined.svg: already present and CRC-verified
+  02-Semiurban/raw/train/docs/combined.svg: already present and CRC-verified
+  02-Semiurban/raw/test/docs/power-grid.svg: already present and CRC-verified
+  02-Semiurban/raw/train/docs/power-grid.svg: already present and CRC-verified
+  02-Semiurban/raw/train/data-point-map.json: already present and CRC-verified
+  02-Semiurban/raw/test/data-point-map.json: already present and CRC-verified
+  02-Semiurban/ipal/test/initial_state.json: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/ipal/test/initial_state.json: 0.1 MB, CRC-32 verified
+  02-Semiurban/ipal/train/initial_state.json: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/ipal/train/initial_state.json: 0.1 MB, CRC-32 verified
+  02-Semiurban/ipal/rules.py: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/ipal/rules.py: 0.4 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/mtu-n1-ccx-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/mtu-n1-ccx-service.log: 0.3 MB, CRC-32 verified
+  02-Semiurban/raw/test/docs/network.svg: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/docs/network.svg: 0.7 MB, CRC-32 verified
+  02-Semiurban/raw/train/docs/network.svg: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/docs/network.svg: 0.7 MB, CRC-32 verified
+  02-Semiurban/raw/train/log/mtu-n1-ccx-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/log/mtu-n1-ccx-service.log: 0.1 MB, CRC-32 verified
+  02-Semiurban/raw/test/sherlock-config.yml: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/sherlock-config.yml: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n120-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n120-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n151-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n151-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n150-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n150-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/ipal/test/events.json: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/ipal/test/events.json: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/train/events.jsonl: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/train/events.jsonl: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n137-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n137-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n119-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n119-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n118-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n118-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n138-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n138-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n127-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n127-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n163-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n163-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n155-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n155-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n171-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n171-rtu-service.log: 0.0 MB, CRC-32 verified
+  02-Semiurban/raw/test/log/rtu-n156-rtu-service.log: 0.0 MB in 1 chunks, 0 already done, 6 workers
+  02-Semiurban/raw/test/log/rtu-n156-rtu-service.log: 0.0 MB, CRC-32 verified
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.11/urllib/request.py", line 1348, in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+  File "/opt/anaconda3/lib/python3.11/http/client.py", line 1294, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/opt/anaconda3/lib/python3.11/http/client.py", line 1340, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/opt/anaconda3/lib/python3.11/http/client.py", line 1289, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/opt/anaconda3/lib/python3.11/http/client.py", line 1048, in _send_output
+    self.send(msg)
+  File "/opt/anaconda3/lib/python3.11/http/client.py", line 986, in send
+    self.connect()
+  File "/opt/anaconda3/lib/python3.11/http/client.py", line 1466, in connect
+    self.sock = self._context.wrap_socket(self.sock,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/ssl.py", line 517, in wrap_socket
+    return self.sslsocket_class._create(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/ssl.py", line 1108, in _create
+    self.do_handshake()
+  File "/opt/anaconda3/lib/python3.11/ssl.py", line 1383, in do_handshake
+    self._sslobj.do_handshake()
+ConnectionResetError: [Errno 54] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/bodapati/Downloads/CyberPhysicalDBN/scripts/download_sherlock_parallel.py", line 342, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/Users/bodapati/Downloads/CyberPhysicalDBN/scripts/download_sherlock_parallel.py", line 331, in main
+    fetch_essential(name, out, args.workers, chunk)
+  File "/Users/bodapati/Downloads/CyberPhysicalDBN/scripts/download_sherlock_parallel.py", line 280, in fetch_essential
+    extract_member_from_remote(url, zf, info, out / name, workers, chunk_bytes, tmp)
+  File "/Users/bodapati/Downloads/CyberPhysicalDBN/scripts/download_sherlock_parallel.py", line 226, in extract_member_from_remote
+    with urllib.request.urlopen(req, timeout=60) as r:  # exactly the 30 fixed header bytes, not a 4 MB cache block
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/urllib/request.py", line 216, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/urllib/request.py", line 519, in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/urllib/request.py", line 536, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/urllib/request.py", line 496, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/urllib/request.py", line 1391, in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.11/urllib/request.py", line 1351, in do_open
+    raise URLError(err)
+urllib.error.URLError: <urlopen error [Errno 54] Connection reset by peer>
+exit=1

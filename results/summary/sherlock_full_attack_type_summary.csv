@@ -1,0 +1,17 @@
+scenario,detector,attack_type,n_events,n_detected,mean_frac_slices_alarmed,mean_event_auroc,n_events_auroc_ge_0.9,mean_n_attack_points,git_sha,source_file,ablation_axis
+01-Basic,lstm_ae,arp-spoof:arp-spoof-dos,2,1,0.5,0.400624106266744,0,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+01-Basic,lstm_ae,control-and-freeze:control-and-freeze,5,5,0.9933734939759036,0.6631718019674085,0,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+01-Basic,lstm_ae,drift-off:drift-off,4,4,1.0,0.7549995988507647,1,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+01-Basic,lstm_ae,industroyer:industroyer,7,7,0.9822354748350952,0.7458566654326978,4,1.7142857142857142,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+01-Basic,zscore_mean_abs,arp-spoof:arp-spoof-dos,2,0,0.0,0.3162820065183337,0,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+01-Basic,zscore_mean_abs,control-and-freeze:control-and-freeze,5,3,0.1690340936634187,0.6564720499560764,1,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+01-Basic,zscore_mean_abs,drift-off:drift-off,4,3,0.5033431494264702,0.7921947822866395,2,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+01-Basic,zscore_mean_abs,industroyer:industroyer,7,3,0.4090953135432092,0.7988087119535278,3,1.7142857142857142,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+02-Semiurban,lstm_ae,arp-spoof:arp-spoof-dos,2,2,1.0,0.4324147137830628,0,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+02-Semiurban,lstm_ae,control-and-freeze:control-and-freeze,2,2,1.0,0.5042149185120532,0,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+02-Semiurban,lstm_ae,drift-off:drift-off,2,2,1.0,0.5160139674210837,0,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+02-Semiurban,lstm_ae,industroyer:industroyer,1,1,1.0,0.9948205394657708,1,1.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+02-Semiurban,zscore_mean_abs,arp-spoof:arp-spoof-dos,2,1,0.5,0.3588474766750376,0,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+02-Semiurban,zscore_mean_abs,control-and-freeze:control-and-freeze,2,2,0.7338235294117648,0.5777094801551814,0,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+02-Semiurban,zscore_mean_abs,drift-off:drift-off,2,2,0.6448632178578525,0.5617789262122742,0,0.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full
+02-Semiurban,zscore_mean_abs,industroyer:industroyer,1,1,1.0,0.9973243545107536,1,1.0,1fe7fa9e4b5739d0565e60119fe204c708e3a300-dirty,exp13_attack_type_summary_20260928T130418Z.csv,sherlock_full

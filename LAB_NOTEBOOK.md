@@ -3218,3 +3218,293 @@ is a stronger, more specific version of H5's pre-registered null than
 anticipated: not "the aux signal fails to transfer," but "the aux signal
 transfers and measurably changes the partition, and the downstream metric
 still doesn't care."
+
+## 2026-09-28 Experiment: exp13_sherlock_full (all three Sherlock scenarios; anomaly-detection reformulation)
+
+**Motivation.** User asked to download the COMPLETE Sherlock dataset and use it.
+exp07 (2026-08-05) used only `01-Basic` and its headline finding was that the
+scenario gives NO usable in-domain supervision: the train split has zero real
+attacks (by the dataset authors' design), so the supervised `CausalTCN`
+collapsed to a constant predictor (AUC-PR = base rate = 0.1330, ECE = base
+rate, calibration temperature pinned at its bound T=20). That entry named two
+next steps: train on `02-Semiurban`, or reformulate as anomaly detection.
+Both are now possible. This experiment does the second properly and uses all
+three scenarios.
+
+**Data actually obtained** (Zenodo record 15168928, v1; md5 verified against
+the hashes Zenodo publishes before any byte is used):
+`02-Semiurban.zip` 4,677,487,711 B, `03-Rural.zip` 1,866,012,067 B,
+`paper.pdf` 1,653,871 B. Downloaded with a resumable parallel-range fetcher
+(Zenodo throttles each connection to ~0.25-0.3 MB/s, measured; 16 parallel
+connections gave ~1 MB/s aggregate) instead of `scripts/download_sherlock.sh`'s
+single-stream `curl`, which would have needed ~4 h uninterrupted and cannot
+resume. Same md5 gate, so the bytes are the same bytes. Disk headroom (14 GiB
+free of 228) forced extract-then-delete-zip per scenario.
+
+**Structure known BEFORE download** (read from each zip's central directory via
+HTTP range requests -- a few KB, no payload): `02-Semiurban/` ships
+`train.n406.state.gz` (308 MB) + `test.n406.state.gz` (301 MB) + `ipal/{train,test}`
++ `raw/{train,test}`. `03-Rural/` ships ONLY `train.n402.state.gz` (580 MB) +
+`ipal/test` + `raw/test` -- no `test.*.state.gz` and no `raw/train`, even though
+the state file is NAMED "train". So which of 03's slices are attacks is an open
+question until the label vocabulary is read (named risk H4). State-point
+counts differ per scenario (n302 / n406 / n402 in the file names).
+
+**Design.**
+- Streaming feature extraction (`stream_state_file_features`, new, tested to be
+  bit-identical to the existing record-list route): the existing route keeps
+  every record's ~470-key dict alive, which does not scale to the Rural file.
+  Same 11 aggregate features (`SHERLOCK_GLOBAL_COLUMNS`), no topology (none
+  ships), no new hand-made feature.
+- **Arm A -- unsupervised anomaly detection, in-domain (01-Basic, 02-Semiurban).**
+  The existing `LSTMAutoencoder` (src/baselines/lstm_ae.py, reused unchanged,
+  incl. its tested float64-safe `error_to_probability`) is trained ONLY on the
+  attack-free train file (chronological 60/20/20 = fit / val for early stopping
+  + error-scaler / held-out-clean), on per-feature standardized inputs
+  (mean/std from the fit chunk only), and scores the held-out attack test file.
+  No positive label is ever seen in training. A trivial reference detector
+  (mean |z| over the same standardized features, scaler fit on the same val
+  chunk) is scored alongside, so "the AE adds something" is checked, not
+  assumed. Hyperparameters fixed a priori (hidden 32, latent 8, 1 layer, lr 1e-3),
+  NOT searched -- stated, so no comparison here is claimed against tuned
+  baselines.
+- **Arm B -- zero-shot cross-network transfer.** Each in-domain AE scores the
+  OTHER scenarios' data (including 03-Rural, which the dataset ships
+  specifically to test transferability), normalized with the SOURCE network's
+  statistics only. Also reports the false-alarm rate on the target's non-attack
+  slices at the source's own threshold, to separate "cannot see the attack"
+  from "the whole network looks anomalous because its scale differs".
+- **Arm C -- supervised transfer matrix on the shared 2-column bus-voltage
+  subspace** (the design exp07 already used, unchanged: mean bus voltage pu and
+  its delta): twin -> each Sherlock scenario, and each real attack file ->
+  twin and -> the other real files. exp07 could only fill ONE cell of this
+  (twin -> 01-Basic, 0.169 vs base 0.133) because no Sherlock file it used
+  contained positives it was allowed to train on.
+
+**H1.** The AE trained on clean data alone discriminates real attack slices in
+the held-out test file at AUC-PR materially above the base rate on both 01-Basic
+and 02-Semiurban (unlike exp07's exactly-base-rate constant predictor), because
+Sherlock's attacks manipulate process state (measurement/command injection)
+outside the clean operating envelope. Direction asserted; magnitude not.
+**Pre-registered possible null:** the 11 aggregate features average over every
+bus/line/load in the network, so a localized manipulation of one element can
+vanish into the mean; then AUC-PR stays near the base rate and the finding is
+"topology-free aggregates are insufficient", pointing back at the missing
+per-element view (exp07's H3). The dataset paper's own framing ("process-aware"
+detection: some attacks are only visible through process semantics) makes this
+null genuinely plausible.
+**H2.** Zero-shot cross-network AUC-PR is below in-domain AUC-PR (a real gap,
+reported), because aggregate power features scale with network size
+(n302 vs n406 vs n402 state points). If scale dominates, target NON-attack
+slices will already exceed the source threshold (high false-alarm rate) -- a
+distinct, diagnosable failure from "attack invisible".
+**H3.** Filling the twin -> {02, 03} cells reproduces exp07's small margin above
+base rate on 01-Basic; no magnitude asserted. Real-attack-trained -> twin and
+real -> real cells are new and have no prior expectation beyond "the 2-column
+subspace carries little attack signal" (exp07's own finding).
+**H4 (named risk -- 03-Rural).** Its lone state file is named "train" but the
+archive carries only `raw/test`; the label vocabulary may show it is entirely or
+mostly attack data (evaluation-only, as the dataset paper describes 03), or a
+mix. Either way it can only ever be a TARGET in arms B/C, never a clean-train
+source. The real vocabulary and base rate are read and printed before any score
+is computed on it.
+
+**Stop rule.** Structural gate only (every raw `malicious` string classifiable,
+feature tensors finite, cadence verified not assumed, train files contain no
+real attack where the design requires it, scores finite and in [0,1], seeds
+logged). AUC-PR / ROC-AUC / lift numbers print unconditionally and are never
+gated (CLAUDE.md rule 3). A null on H1 is a result, not a reason to add
+features or tune until it goes away.
+
+**Amendment (same day, written BEFORE any reportable exp13 number exists).**
+While 02/03 were still downloading, exp13 was run at full scale on 01-Basic
+alone as a debugging preview (`results/exp13_preview_01basic_only_*.log`; NOT a
+result, never cited as one). Its alarm thresholds were absurd: theta = 1.5e15
+(LSTM-AE reconstruction error) and 1.2e7 (mean |z|), while several attack events
+scored enormously (mean |z| 174-331) yet were "not detected", and the only two
+"detected" events (the last two) were alarmed at 100% of their slices as were
+4.65% of the file's NON-attack slices. Diagnosis on the real 01-Basic clean
+train file (`diag_chunks.py`, per-feature stats per chunk):
+- `trafo_tap_position_mean` is exactly 0 (std exactly 0) throughout the first
+  ~82% of the ATTACK-FREE train file, then is 127.5 for most of the rest. The
+  chronological 60/20/20 split therefore fits on one operating regime and
+  puts the calibration chunk (88% of it in the new regime) in another.
+- With the pre-registered std floor of 1e-6, that regime change is
+  z = 1.28e8, which sets both alarm thresholds and drowns every other feature.
+  Two further features are near-constant in the fit chunk
+  (`load_reactive_power_var_mean` std 6.5 on mean 6.1e5; `bus_voltage_pu_max`).
+So the preview measured "which slices are in the tap-127.5 regime", not
+"which slices are attacks". That is a defect in MY design (a numerical floor,
+not the data, setting the scale; and a split that ignores non-stationarity in
+one 12-hour recording), found before any reportable number, so it is amended
+here rather than left in:
+1. Split: BLOCKED interleaving instead of chronological 60/20/20 -- 1800-slice
+   (30 min) blocks assigned cyclically fit,fit,fit,val,calib, so fit / val /
+   calib each span the whole recording including every regime. Cost, stated:
+   val/calib are adjacent to fit blocks, hence an easier clean-vs-clean
+   comparison than a genuinely later period, so the 99th-percentile threshold
+   may be optimistic; the test file's non-attack false-alarm rate is reported
+   next to it as the honest check.
+2. |z| is clipped at 10 after standardization (both detectors), so a
+   near-constant feature cannot dominate by a numerical accident.
+3. A second, ALSO-REPORTED (never replacing the first) evaluation ignores the
+   post-attack RECOVERY windows the dataset's own catalog defines
+   ([end, recovery) of each real attack): labels mark only the attack itself as
+   malicious, but the grid is still perturbed while it recovers, so an
+   alarm there is not obviously a false alarm.
+Unchanged: model and every hyperparameter, the 11 features, the a-priori 99th
+percentile, the hypotheses H1-H4 and their pre-registered nulls, the stop rule.
+The values 1800 and 10 were fixed by argument (a window is 63 slices; 10 sigma
+of clean variation is unambiguously anomalous), not swept, and preview
+detection numbers were not used to choose them.
+
+**What was downloaded, precisely (and what was not).** From Zenodo record
+15168928 v1: `paper.pdf` (md5 verified) and, for `02-Semiurban` and
+`03-Rural`, every member the experiments read -- all three `*.state.gz`
+(298.1 + 290.7 MB and 555.3 MB compressed), every `ipal/**` event catalog and
+every other member <= 20 MB compressed (181 + 85 members), each verified by its
+zip CRC-32 and size (`scripts/download_sherlock_parallel.py --essential`, logs
+`results/sherlock_essential_download_*.log`). NOT downloaded: the 8 + 4 large
+members (`raw/*/physical.zip`, `raw/*/control-center.zip`, the biggest pcaps;
+~4.0 GB for 02, ~1.2 GB for 03). Reasons: the disk had 10-14 GiB free at 93-95%
+(a full 02 needs zip + 6.05 GB extracted at once), Zenodo throttled the whole-zip
+route to ~0.25 MB/s per connection (my first full-zip attempt stalled at 0.64 of
+4.68 GB and was abandoned; its partial file was deleted), and no experiment
+here reads any of them. So the user's "complete dataset" is complete for every
+file this project reads, and NOT byte-complete; the full-mode downloader
+(md5-gated) exists for whoever frees the disk. 01-Basic was already fully
+extracted from 2026-08-05.
+
+**Dataset facts found only by opening the real files (and the paper):**
+- `02-Semiurban`'s shipped state export is TRUNCATED. Paper Table 1: train and
+  test are each 12 h and the test has 29 attacks. The files hold 11,116 (train)
+  and 10,803 (test) records = ~3.1 h / 3.0 h, each ending in a line cut off
+  mid-number (2,819 and 35,153 chars dropped by `read_ipal_tolerant`; a
+  malformed line anywhere else still raises). The dataset's own catalog lists
+  29 attacks, only 7 of which start inside the exported window -- 22 do not
+  exist in the export. `01-Basic` (43,204 records, 18/18 catalogued attacks) and
+  `03-Rural` (43,206 records, 28/28) are complete. Both 02 files are ~300 MB,
+  which looks like an export size cap, not a property of the grid. Raw
+  `physical.zip` (1.46 GB vs 316 MB for 01) plausibly holds the full 02
+  timeline; NOT verified, and using it means re-implementing the authors'
+  1 Hz resampling and ~14 GB of disk -- left as a stated follow-up.
+- `03-Rural`'s only state file is named `train.n402...` but is the ATTACK data
+  (base rate 0.2336, 28 real attacks, 37 distinct raw labels); it has no clean
+  split, so it can only be a target (H4 confirmed). Its catalog is under
+  `ipal/test/`.
+- The state export is what a passive vantage point RECONSTRUCTS from intercepted
+  IEC-104 packets (paper Sec. 3.6), not raw pandapower truth. exp07's docstrings
+  call it "physical telemetry"; that is loose -- it is the state as the network
+  carried it. This matters for reading attack types (below).
+- The three scenarios are very different networks: 470 / 3,565 / 1,894 state
+  keys per record (60 / 512 / 240 bus entries).
+
+**Result** (`results/exp13_full_run_20260928T130418Z.log`, seed 42, all outputs
+stamped with the git SHA; gate PASSED (a)-(l)). Reported unconditionally.
+
+Arm A, in-domain, trained on attack-free data only (AUC-PR vs the test file's
+base rate; ROC-AUC; mean-|z| is the trivial reference):
+| scenario | detector | AUC-PR | base | lift | ROC-AUC | AUC-PR ignoring recovery |
+|---|---|---|---|---|---|---|
+| 01-Basic | LSTM-AE | 0.383 | 0.133 | 2.88x | 0.700 | 0.507 (base 0.137) |
+| 01-Basic | mean-abs-z | 0.376 | 0.133 | 2.83x | 0.721 | 0.495 |
+| 02-Semiurban | LSTM-AE | 0.331 | 0.231 | 1.43x | 0.508 | 0.364 (base 0.238) |
+| 02-Semiurban | mean-abs-z | 0.339 | 0.231 | 1.47x | 0.544 | 0.368 |
+Alarm-threshold behaviour (99th pct of held-out clean errors): mean-abs-z on
+01-Basic alarms 9/18 events at a 1.5% non-attack false-alarm rate, mean time to
+first alarm 141 s (median 62 s). The LSTM-AE's threshold is useless as a
+detector: 92% (01) and 100% (02) of the test file's NON-attack slices exceed it,
+so its "17/18" and "7/7" event counts mean nothing on their own; only its
+rank-based numbers (AUC-PR/ROC/event AUROC) are interpretable. mean-abs-z on
+02-Semiurban: 65% non-attack false-alarm rate, also poor.
+
+Per attack type, threshold-free (mean per-event AUROC of the event's slices vs
+all normal slices; 0.5 = invisible), LSTM-AE:
+| attack type | 01-Basic | 02-Semiurban (7 events only) |
+|---|---|---|
+| industroyer | 0.75 (7 events, 4 with AUROC >= 0.9) | 0.99 (1 event) |
+| drift-off | 0.76 (4) | 0.52 (2) |
+| control-and-freeze | 0.66 (5) | 0.50 (2) |
+| arp-spoof-dos | 0.40 (2) | 0.43 (2) |
+
+Arm B, zero-shot cross-network (source statistics only), AUC-PR / lift / ROC-AUC,
+LSTM-AE (mean-abs-z within 0.06 of these): 01->02 0.165 / 0.71x / 0.29;
+01->03 0.306 / 1.31x / 0.59; 02->01 0.232 / 1.74x / 0.62; 02->03 0.447 / 1.91x /
+0.66. The source's alarm threshold fires on 100% of the target's slices in every
+pair (so any threshold-based count transfers as nothing).
+Arm C, supervised on the 2-column bus-voltage subspace: lifts 0.99-1.50x across
+all real cells (e.g. twin->01 0.169 = exp07's logged 0.1692012238 to 10 digits,
+twin->02 0.275, twin->03 0.232 at base 0.234); every ->twin cell is 1.00x because
+the twin's own base rate is 0.9992 (all attack roots active from t=0) -- those
+cells carry no information.
+
+**Interpretation.**
+- H1 (in-domain above base rate): CONFIRMED in direction on both, but only
+  MATERIALLY on 01-Basic (2.9x, ROC 0.70). On 02-Semiurban the 1.4x AUC-PR sits
+  next to a ROC-AUC of 0.51/0.54 -- essentially chance -- i.e. the lift comes
+  from one event family (industroyer, event AUROC 0.99), not from general
+  separation. The pre-registered null (11 aggregates wash out localized
+  manipulation, worse in a 512-bus network) is therefore partly realized: what
+  the aggregates expose is what changes the state on a large scale (opening
+  breakers); the other three families sit at 0.40-0.66 (01) and 0.43-0.52 (02).
+  Reading the attack types against paper Table 2 (consistent with, not proven
+  by, these numbers): arp-spoof-dos is a NETWORK denial of service against RTUs
+  -- in a state reconstructed from packets it freezes updates, which reads as
+  calmer than normal (event AUROC below 0.5, both scenarios); drift-off and
+  control-and-freeze are man-in-the-middle measurement manipulations that
+  change one bus or one generator, which 11 network-wide means dilute. The
+  LSTM-AE adds nothing over the trivial mean-|z| detector (0.383 vs 0.376; 0.331
+  vs 0.339): temporal structure of these aggregates buys no discrimination.
+- H2 (cross-network below in-domain): CONFIRMED where both exist (01->02 0.165 vs
+  0.331; 02->01 0.232 vs 0.383) and 01->02 is INVERTED (ROC 0.29: normal 02
+  slices look more anomalous than its attacks under 01's scale). The prediction
+  that scale shift dominates is confirmed hard: the false-alarm rate is 100% for
+  every pair. But 02->03 (0.447, 1.9x) beats 02's own in-domain 0.331; treat as
+  a confound, not a transfer success -- 03 has 28 attacks over 12 h vs 02's 7
+  over 3 h and a different attack mix.
+- H3: the twin->01 cell reproduces exp07's number to 10 digits (a real
+  reproducibility check of exp07 through a re-implemented feature path); twin->02
+  and ->03 add nothing (1.19x, 0.99x). Real-attack-trained cells also sit at
+  1.0-1.5x: mean bus voltage and its delta carry little attack signal, exactly
+  exp07's earlier conclusion, now on three networks.
+- H4: confirmed (03 is a target only), plus the 02 export truncation above.
+- What this changes about exp07: its headline ("01-Basic gives no in-domain
+  supervision; AUC-PR == base rate") was true of the SUPERVISED formulation. The
+  dataset's designed formulation (fit on clean, score attacks) gives a real,
+  modest signal on 01-Basic (2.9x) -- so "Sherlock cannot ground the perception
+  layer" was too strong; "topology-free aggregates ground only the
+  large-footprint attacks" is what the data supports.
+- Consistent with the dataset paper's own findings: its Challenge 2/3 (valid
+  configurations unseen in training; benign switching that looks like an attack)
+  is what the 01-Basic tap regime (0 for 82% of the clean file, then 127.5) is,
+  and its Sec. 3.5 says alarms during recovery should be ignored, which the
+  recovery-excluded column applies (AUC-PR up from 0.38 to 0.51 on 01-Basic).
+  No numeric comparison to the paper's five IIDSs is made: their protocol
+  (filtered measurements, alarm-based counts) is not this one.
+
+**Limitations, stated.** One seed; hyperparameters fixed a priori, not searched
+(an AE that adds nothing over mean-|z| may simply be undertrained on 11k-27k
+windows); 02's clean data is 3.1 h and its test has only 7 events, so per-type
+02 numbers rest on 1-2 events each; blocked interleaving makes the calibration
+chunk easier than a later period, which the 92-100% test false-alarm rate shows
+was optimistic for the AE; the aggregate features are the ONLY view used (no
+topology ships), and nothing here tests a per-element or cyber-side view.
+
+**Surprised?** Yes, four times, each checked: (1) the preview's thresholds of
+1.5e15 / 1.2e7 -- traced to a tap position frozen at 0 for 82% of a clean file
+(amendment above), a defect in my own design caught before any reportable
+number; (2) the 02 export covers 25% of the paper's stated duration and 7 of 29
+attacks -- confirmed from the catalog, the file tails and paper Table 1, not
+assumed; (3) the LSTM-AE is no better than the trivial detector; (4) 01->02 is
+worse than chance. Open follow-up if pursued: the raw `physical.zip` for a
+full-length 02 timeline; a per-component (non-aggregate) feature view.
+
+**Addendum 2026-10-03 -- download completed.** `download_sherlock_parallel.py
+--scenario {02-Semiurban,03-Rural} --all-members --workers 8` finished with
+exit 0 and no MISMATCH/Traceback lines (log `results/sherlock_full_members_download_20261002T124558Z.log`):
+every member CRC-32 and size verified; on disk 02 = 5.6 GB, 03 = 2.3 GB, 01 = 3.2 GB.
+This supersedes the "NOT downloaded / NOT byte-complete" statement above. The
+whole-zip md5 was not computed (members were fetched individually), and nested
+`physical.zip` / `control-center.zip` are kept zipped. No exp13 number changes:
+the experiment never read these members. Whether 02's raw `physical.zip` holds the
+full 12 h timeline is still unchecked.

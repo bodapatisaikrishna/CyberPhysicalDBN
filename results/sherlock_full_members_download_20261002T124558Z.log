@@ -1,0 +1,463 @@
+==> 02-Semiurban (essential members only)
+  189 essential members, 6054 MB compressed; skipping 0 large members (0.00 GB); 65.7 GiB free
+  02-Semiurban/raw/test/physical.zip: 1475.7 MB in 44 chunks, 0 already done, 8 workers
+  02-Semiurban/raw/test/physical.zip:      0.0/1475.7 MB   0.00 MB/s  eta 24595701.2 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:      0.0/1475.7 MB   0.00 MB/s  eta 24595701.2 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:      0.0/1475.7 MB   0.00 MB/s  eta 24595701.2 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:     33.6/1475.7 MB   0.14 MB/s  eta 171.9 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    134.2/1475.7 MB   0.45 MB/s  eta  50.0 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    268.4/1475.7 MB   0.75 MB/s  eta  27.0 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    268.4/1475.7 MB   0.64 MB/s  eta  31.5 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    268.4/1475.7 MB   0.56 MB/s  eta  36.0 min (finished chunks only)
+  chunk 9 attempt 1 failed (OSError('short read on chunk 9: 25619516 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/test/physical.zip:    402.7/1475.7 MB   0.75 MB/s  eta  24.0 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    436.2/1475.7 MB   0.73 MB/s  eta  23.8 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    469.8/1475.7 MB   0.71 MB/s  eta  23.6 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    536.9/1475.7 MB   0.75 MB/s  eta  21.0 min (finished chunks only)
+  chunk 16 attempt 1 failed (OSError('short read on chunk 16: 28602140 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/test/physical.zip:    570.4/1475.7 MB   0.73 MB/s  eta  20.6 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    604.0/1475.7 MB   0.72 MB/s  eta  20.2 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    704.6/1475.7 MB   0.78 MB/s  eta  16.4 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    771.8/1475.7 MB   0.80 MB/s  eta  14.6 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    838.9/1475.7 MB   0.82 MB/s  eta  12.9 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    906.0/1475.7 MB   0.84 MB/s  eta  11.3 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:    939.5/1475.7 MB   0.82 MB/s  eta  10.8 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:   1006.6/1475.7 MB   0.84 MB/s  eta   9.3 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:   1073.7/1475.7 MB   0.85 MB/s  eta   7.9 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:   1107.3/1475.7 MB   0.84 MB/s  eta   7.3 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:   1174.4/1475.7 MB   0.85 MB/s  eta   5.9 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:   1208.0/1475.7 MB   0.84 MB/s  eta   5.3 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:   1275.1/1475.7 MB   0.85 MB/s  eta   3.9 min (finished chunks only)
+  chunk 42 attempt 1 failed (OSError('short read on chunk 42: 33522832 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/test/physical.zip:   1375.7/1475.7 MB   0.88 MB/s  eta   1.9 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:   1442.2/1475.7 MB   0.89 MB/s  eta   0.6 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip:   1442.2/1475.7 MB   0.86 MB/s  eta   0.7 min (finished chunks only)
+  02-Semiurban/raw/test/physical.zip: 1560.7 MB, CRC-32 verified
+  02-Semiurban/raw/train/physical.zip: 1462.0 MB in 44 chunks, 0 already done, 8 workers
+  02-Semiurban/raw/train/physical.zip:      0.0/1462.0 MB   0.00 MB/s  eta 24366505.8 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:      0.0/1462.0 MB   0.00 MB/s  eta 24366505.8 min (finished chunks only)
+  chunk 6 attempt 1 failed (OSError('short read on chunk 6: 6276340 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/train/physical.zip:      0.0/1462.0 MB   0.00 MB/s  eta 24366505.8 min (finished chunks only)
+  chunk 1 attempt 1 failed (OSError('short read on chunk 1: 10045496 of 33554432 bytes')); retrying in 1s
+  chunk 0 attempt 1 failed (OSError('short read on chunk 0: 11555232 of 33554432 bytes')); retrying in 1s
+  chunk 7 attempt 1 failed (OSError('short read on chunk 7: 11618464 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/train/physical.zip:      0.0/1462.0 MB   0.00 MB/s  eta 24366505.8 min (finished chunks only)
+  chunk 5 attempt 1 failed (OSError('short read on chunk 5: 11755960 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/train/physical.zip:      0.0/1462.0 MB   0.00 MB/s  eta 24366505.8 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:      0.0/1462.0 MB   0.00 MB/s  eta 24366505.8 min (finished chunks only)
+  chunk 5 attempt 2 failed (OSError('short read on chunk 5: 15511160 of 33554432 bytes')); retrying in 2s
+  02-Semiurban/raw/train/physical.zip:     67.1/1462.0 MB   0.16 MB/s  eta 145.5 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    134.2/1462.0 MB   0.28 MB/s  eta  79.2 min (finished chunks only)
+  chunk 1 attempt 2 failed (OSError('short read on chunk 1: 33545000 of 33554432 bytes')); retrying in 2s
+  02-Semiurban/raw/train/physical.zip:    201.3/1462.0 MB   0.37 MB/s  eta  56.4 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    201.3/1462.0 MB   0.34 MB/s  eta  62.6 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    201.3/1462.0 MB   0.30 MB/s  eta  68.9 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    234.9/1462.0 MB   0.33 MB/s  eta  62.7 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    335.5/1462.0 MB   0.43 MB/s  eta  43.6 min (finished chunks only)
+  chunk 12 attempt 1 failed (OSError('short read on chunk 12: 20885608 of 33554432 bytes')); retrying in 1s
+  chunk 11 attempt 1 failed (OSError('short read on chunk 11: 29568372 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/train/physical.zip:    369.1/1462.0 MB   0.44 MB/s  eta  41.5 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    436.2/1462.0 MB   0.48 MB/s  eta  35.3 min (finished chunks only)
+  chunk 17 attempt 1 failed (OSError('short read on chunk 17: 7821752 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/train/physical.zip:    436.2/1462.0 MB   0.45 MB/s  eta  37.6 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    469.8/1462.0 MB   0.46 MB/s  eta  35.9 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    469.8/1462.0 MB   0.43 MB/s  eta  38.0 min (finished chunks only)
+  chunk 12 attempt 2 failed (OSError('short read on chunk 12: 33553152 of 33554432 bytes')); retrying in 2s
+  02-Semiurban/raw/train/physical.zip:    536.9/1462.0 MB   0.47 MB/s  eta  32.7 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    637.5/1462.0 MB   0.53 MB/s  eta  25.9 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    704.6/1462.0 MB   0.56 MB/s  eta  22.6 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    704.6/1462.0 MB   0.53 MB/s  eta  23.6 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    738.2/1462.0 MB   0.53 MB/s  eta  22.6 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    805.3/1462.0 MB   0.56 MB/s  eta  19.6 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    939.5/1462.0 MB   0.63 MB/s  eta  13.9 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:    973.1/1462.0 MB   0.62 MB/s  eta  13.1 min (finished chunks only)
+  chunk 34 attempt 1 failed (OSError('short read on chunk 34: 8577084 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/train/physical.zip:    973.1/1462.0 MB   0.60 MB/s  eta  13.6 min (finished chunks only)
+  chunk 32 attempt 1 failed (OSError('short read on chunk 32: 18759804 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/train/physical.zip:   1006.6/1462.0 MB   0.60 MB/s  eta  12.7 min (finished chunks only)
+  chunk 31 attempt 1 failed (OSError('short read on chunk 31: 33554076 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/train/physical.zip:   1040.2/1462.0 MB   0.60 MB/s  eta  11.8 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:   1107.3/1462.0 MB   0.62 MB/s  eta   9.6 min (finished chunks only)
+  chunk 35 attempt 1 failed (OSError('short read on chunk 35: 31801520 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/train/physical.zip:   1107.3/1462.0 MB   0.60 MB/s  eta   9.9 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:   1140.9/1462.0 MB   0.59 MB/s  eta   9.0 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:   1208.0/1462.0 MB   0.61 MB/s  eta   6.9 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:   1275.1/1462.0 MB   0.62 MB/s  eta   5.0 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip:   1342.2/1462.0 MB   0.64 MB/s  eta   3.1 min (finished chunks only)
+  02-Semiurban/raw/train/physical.zip: 1545.1 MB, CRC-32 verified
+  02-Semiurban/raw/train/control-center.zip: 298.5 MB in 9 chunks, 0 already done, 8 workers
+  02-Semiurban/raw/train/control-center.zip:      0.0/298.5 MB   0.00 MB/s  eta 4975232.4 min (finished chunks only)
+  02-Semiurban/raw/train/control-center.zip:      0.0/298.5 MB   0.00 MB/s  eta 4975232.4 min (finished chunks only)
+  02-Semiurban/raw/train/control-center.zip:      0.0/298.5 MB   0.00 MB/s  eta 4975232.4 min (finished chunks only)
+  02-Semiurban/raw/train/control-center.zip:      0.0/298.5 MB   0.00 MB/s  eta 4975232.4 min (finished chunks only)
+  02-Semiurban/raw/train/control-center.zip:    100.7/298.5 MB   0.34 MB/s  eta   9.8 min (finished chunks only)
+  02-Semiurban/raw/train/control-center.zip:    268.4/298.5 MB   0.75 MB/s  eta   0.7 min (finished chunks only)
+  02-Semiurban/raw/train/control-center.zip: 298.4 MB, CRC-32 verified
+  02-Semiurban/train.n406.state.gz: already present and CRC-verified
+  02-Semiurban/raw/test/control-center.zip: 291.4 MB in 9 chunks, 0 already done, 8 workers
+  02-Semiurban/raw/test/control-center.zip:      0.0/291.4 MB   0.00 MB/s  eta 4856286.7 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:      0.0/291.4 MB   0.00 MB/s  eta 4856286.7 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:      0.0/291.4 MB   0.00 MB/s  eta 4856286.7 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:      0.0/291.4 MB   0.00 MB/s  eta 4856286.7 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:     33.6/291.4 MB   0.11 MB/s  eta  38.4 min (finished chunks only)
+  chunk 0 attempt 1 failed (OSError('short read on chunk 0: 23994340 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/test/control-center.zip:     67.1/291.4 MB   0.19 MB/s  eta  20.1 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:     67.1/291.4 MB   0.16 MB/s  eta  23.4 min (finished chunks only)
+  chunk 5 attempt 1 failed (OSError('short read on chunk 5: 30637568 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/test/control-center.zip:    201.3/291.4 MB   0.42 MB/s  eta   3.6 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:    201.3/291.4 MB   0.37 MB/s  eta   4.0 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:    201.3/291.4 MB   0.34 MB/s  eta   4.5 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:    201.3/291.4 MB   0.31 MB/s  eta   4.9 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:    201.3/291.4 MB   0.28 MB/s  eta   5.4 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:    201.3/291.4 MB   0.26 MB/s  eta   5.8 min (finished chunks only)
+  chunk 0 attempt 2 failed (OSError('short read on chunk 0: 24113024 of 33554432 bytes')); retrying in 2s
+  02-Semiurban/raw/test/control-center.zip:    224.3/291.4 MB   0.27 MB/s  eta   4.2 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:    257.8/291.4 MB   0.29 MB/s  eta   2.0 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip:    257.8/291.4 MB   0.27 MB/s  eta   2.1 min (finished chunks only)
+  02-Semiurban/raw/test/control-center.zip: 291.3 MB, CRC-32 verified
+  02-Semiurban/test.n406.state.gz: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap: 196.7 MB in 6 chunks, 0 already done, 8 workers
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:      0.0/196.7 MB   0.00 MB/s  eta 3277734.2 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:      0.0/196.7 MB   0.00 MB/s  eta 3277734.2 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:      0.0/196.7 MB   0.00 MB/s  eta 3277734.2 min (finished chunks only)
+  chunk 1 attempt 1 failed (SSLError(1, '[SYS] unknown error (_ssl.c:2580)')); retrying in 1s
+  chunk 5 attempt 1 failed (SSLError(1, '[SYS] unknown error (_ssl.c:2580)')); retrying in 1s
+  chunk 2 attempt 1 failed (SSLError(1, '[SYS] unknown error (_ssl.c:2580)')); retrying in 1s
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:      0.0/196.7 MB   0.00 MB/s  eta 3277734.2 min (finished chunks only)
+  chunk 0 attempt 1 failed (TimeoutError('The read operation timed out')); retrying in 1s
+  chunk 4 attempt 1 failed (TimeoutError('The read operation timed out')); retrying in 1s
+  chunk 3 attempt 1 failed (TimeoutError('The read operation timed out')); retrying in 1s
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:      0.0/196.7 MB   0.00 MB/s  eta 3277734.2 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:      0.0/196.7 MB   0.00 MB/s  eta 3277734.2 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:      0.0/196.7 MB   0.00 MB/s  eta 3277734.2 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:      0.0/196.7 MB   0.00 MB/s  eta 3277734.2 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:      0.0/196.7 MB   0.00 MB/s  eta 3277734.2 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:     67.1/196.7 MB   0.11 MB/s  eta  19.3 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:     96.0/196.7 MB   0.15 MB/s  eta  11.5 min (finished chunks only)
+  chunk 4 attempt 2 failed (OSError('short read on chunk 4: 30798240 of 33554432 bytes')); retrying in 2s
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:     96.0/196.7 MB   0.13 MB/s  eta  12.6 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:    163.1/196.7 MB   0.21 MB/s  eta   2.7 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap:    163.1/196.7 MB   0.19 MB/s  eta   2.9 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n406-pcap-mir2.pcap: 512.5 MB, CRC-32 verified
+  02-Semiurban/raw/test/pcap/switch-n406-pcap-mir2.pcap: 186.5 MB in 6 chunks, 0 already done, 8 workers
+  02-Semiurban/raw/test/pcap/switch-n406-pcap-mir2.pcap:      0.0/186.5 MB   0.00 MB/s  eta 3109029.3 min (finished chunks only)
+  02-Semiurban/raw/test/pcap/switch-n406-pcap-mir2.pcap:      0.0/186.5 MB   0.00 MB/s  eta 3109029.3 min (finished chunks only)
+  02-Semiurban/raw/test/pcap/switch-n406-pcap-mir2.pcap:     18.8/186.5 MB   0.10 MB/s  eta  26.8 min (finished chunks only)
+  chunk 3 attempt 1 failed (OSError('short read on chunk 3: 19973280 of 33554432 bytes')); retrying in 1s
+  02-Semiurban/raw/test/pcap/switch-n406-pcap-mir2.pcap:     18.8/186.5 MB   0.08 MB/s  eta  35.8 min (finished chunks only)
+  02-Semiurban/raw/test/pcap/switch-n406-pcap-mir2.pcap:     85.9/186.5 MB   0.29 MB/s  eta   5.9 min (finished chunks only)
+  02-Semiurban/raw/test/pcap/switch-n406-pcap-mir2.pcap:    119.4/186.5 MB   0.33 MB/s  eta   3.4 min (finished chunks only)
+  02-Semiurban/raw/test/pcap/switch-n406-pcap-mir2.pcap: 482.6 MB, CRC-32 verified
+  02-Semiurban/raw/train/pcap/switch-n495-pcap-mir4.pcap: 50.1 MB in 2 chunks, 0 already done, 8 workers
+  02-Semiurban/raw/train/pcap/switch-n495-pcap-mir4.pcap:      0.0/50.1 MB   0.00 MB/s  eta 835471.4 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n495-pcap-mir4.pcap:     16.6/50.1 MB   0.14 MB/s  eta   4.0 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n495-pcap-mir4.pcap:     16.6/50.1 MB   0.09 MB/s  eta   6.1 min (finished chunks only)
+  02-Semiurban/raw/train/pcap/switch-n495-pcap-mir4.pcap: 163.9 MB, CRC-32 verified
+  02-Semiurban/raw/test/pcap/switch-n495-pcap-mir4.pcap: 48.3 MB in 2 chunks, 0 already done, 8 workers
+  02-Semiurban/raw/test/pcap/switch-n495-pcap-mir4.pcap:      0.0/48.3 MB   0.00 MB/s  eta 805010.1 min (finished chunks only)
+  02-Semiurban/raw/test/pcap/switch-n495-pcap-mir4.pcap:     14.7/48.3 MB   0.12 MB/s  eta   4.6 min (finished chunks only)
+  02-Semiurban/raw/test/pcap/switch-n495-pcap-mir4.pcap: 162.7 MB, CRC-32 verified
+  02-Semiurban/raw/test/pcap/switch-n502-pcap-mir3.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n502-pcap-mir3.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n532-pcap-mir2.pcap: already present and CRC-verified
+  02-Semiurban/raw/test/pcap/switch-n532-pcap-mir2.pcap: already present and CRC-verified
+  02-Semiurban/raw/test/pcap/switch-n523-pcap-mir4.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n407-pcap-mir5.pcap: already present and CRC-verified
+  02-Semiurban/raw/test/pcap/switch-n407-pcap-mir5.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/pcap/switch-n523-pcap-mir2.pcap: already present and CRC-verified
+  02-Semiurban/raw/train/docs/combined.pdf: already present and CRC-verified
+  02-Semiurban/raw/test/docs/combined.pdf: already present and CRC-verified
+  02-Semiurban/raw/test/docs/network.pdf: already present and CRC-verified
+  02-Semiurban/raw/train/docs/network.pdf: already present and CRC-verified
+  02-Semiurban/raw/test/events.jsonl: already present and CRC-verified
+  02-Semiurban/raw/test/log/mtu-n1-vcc-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/docs/power-grid.pdf: already present and CRC-verified
+  02-Semiurban/raw/train/docs/power-grid.pdf: already present and CRC-verified
+  02-Semiurban/raw/train/log/mtu-n1-vcc-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/docs/combined.svg: already present and CRC-verified
+  02-Semiurban/raw/train/docs/combined.svg: already present and CRC-verified
+  02-Semiurban/raw/test/docs/power-grid.svg: already present and CRC-verified
+  02-Semiurban/raw/train/docs/power-grid.svg: already present and CRC-verified
+  02-Semiurban/raw/train/data-point-map.json: already present and CRC-verified
+  02-Semiurban/raw/test/data-point-map.json: already present and CRC-verified
+  02-Semiurban/ipal/test/initial_state.json: already present and CRC-verified
+  02-Semiurban/ipal/train/initial_state.json: already present and CRC-verified
+  02-Semiurban/ipal/rules.py: already present and CRC-verified
+  02-Semiurban/raw/test/log/mtu-n1-ccx-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/docs/network.svg: already present and CRC-verified
+  02-Semiurban/raw/train/docs/network.svg: already present and CRC-verified
+  02-Semiurban/raw/train/log/mtu-n1-ccx-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/sherlock-config.yml: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n120-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n151-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n150-rtu-service.log: already present and CRC-verified
+  02-Semiurban/ipal/test/events.json: already present and CRC-verified
+  02-Semiurban/raw/train/events.jsonl: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n137-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n119-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n118-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n138-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n127-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n163-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n155-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n171-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n156-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n104-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n134-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n167-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n154-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n136-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n147-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n116-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n145-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n154-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n150-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n109-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n167-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n159-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n115-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n126-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n165-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n146-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n153-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n128-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n127-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n139-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n104-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n105-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n159-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n113-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n111-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n169-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n121-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n148-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n151-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n172-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n172-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n140-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n107-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n171-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n140-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n120-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n110-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n168-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n133-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n131-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n168-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n170-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n135-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n132-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n149-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n107-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n113-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n170-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n111-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n141-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n141-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n112-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n142-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n163-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n148-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n165-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n122-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n121-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n106-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n131-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n143-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n169-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n152-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n133-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n153-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n106-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n126-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n147-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n129-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n124-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n110-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n122-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n145-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n117-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n161-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n132-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n125-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n157-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n144-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n130-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n108-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n123-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n136-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n114-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n123-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n164-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n124-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n125-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n158-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n146-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n152-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n142-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n162-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n160-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n144-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n143-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n137-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n161-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n118-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n128-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n114-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n135-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n164-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n116-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n117-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n160-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n112-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n108-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n105-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n166-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n157-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n155-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n156-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n149-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n109-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n134-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n158-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n115-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n129-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n138-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n166-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n162-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n139-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n130-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n119-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n101-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n102-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n102-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n101-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/test/log/rtu-n103-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/log/rtu-n103-rtu-service.log: already present and CRC-verified
+  02-Semiurban/raw/train/sherlock-config.yml: already present and CRC-verified
+  02-Semiurban/ipal/train/events.json: already present and CRC-verified
+==> 02-Semiurban essential members ready under data/sherlock/02-Semiurban/ (skipped: [] ... 0 total)
+Done. See docs/sherlock_download.md for dataset notes.
+==> 03-Rural (essential members only)
+  85 essential members, 2509 MB compressed; skipping 0 large members (0.00 GB); 54.6 GiB free
+  03-Rural/raw/test/physical.zip: 955.3 MB in 29 chunks, 0 already done, 8 workers
+  03-Rural/raw/test/physical.zip:      0.0/955.3 MB   0.00 MB/s  eta 15920950.0 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:      0.0/955.3 MB   0.00 MB/s  eta 15920950.0 min (finished chunks only)
+  chunk 4 attempt 1 failed (OSError('short read on chunk 4: 13748668 of 33554432 bytes')); retrying in 1s
+  03-Rural/raw/test/physical.zip:      0.0/955.3 MB   0.00 MB/s  eta 15920950.0 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:      0.0/955.3 MB   0.00 MB/s  eta 15920950.0 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:     67.1/955.3 MB   0.22 MB/s  eta  66.2 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    167.8/955.3 MB   0.47 MB/s  eta  28.2 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    201.3/955.3 MB   0.48 MB/s  eta  26.2 min (finished chunks only)
+  chunk 4 attempt 2 failed (OSError('short read on chunk 4: 33546800 of 33554432 bytes')); retrying in 2s
+  03-Rural/raw/test/physical.zip:    234.9/955.3 MB   0.49 MB/s  eta  24.5 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    234.9/955.3 MB   0.43 MB/s  eta  27.6 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    335.5/955.3 MB   0.56 MB/s  eta  18.5 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    402.7/955.3 MB   0.61 MB/s  eta  15.1 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    469.8/955.3 MB   0.65 MB/s  eta  12.4 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    503.3/955.3 MB   0.65 MB/s  eta  11.7 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    604.0/955.3 MB   0.72 MB/s  eta   8.1 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    637.5/955.3 MB   0.71 MB/s  eta   7.5 min (finished chunks only)
+  chunk 16 attempt 1 failed (OSError('short read on chunk 16: 12591436 of 33554432 bytes')); retrying in 1s
+  03-Rural/raw/test/physical.zip:    637.5/955.3 MB   0.66 MB/s  eta   8.0 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    738.2/955.3 MB   0.72 MB/s  eta   5.0 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    805.3/955.3 MB   0.75 MB/s  eta   3.4 min (finished chunks only)
+  chunk 16 attempt 2 failed (OSError('short read on chunk 16: 33538096 of 33554432 bytes')); retrying in 2s
+  03-Rural/raw/test/physical.zip:    872.4/955.3 MB   0.77 MB/s  eta   1.8 min (finished chunks only)
+  chunk 27 attempt 1 failed (OSError('short read on chunk 27: 33530412 of 33554432 bytes')); retrying in 1s
+  03-Rural/raw/test/physical.zip:    872.4/955.3 MB   0.73 MB/s  eta   1.9 min (finished chunks only)
+  03-Rural/raw/test/physical.zip:    906.0/955.3 MB   0.72 MB/s  eta   1.1 min (finished chunks only)
+  03-Rural/raw/test/physical.zip: 1011.3 MB, CRC-32 verified
+  03-Rural/train.n402.state.gz: already present and CRC-verified
+  03-Rural/raw/test/control-center.zip: 151.0 MB in 5 chunks, 0 already done, 8 workers
+  03-Rural/raw/test/control-center.zip:      0.0/151.0 MB   0.00 MB/s  eta 2517284.7 min (finished chunks only)
+  03-Rural/raw/test/control-center.zip:     16.8/151.0 MB   0.14 MB/s  eta  16.0 min (finished chunks only)
+  03-Rural/raw/test/control-center.zip: 151.0 MB, CRC-32 verified
+  03-Rural/raw/test/pcap/switch-n402-pcap-mir2.pcap: 115.8 MB in 4 chunks, 0 already done, 8 workers
+  03-Rural/raw/test/pcap/switch-n402-pcap-mir2.pcap:      0.0/115.8 MB   0.00 MB/s  eta 1929213.5 min (finished chunks only)
+  03-Rural/raw/test/pcap/switch-n402-pcap-mir2.pcap:     15.1/115.8 MB   0.13 MB/s  eta  13.3 min (finished chunks only)
+  03-Rural/raw/test/pcap/switch-n402-pcap-mir2.pcap: 310.8 MB, CRC-32 verified
+  03-Rural/raw/test/pcap/switch-n472-pcap-mir4.pcap: already present and CRC-verified
+  03-Rural/raw/test/pcap/switch-n493-pcap-mir4.pcap: already present and CRC-verified
+  03-Rural/raw/test/pcap/switch-n477-pcap-mir3.pcap: already present and CRC-verified
+  03-Rural/raw/test/pcap/switch-n484-pcap-mir4.pcap: already present and CRC-verified
+  03-Rural/raw/test/pcap/switch-n468-pcap-mir3.pcap: already present and CRC-verified
+  03-Rural/raw/test/pcap/switch-n502-pcap-mir4.pcap: already present and CRC-verified
+  03-Rural/raw/test/pcap/switch-n403-pcap-mir5.pcap: already present and CRC-verified
+  03-Rural/raw/test/log/mtu-n1-vcc-service.log: already present and CRC-verified
+  03-Rural/raw/test/docs/combined.pdf: already present and CRC-verified
+  03-Rural/raw/test/docs/network.pdf: already present and CRC-verified
+  03-Rural/raw/test/events.jsonl: already present and CRC-verified
+  03-Rural/raw/test/docs/power-grid.pdf: already present and CRC-verified
+  03-Rural/raw/test/docs/combined.svg: already present and CRC-verified
+  03-Rural/raw/test/docs/power-grid.svg: already present and CRC-verified
+  03-Rural/raw/test/data-point-map.json: already present and CRC-verified
+  03-Rural/raw/test/log/mtu-n1-ccx-service.log: already present and CRC-verified
+  03-Rural/ipal/test/initial_state.json: already present and CRC-verified
+  03-Rural/raw/test/docs/network.svg: already present and CRC-verified
+  03-Rural/ipal/rules.py: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n117-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n143-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/sherlock-config.yml: already present and CRC-verified
+  03-Rural/ipal/test/events.json: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n138-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n112-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n127-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n124-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n152-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n129-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n144-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n123-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n145-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n136-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n106-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n107-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n133-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n115-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n108-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n139-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n110-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n126-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n148-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n109-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n131-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n114-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n141-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n147-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n104-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n105-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n125-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n128-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n113-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n137-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n121-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n151-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n120-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n153-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n154-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n159-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n116-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n135-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n156-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n146-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n134-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n142-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n119-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n158-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n150-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n149-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n122-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n140-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n157-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n130-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n155-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n132-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n118-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n111-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n101-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n102-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n103-rtu-service.log: already present and CRC-verified
+  03-Rural/raw/test/log/rtu-n160-rtu-service.log: already present and CRC-verified
+==> 03-Rural essential members ready under data/sherlock/03-Rural/ (skipped: [] ... 0 total)
+Done. See docs/sherlock_download.md for dataset notes.
+exit=0

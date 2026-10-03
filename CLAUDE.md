@@ -680,6 +680,46 @@ under `results/exp12_*_20260813T104934Z.csv`; consolidated into
 
 ---
 
+## Session 13 — all three real Sherlock scenarios (post-Prompt-Pack, user-requested)
+
+The user asked to download the complete Sherlock dataset and use it.
+`experiments/exp13_sherlock_full.py`, hypotheses pre-registered (and one
+amendment, written before any reportable number) in `LAB_NOTEBOOK.md`
+2026-09-28. Facts a future session must not re-derive:
+
+- **What is on disk** (`data/sherlock/`, gitignored): 01-Basic (complete, from
+  Session 7), and for 02-Semiurban / 03-Rural every member the experiments read
+  (all `*.state.gz`, all event catalogs, every member <= 20 MB), each CRC-32
+  verified. Later (2026-10-03) the remaining ~5 GB of raw captures
+  (`raw/*/physical.zip`, `control-center.zip`, big pcaps) were fetched with
+  `--all-members`, each member CRC-32 verified (nested zips kept as zips; no
+  whole-zip md5 check was run). exp13 does not read them. Tool:
+  `scripts/download_sherlock_parallel.py` (`--essential` or full md5-gated mode).
+- **Data defects, verified**: 02-Semiurban's state export is truncated to ~3 h
+  of a 12 h run and ends mid-line (7 of its 29 catalogued test attacks are in
+  it); 03-Rural's only state file, named "train", is the ATTACK data (28
+  attacks, no clean split — a target only); the state is what a network vantage
+  point reconstructs from IEC-104 packets, not simulator truth (paper Sec. 3.6).
+- **Supervised training on 01-Basic is degenerate** (its train split has no
+  attacks; exp07's AUC-PR == base rate). The dataset's designed use is
+  unsupervised: fit on attack-free data, score the attack file. exp13 does that.
+- **Results** (reported, not gated): in-domain AUC-PR lift 2.88x on 01-Basic
+  (ROC-AUC 0.70) but 1.43x on 02-Semiurban (ROC-AUC 0.51, ~chance); a trivial
+  mean-|z| detector matches the LSTM autoencoder; only the breaker-opening
+  attack family (industroyer) is clearly separable from the 11 topology-free
+  aggregates; zero-shot cross-network lifts 0.71-1.91x with a 100% false-alarm
+  rate at every source threshold; supervised 2-column-subspace lifts 0.99-1.50x;
+  every "->twin" cell is uninformative (twin base rate 0.9992, so exp07's
+  "Sherlock->twin 0.99" carried no information).
+- **Pitfall found and fixed before reporting** (do not reintroduce): a
+  standardizer whose 1e-6 floor acts as a scale turns a feature that is
+  constant in the fit data but moves later (01-Basic's transformer tap: 0 for
+  82% of the clean file, then 127.5) into z ~ 1e8 and sets the whole alarm
+  threshold. Fix: clip |z| at 10 and split the clean recording into interleaved
+  30-minute blocks (fit/val/calib) instead of chronologically.
+
+---
+
 # PART 3 — Operating rules for these sessions
 
 **One session per phase.** Long sessions degrade; Claude Code loses track of
