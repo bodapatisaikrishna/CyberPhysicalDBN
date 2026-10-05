@@ -1,0 +1,2 @@
+arm,train,eval,detector,auc_pr,base_rate,lift,roc_auc,git_sha,seed
+D_supervised_event_heldout,02-Semiurban/test other folds,02-Semiurban/test held-out folds,hist_gbm,0.23230933044518073,0.24413911939418673,0.951544885644051,0.44412461861580094,2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42

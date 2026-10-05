@@ -1,0 +1,3 @@
+train_domain,eval_domain,auc_pr,base_rate,lift,n_eval,n_train_slices,git_sha,seed,source_file,ablation_axis
+twin,02-Semiurban,0.2547455970249788,0.2441391199827194,1.0434443977802907,22053,7220,2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp13_transfer_matrix_20261003T093637Z.csv,sherlock_physical
+02-Semiurban,twin,1.0,0.999168974161148,1.000831717017184,10,22053,2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp13_transfer_matrix_20261003T093637Z.csv,sherlock_physical

@@ -745,3 +745,15 @@ doubt usually contains silent assumptions.
 question, or fix the instability threshold, or settle the asset-graph schema —
 write it into `CLAUDE.md`. It is a living contract, and future sessions depend
 on it being current.
+**Session 13 addendum (2026-10-03).** 02-Semiurban's raw `physical.zip` (both splits) holds the full 12.03 h
+(~2 s snapshots, jittered 0.6-6.6 s); `src/perception/sherlock_physical.py` + `configs/sherlock_full_physical.yaml`
+score all 29 test attacks (labels from `ipal/<split>/events.json`, 99.9% agreement with the state file's own
+labels). Result: lift 1.06x (LSTM-AE) / 1.24x (mean-|z|), ROC-AUC ~0.46 -- the full timeline did NOT make the
+aggregates more informative. Physical view != state view (178 vs a subset of buses): never mix them across arms.
+Its gate (b) (cadence) FAILED and is reported, not relaxed. NaN voltages (islanded buses) are excluded+counted.
+build_summary_tables/generate_publication_plots pin exp13 run timestamps; do not revert to newest-glob.
+**Session 13 follow-up (2026-10-03, exp14-16).** Tried to improve the 02 physical-view result: per-component view (exp14),
+causal rolling baseline (exp15), event-held-out supervised (exp16). Only gain: regime robustness + industroyer 6/9 events
+AUROC>=0.9; overall ROC ~0.50, all pre-registered criteria missed. The three non-breaker families show no footprint in any
+physical view tried; the untried lever is the raw network captures. Do not claim "improved detection" beyond industroyer.
+A clean-train detector scored on a different run saturates (100% non-attack FPR) unless a per-run causal baseline is used.

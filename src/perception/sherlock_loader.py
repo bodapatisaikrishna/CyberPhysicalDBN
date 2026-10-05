@@ -308,6 +308,8 @@ class StateFileFeatures:
     raw_label_counts: dict[str, int]  # Counter over str(raw `malicious`) -- the real label vocabulary
     component_key_counts: dict[str, int]  # distinct state keys per component family, first record
     n_state_keys_first_record: int
+    column_names: tuple[str, ...] = ()  # per-column names for views whose columns are not SHERLOCK_GLOBAL_COLUMNS
+    n_nonfinite_values: int = 0  # NaN/inf feature-source values dropped before aggregating (physical view only; 0 for state files)
     truncated_tail_chars: int = 0  # >0: the file's last line was cut off mid-record and dropped (see read_ipal_tolerant)
 
 

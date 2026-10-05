@@ -1,0 +1,4 @@
+criterion,met,detail,git_sha,seed,source_file,ablation_axis
+S-1 pooled out-of-fold ROC-AUC>=0.80,False,0.444,2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp16_criteria_20261003T153317Z.csv,sherlock_supervised
+S-2 each non-industroyer family mean event AUROC>=0.70,False,"{""arp-spoof"": 0.531, ""control-and-freeze"": 0.506, ""drift-off"": 0.382}",2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp16_criteria_20261003T153317Z.csv,sherlock_supervised
+S-3 industroyer >=7/9 events AUROC>=0.9 (mean over repeats),False,1.3/9,2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp16_criteria_20261003T153317Z.csv,sherlock_supervised

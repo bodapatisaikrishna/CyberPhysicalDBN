@@ -67,6 +67,11 @@ from src.perception.sherlock_anomaly import (
     score_ae_ranges,
     zscore_mean_abs,
 )
+from src.perception.sherlock_physical import (
+    label_agreement_with_state_file,
+    stream_physical_zip_components,
+    stream_physical_zip_features,
+)
 from src.perception.sherlock_loader import (
     SHERLOCK_GLOBAL_COLUMNS,
     StateFileFeatures,
@@ -128,12 +133,13 @@ class SherlockFile:
         return f"{self.scenario}/{self.kind}"
 
 
-def load_features_cached(path: Path, cache_dir: Path, scenario: str, max_records: int | None) -> StateFileFeatures:
+def load_features_cached(path: Path, cache_dir: Path, scenario: str, max_records: int | None,
+                         stream_fn=None, cache_tag: str = "") -> StateFileFeatures:
     """Parse once, reuse: the large files take minutes to stream. The cache is
     keyed on the source file's size + mtime (a re-downloaded/changed file is
     re-parsed, never silently served stale). Smoke prefixes are never cached."""
     st = path.stat()
-    cache = cache_dir / f"{scenario}__{path.name}.npz"
+    cache = cache_dir / f"{scenario}__{cache_tag}{path.name}.npz"
     if max_records is None and cache.exists():
         z = np.load(cache, allow_pickle=False)
         meta = json.loads(str(z["meta"]))
@@ -148,9 +154,11 @@ def load_features_cached(path: Path, cache_dir: Path, scenario: str, max_records
                 component_key_counts=meta["component_key_counts"],
                 n_state_keys_first_record=meta["n_keys"],
                 truncated_tail_chars=int(meta.get("truncated_tail_chars", 0)),
+                n_nonfinite_values=int(meta.get("n_nonfinite_values", 0)),
+                column_names=tuple(meta.get("column_names", ())),
             )
     t0 = time.time()
-    f = stream_state_file_features(path, max_records=max_records)
+    f = (stream_fn or stream_state_file_features)(path, max_records=max_records)
     print(f"    parsed {f.features.shape[0]} records in {time.time() - t0:.0f}s", flush=True)
     if max_records is None:
         cache_dir.mkdir(parents=True, exist_ok=True)
@@ -160,7 +168,8 @@ def load_features_cached(path: Path, cache_dir: Path, scenario: str, max_records
             meta=json.dumps({
                 "size": st.st_size, "mtime_ns": st.st_mtime_ns, "raw_label_counts": f.raw_label_counts,
                 "component_key_counts": f.component_key_counts, "n_keys": f.n_state_keys_first_record,
-                "truncated_tail_chars": f.truncated_tail_chars,
+                "truncated_tail_chars": f.truncated_tail_chars, "n_nonfinite_values": f.n_nonfinite_values,
+                "column_names": list(f.column_names),
             }),
         )
     return f
@@ -173,6 +182,9 @@ def check_cadence(timestamps: np.ndarray, expected: float, tol: float) -> tuple[
     if gaps.size == 0:
         return expected, 0
     return float(np.median(gaps)), int((np.abs(gaps - expected) > tol).sum())
+
+
+PHYSICAL_AGREEMENT: dict[str, dict] = {}
 
 
 def load_event_catalog(scenario_dir: Path, kind: str) -> tuple[dict[str, dict] | None, Path | None]:
@@ -205,7 +217,27 @@ def locate_and_load(cfg: dict, smoke: bool) -> list[SherlockFile]:
             print(f"    {kind}_glob {glob!r} matched: {[m.name for m in matches]}")
             if not matches:
                 continue
-            f = load_features_cached(matches[0], cache_dir, sc["name"], max_records)
+            if sc.get("physical"):
+                # Full-length simulator-side snapshots (see src/perception/sherlock_physical.py);
+                # labels come from the dataset's own event catalog, cross-checked against the
+                # state file's labels on the span both cover.
+                zpath = d / sc["physical"][f"{kind}_zip"]
+                catalog_list = json.loads((d / "ipal" / kind / "events.json").read_text())
+                view = sc["physical"].get("view", "aggregate")
+                stream = stream_physical_zip_components if view == "component" else stream_physical_zip_features
+                f = load_features_cached(
+                    zpath, cache_dir, sc["name"], max_records,
+                    stream_fn=lambda p, max_records=None, _c=catalog_list, _s=stream: _s(p, _c, max_records=max_records),
+                    cache_tag=f"physical__{kind}__" if view == "aggregate" else f"physical_{view}__{kind}__",
+                )
+                if max_records is None:
+                    sf = load_features_cached(matches[0], cache_dir, sc["name"], None)
+                    ag = label_agreement_with_state_file(f.timestamps, f.labels.numpy(), sf.timestamps, sf.labels.numpy())
+                    print(f"    label agreement physical(catalog rule) vs state-file labels on shared span: {ag}", flush=True)
+                    PHYSICAL_AGREEMENT[f"{sc['name']}/{kind}"] = ag
+                matches = [zpath]
+            else:
+                f = load_features_cached(matches[0], cache_dir, sc["name"], max_records)
             med, n_bad = check_cadence(f.timestamps, float(cfg["timebase"]["expected_cadence_seconds"]),
                                        float(cfg["timebase"]["cadence_tolerance_seconds"]))
             runs = event_runs(f.event_ids)
@@ -448,7 +480,7 @@ def main() -> int:
         inv_rows.append({
             "scenario": f.scenario, "file": f.path.name, "kind": f.kind, "role": f_role,
             "n_records": f.feats.features.shape[0], "n_state_keys": f.feats.n_state_keys_first_record,
-            "truncated_tail_chars": f.feats.truncated_tail_chars,
+            "truncated_tail_chars": f.feats.truncated_tail_chars, "n_nonfinite_values_excluded": f.feats.n_nonfinite_values,
             "cadence_median_s": f.cadence_median, "cadence_n_gaps_outside_tol": f.cadence_n_bad,
             "base_rate": f.base_rate, "n_attack_slices": int(f.feats.labels.sum().item()),
             "n_attack_events": len(f.runs), **{k: (json.dumps(v) if isinstance(v, list) else v) for k, v in catalog_coverage(f).items()},
@@ -473,7 +505,8 @@ def main() -> int:
         print(f"      components: {f.feats.component_key_counts}")
         if non_benign:
             failures.append(f"{f.label}: raw label(s) not False / benign / numeric event id: {non_benign[:5]}")
-        if f.cadence_n_bad:
+        allowed_bad = float(cfg["timebase"].get("max_frac_gaps_outside_tol", 0.0)) * f.feats.features.shape[0]
+        if f.cadence_n_bad > allowed_bad:
             failures.append(f"{f.label}: {f.cadence_n_bad} inter-record gaps outside {cfg['timebase']['cadence_tolerance_seconds']}s "
                             "-- window-in-slices semantics need real-timestamp slicing")
         if not torch.isfinite(f.feats.features).all():
@@ -702,7 +735,7 @@ def main() -> int:
     print("\n=== VALIDATION GATE ===")
     print(f"(a) every raw `malicious` label classifiable (False / benign / numeric id), all files ... "
           f"{'PASS' if not any('raw label' in f for f in failures) else 'FAIL'}")
-    print(f"(b) cadence verified uniform (1.0s) on every file ... "
+    print(f"(b) cadence verified within tolerance (configured expected cadence) on every file ... "
           f"{'PASS' if not any('gaps outside' in f for f in failures) else 'FAIL'}")
     print(f"(c) feature tensors finite, all files ... {'PASS' if not any('non-finite feature' in f for f in failures) else 'FAIL'}")
 
@@ -750,8 +783,9 @@ def main() -> int:
                 n_uncat += 1
             else:
                 worst = max(worst, abs(float(f.feats.timestamps[a]) - float(cat["start"])))
-    k_ok = n_uncat == 0 and worst <= 2.0
-    print(f"(k) every labelled attack run is in the dataset's own event catalog and starts within 2 s of its catalogued "
+    k_tol = float(cfg["timebase"].get("label_start_tolerance_seconds", 2.0))
+    k_ok = n_uncat == 0 and worst <= k_tol
+    print(f"(k) every labelled attack run is in the dataset's own event catalog and starts within {k_tol:g} s of its catalogued "
           f"start (uncatalogued runs={n_uncat}, worst offset={worst:.3f}s) ... {'PASS' if k_ok else 'FAIL'}")
     if not k_ok:
         failures.append(f"label/catalog mismatch: {n_uncat} uncatalogued runs, worst start offset {worst:.3f}s")

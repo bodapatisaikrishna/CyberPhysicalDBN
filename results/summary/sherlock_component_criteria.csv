@@ -1,0 +1,5 @@
+criterion,met,detail,git_sha,seed,source_file,ablation_axis
+H-C1 pca_spe ROC-AUC>=0.70 and lift>=2.0,False,"ROC-AUC 0.512, lift 0.94x",2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp14_criteria_20261003T122426Z.csv,sherlock_component
+H-C2 pca_spe industroyer >=7/9 events AUROC>=0.9,False,0/9,2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp14_criteria_20261003T122426Z.csv,sherlock_component
+H-C3 pca_spe mean event AUROC>=0.60 for each other family,False,"{""arp-spoof"": 0.28, ""control-and-freeze"": 0.375, ""drift-off"": 0.541}",2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp14_criteria_20261003T122426Z.csv,sherlock_component
+H-C4 nonfinite_total industroyer >=5/9 events AUROC>=0.9,False,2/9,2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp14_criteria_20261003T122426Z.csv,sherlock_component

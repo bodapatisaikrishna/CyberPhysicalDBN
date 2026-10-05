@@ -50,6 +50,9 @@ def newest_nonsmoke(directory: Path, pattern: str) -> Path | None:
 
 # --- canonical sources, hardcoded where a specific historical run is the
 # citation of record (verified against LAB_NOTEBOOK.md) -----------------
+EXP13_STATE_TS = "20260928T130418Z"
+EXP13_PHYSICAL_TS = "20261003T093637Z"
+
 CANONICAL = {
     "exp01_summary": SUMMARIES_DIR / "exp01_summary_20260731T164052Z.csv",
     "exp04_lead_time": RESULTS_DIR / "exp04_lead_time_20260802T042212Z.csv",
@@ -99,12 +102,32 @@ AXES: dict[str, list[tuple[str, Path | None]]] = {
         ("perf", newest_nonsmoke(RESULTS_DIR, "exp10_m_sweep_perf_*.csv")),
         ("kl", newest_nonsmoke(RESULTS_DIR, "exp10_m_sweep_kl_*.csv")),
     ],
+    # state-view run (3 scenarios, 02 truncated to ~3 h); pinned so the later
+    # physical-view run (a different feature view) never replaces it
     "sherlock_full": [
-        ("inventory", newest_nonsmoke(RESULTS_DIR, "exp13_inventory_*.csv")),
-        ("anomaly_metrics", newest_nonsmoke(RESULTS_DIR, "exp13_anomaly_metrics_*.csv")),
-        ("attack_type_summary", newest_nonsmoke(RESULTS_DIR, "exp13_attack_type_summary_*.csv")),
-        ("cross_network", newest_nonsmoke(RESULTS_DIR, "exp13_cross_network_*.csv")),
-        ("transfer_matrix", newest_nonsmoke(RESULTS_DIR, "exp13_transfer_matrix_*.csv")),
+        (m, RESULTS_DIR / f"exp13_{m}_{EXP13_STATE_TS}.csv")
+        for m in ("inventory", "anomaly_metrics", "attack_type_summary", "cross_network", "transfer_matrix")
+    ],
+    # 02-Semiurban full 12 h from raw physical.zip (LAB_NOTEBOOK.md 2026-10-03)
+    "sherlock_physical": [
+        (m, RESULTS_DIR / f"exp13_{m}_{EXP13_PHYSICAL_TS}.csv")
+        for m in ("inventory", "anomaly_metrics", "attack_type_summary", "cross_network", "transfer_matrix")
+    ],
+    # 2026-10-03 improvement attempts on 02-Semiurban physical view (pinned run timestamps)
+    "sherlock_component": [
+        ("anomaly_metrics", RESULTS_DIR / "exp14_anomaly_metrics_20261003T122426Z.csv"),
+        ("events", RESULTS_DIR / "exp14_events_20261003T122426Z.csv"),
+        ("criteria", RESULTS_DIR / "exp14_criteria_20261003T122426Z.csv"),
+    ],
+    "sherlock_rolling_baseline": [
+        ("anomaly_metrics", RESULTS_DIR / "exp15_anomaly_metrics_20261003T123459Z.csv"),
+        ("events", RESULTS_DIR / "exp15_events_20261003T123459Z.csv"),
+        ("criteria", RESULTS_DIR / "exp15_criteria_20261003T123459Z.csv"),
+    ],
+    "sherlock_supervised": [
+        ("pooled", RESULTS_DIR / "exp16_pooled_20261003T153317Z.csv"),
+        ("events", RESULTS_DIR / "exp16_events_20261003T153317Z.csv"),
+        ("criteria", RESULTS_DIR / "exp16_criteria_20261003T153317Z.csv"),
     ],
     "gnn_cluster_vs_heuristic": [
         ("cluster_assignment", CANONICAL["exp12_cluster_assignment"]),

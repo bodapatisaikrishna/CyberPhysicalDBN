@@ -194,7 +194,9 @@ site's prose:
    lists 29 attacks; only the first 7 start inside the exported window. Both
    files are ~300 MB, which looks like an export size cap. The raw
    `physical.zip` (1.46 GB, vs 316 MB for 01-Basic) plausibly holds the full
-   timeline; that is unverified; it is now on disk but no experiment has read it.
+   timeline; verified 2026-10-03: both `physical.zip` files span 12.03 h (~2 s snapshots, 21,656 train / 22,053 test),
+   covering all 29 test attacks. exp13's physical variant (`configs/sherlock_full_physical.yaml`,
+   `src/perception/sherlock_physical.py`) scores them; see LAB_NOTEBOOK.md 2026-10-03.
 - **03-Rural has no clean data.** Its one state file is named `train.n402...`,
    but its labels are 23% attack (28 real attacks, 37 distinct raw labels) and
    the archive carries only `raw/test` and `ipal/test`. It can only be an

@@ -1,0 +1,63 @@
+exp14 seed=42 git_sha=2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty smoke=False
+
+stage 0: locating and parsing (component view) ...
+  02-Semiurban: /Users/bodapati/Downloads/CyberPhysicalDBN/data/sherlock/02-Semiurban/02-Semiurban
+    train_glob 'train.*.state.gz' matched: ['train.n406.state.gz']
+    parsed 21656 records in 115s
+    cache hit: 02-Semiurban__train.n406.state.gz.npz
+    label agreement physical(catalog rule) vs state-file labels on shared span: {'n_compared': 11116, 'agreement': 1.0, 'n_state_attack': 0, 'n_phys_attack': 0, 'n_disagree': 0}
+    test_glob 'test.*.state.gz' matched: ['test.n406.state.gz']
+    parsed 22053 records in 104s
+    cache hit: 02-Semiurban__test.n406.state.gz.npz
+    label agreement physical(catalog rule) vs state-file labels on shared span: {'n_compared': 10803, 'agreement': 0.9989817643247246, 'n_state_attack': 2496, 'n_phys_attack': 2489, 'n_disagree': 11}
+    event catalog: ipal/test/events.json
+  clean 02-Semiurban/train: (21656, 5731); attack 02-Semiurban/test: (22053, 5731), base rate 0.2441, 29 attack events
+  cadence: train median 2.000s (22 gaps out of tol), test median 2.000s (432 gaps out of tol)
+  fit 13500 slices, calib 3656 slices (interleaved blocks)
+  PCA: k=64 components capture 0.9622 of fit variance; 1915/5731 columns constant in the fit chunk
+  pca_spe           AUC-PR=0.2295 (base 0.2441, lift 0.94x) ROC-AUC=0.5123 | excl. recovery: AUC-PR=0.2367 ROC-AUC=0.5132 | FPR non-attack 1.000; calib-clean FPR 0.010
+  pca_t2            AUC-PR=0.2117 (base 0.2441, lift 0.87x) ROC-AUC=0.4561 | excl. recovery: AUC-PR=0.2180 ROC-AUC=0.4557 | FPR non-attack 0.891; calib-clean FPR 0.010
+  max_abs_z         AUC-PR=0.2441 (base 0.2441, lift 1.00x) ROC-AUC=0.5000 | excl. recovery: AUC-PR=0.2515 ROC-AUC=0.5000 | FPR non-attack 1.000; calib-clean FPR 0.162
+  top_k_mean_abs_z  AUC-PR=0.2441 (base 0.2441, lift 1.00x) ROC-AUC=0.5000 | excl. recovery: AUC-PR=0.2515 ROC-AUC=0.5000 | FPR non-attack 1.000; calib-clean FPR 0.010
+  nonfinite_total   AUC-PR=0.2319 (base 0.2441, lift 0.95x) ROC-AUC=0.4736 | excl. recovery: AUC-PR=0.2389 ROC-AUC=0.4739 | FPR non-attack 0.757; calib-clean FPR 0.246
+
+attack-type breakdown (threshold-free event AUROC; 0.5 = indistinguishable from normal):
+  max_abs_z         arp-spoof:arp-spoof-dos              alarmed 6/6; mean event AUROC 0.50, 0/6 >= 0.9
+  max_abs_z         control-and-freeze:control-and-freeze alarmed 5/5; mean event AUROC 0.50, 0/5 >= 0.9
+  max_abs_z         drift-off:drift-off                  alarmed 9/9; mean event AUROC 0.50, 0/9 >= 0.9
+  max_abs_z         industroyer:industroyer              alarmed 9/9; mean event AUROC 0.50, 0/9 >= 0.9
+  nonfinite_total   arp-spoof:arp-spoof-dos              alarmed 4/6; mean event AUROC 0.38, 0/6 >= 0.9
+  nonfinite_total   control-and-freeze:control-and-freeze alarmed 3/5; mean event AUROC 0.35, 0/5 >= 0.9
+  nonfinite_total   drift-off:drift-off                  alarmed 6/9; mean event AUROC 0.45, 1/9 >= 0.9
+  nonfinite_total   industroyer:industroyer              alarmed 9/9; mean event AUROC 0.77, 2/9 >= 0.9
+  pca_spe           arp-spoof:arp-spoof-dos              alarmed 6/6; mean event AUROC 0.28, 0/6 >= 0.9
+  pca_spe           control-and-freeze:control-and-freeze alarmed 5/5; mean event AUROC 0.37, 0/5 >= 0.9
+  pca_spe           drift-off:drift-off                  alarmed 9/9; mean event AUROC 0.54, 0/9 >= 0.9
+  pca_spe           industroyer:industroyer              alarmed 9/9; mean event AUROC 0.73, 0/9 >= 0.9
+  pca_t2            arp-spoof:arp-spoof-dos              alarmed 5/6; mean event AUROC 0.29, 0/6 >= 0.9
+  pca_t2            control-and-freeze:control-and-freeze alarmed 5/5; mean event AUROC 0.31, 0/5 >= 0.9
+  pca_t2            drift-off:drift-off                  alarmed 8/9; mean event AUROC 0.52, 0/9 >= 0.9
+  pca_t2            industroyer:industroyer              alarmed 9/9; mean event AUROC 0.64, 0/9 >= 0.9
+  top_k_mean_abs_z  arp-spoof:arp-spoof-dos              alarmed 6/6; mean event AUROC 0.50, 0/6 >= 0.9
+  top_k_mean_abs_z  control-and-freeze:control-and-freeze alarmed 5/5; mean event AUROC 0.50, 0/5 >= 0.9
+  top_k_mean_abs_z  drift-off:drift-off                  alarmed 9/9; mean event AUROC 0.50, 0/9 >= 0.9
+  top_k_mean_abs_z  industroyer:industroyer              alarmed 9/9; mean event AUROC 0.50, 0/9 >= 0.9
+
+pre-registered criteria (REPORTED, not gated):
+  MISSED H-C1 pca_spe ROC-AUC>=0.70 and lift>=2.0: ROC-AUC 0.512, lift 0.94x
+  MISSED H-C2 pca_spe industroyer >=7/9 events AUROC>=0.9: 0/9
+  MISSED H-C3 pca_spe mean event AUROC>=0.60 for each other family: {"arp-spoof": 0.28, "control-and-freeze": 0.375, "drift-off": 0.541}
+  MISSED H-C4 nonfinite_total industroyer >=5/9 events AUROC>=0.9: 2/9
+
+wrote exp14_*_20261003T122426Z.csv, exp14_raw_scores_20261003T122426Z.npz, summaries/exp14_summary_20261003T122426Z.csv
+
+=== VALIDATION GATE (structural only) ===
+  fit/calib data has zero attack slices ... PASS
+  all scores finite ... PASS
+  every catalogued attack labelled (skipped under --smoke: a prefix holds few) ... PASS
+  event runs partition positive slices ... PASS
+  seed/git sha logged ... PASS
+  (cadence, reported as in exp13 gate b: train 22 / test 432 gaps outside tolerance)
+
+GATE PASSED (structural). Metrics above are reported, not gated.
+exit=0

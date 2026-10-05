@@ -259,17 +259,54 @@ def exp11_leadtime_and_calibration() -> None:
 
 
 
+# ------------------------------------------------------ exp14-16 --------
+
+def exp14_16_plots() -> None:
+    """Per-attack-family mean event AUROC across the 02-Semiurban physical-view
+    improvement attempts (exp13 physical -> exp14 -> exp15 -> exp16). Reads each
+    stage's logged events CSV unmodified (pinned run timestamps)."""
+    stages = [
+        ("exp13 physical\n11 aggregates, LSTM-AE", RESULTS_DIR / "exp13_events_20261003T093637Z.csv", "lstm_ae"),
+        ("exp14\ncomponent view, PCA-SPE", RESULTS_DIR / "exp14_events_20261003T122426Z.csv", "pca_spe"),
+        ("exp15\n+ causal rolling baseline", RESULTS_DIR / "exp15_events_20261003T123459Z.csv", "pca_spe"),
+        ("exp16\nsupervised, held-out events", RESULTS_DIR / "exp16_events_20261003T153317Z.csv", None),
+    ]
+    if not all(p.exists() for _, p, _ in stages):
+        print("  skipping exp14-16: source files not found")
+        return
+    fams = ["industroyer", "control-and-freeze", "drift-off", "arp-spoof"]
+    fig, ax = plt.subplots(figsize=(9, 4.8))
+    width = 0.2
+    for i, (label, path, det) in enumerate(stages):
+        df = pd.read_csv(path)
+        if det is not None:
+            df = df[df["detector"] == det]
+        vals = [df[df["attack_type"].str.startswith(f)]["event_auroc"].mean() for f in fams]
+        ax.bar(np.arange(len(fams)) + (i - 1.5) * width, vals, width=width, label=label)
+    ax.axhline(0.5, color="k", lw=0.8, ls="--")
+    ax.text(len(fams) - 0.55, 0.51, "chance", fontsize=8, ha="right")
+    ax.set_xticks(np.arange(len(fams)))
+    ax.set_xticklabels(fams)
+    ax.set_ylabel("mean per-event AUROC vs. normal")
+    ax.set_ylim(0, 1.0)
+    ax.set_title("02-Semiurban (full 12 h): per-family event AUROC at each step")
+    ax.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=2, frameon=False)
+    ax.grid(alpha=0.3, axis="y")
+    fig.tight_layout()
+    savefig(fig, "exp14_16_family_auroc.png")
+
+
 # -------------------------------------------------------- exp13 ---------
 
 def exp13_plots() -> None:
     """All three real Sherlock scenarios (anomaly detection, zero-shot
     cross-network transfer, supervised transfer matrix). Reads exp13's logged
     CSVs / raw-score npz unmodified."""
-    m_path = newest_nonsmoke(RESULTS_DIR, "exp13_anomaly_metrics_*.csv")
-    e_path = newest_nonsmoke(RESULTS_DIR, "exp13_events_*.csv")
-    x_path = newest_nonsmoke(RESULTS_DIR, "exp13_cross_network_*.csv")
-    t_path = newest_nonsmoke(RESULTS_DIR, "exp13_transfer_matrix_*.csv")
-    r_path = newest_nonsmoke(RESULTS_DIR, "exp13_raw_scores_*.npz")
+    m_path = RESULTS_DIR / "exp13_anomaly_metrics_20260928T130418Z.csv"
+    e_path = RESULTS_DIR / "exp13_events_20260928T130418Z.csv"
+    x_path = RESULTS_DIR / "exp13_cross_network_20260928T130418Z.csv"
+    t_path = RESULTS_DIR / "exp13_transfer_matrix_20260928T130418Z.csv"
+    r_path = RESULTS_DIR / "exp13_raw_scores_20260928T130418Z.npz"
     if m_path is None or r_path is None:
         print("  skipping exp13: source files not found")
         return
@@ -585,6 +622,8 @@ def main() -> int:
     exp11_leadtime_and_calibration()
     print("exp13 real Sherlock (all scenarios) ...")
     exp13_plots()
+    print("exp14-16 improvement attempts ...")
+    exp14_16_plots()
     print("exp12 spatial zone map ...")
     exp12_spatial_zone_map()
     print("architecture diagram ...")

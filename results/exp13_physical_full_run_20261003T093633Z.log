@@ -1,0 +1,85 @@
+exp13 seed=42 git_sha=2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty smoke=False window=63
+
+stage 0: locating and parsing every Sherlock file present ...
+  02-Semiurban: /Users/bodapati/Downloads/CyberPhysicalDBN/data/sherlock/02-Semiurban/02-Semiurban
+    train_glob 'train.*.state.gz' matched: ['train.n406.state.gz']
+    parsed 21656 records in 84s
+    cache hit: 02-Semiurban__train.n406.state.gz.npz
+    label agreement physical(catalog rule) vs state-file labels on shared span: {'n_compared': 11116, 'agreement': 1.0, 'n_state_attack': 0, 'n_phys_attack': 0, 'n_disagree': 0}
+    test_glob 'test.*.state.gz' matched: ['test.n406.state.gz']
+    parsed 22053 records in 86s
+    cache hit: 02-Semiurban__test.n406.state.gz.npz
+    label agreement physical(catalog rule) vs state-file labels on shared span: {'n_compared': 10803, 'agreement': 0.9989817643247246, 'n_state_attack': 2496, 'n_phys_attack': 2489, 'n_disagree': 11}
+    event catalog: ipal/test/events.json
+  02-Semiurban/train        21656 records, 9544 keys, cadence median 2.000s (22 gaps out of tol), base rate 0.000000, 0 attack events, role=clean_train
+      raw labels (top): {'False': 21656}
+      components: {'bus': 890, 'external_grid': 5, 'line': 1764, 'load': 1342, 'sgen': 1711, 'storage': 1824, 'switch': 1080, 'trafo': 928}
+  02-Semiurban/test         22053 records, 9544 keys, cadence median 2.000s (432 gaps out of tol), base rate 0.244139, 29 attack events, role=attack_file
+      catalog: 29 attack events; 29 start inside the file's time span, 0 start AFTER it ends; 29 labelled runs; catalogued-inside-but-unlabelled: []
+      raw labels (top): {'False': 16669, '7': 516, '34': 470, '14': 398, '12': 298, '19': 298}
+      components: {'bus': 890, 'external_grid': 5, 'line': 1764, 'load': 1342, 'sgen': 1711, 'storage': 1824, 'switch': 1080, 'trafo': 928}
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_inventory_20261003T093637Z.csv
+
+arm A: unsupervised anomaly detection, in-domain (clean-train only) ...
+  [02-Semiurban] clean-train file physical.zip: 21656 slices -> blocked split (900-slice blocks, pattern ['fit', 'fit', 'fit', 'val', 'calib']): fit 13500 (15 blocks), val 4500 (5), calib 3656 (5)
+  [02-Semiurban] AE windows: train (1687, 63, 11), val (565, 63, 11) (stride 8)
+  [02-Semiurban] AE trained: 30 epochs in 9s, final val loss 2.19573
+  [02-Semiurban] lstm_ae          AUC-PR=0.2595 (base 0.2441, lift 1.06x) ROC-AUC=0.4596 ECE=0.3326 | ignoring recovery windows (2.9% of slices): AUC-PR=0.2685 (base 0.2515) ROC-AUC=0.4602 | FPR non-attack 0.118 (as shipped 0.119)
+  [02-Semiurban] zscore_mean_abs  AUC-PR=0.3032 (base 0.2441, lift 1.24x) ROC-AUC=0.4699 ECE=0.3703 | ignoring recovery windows (2.9% of slices): AUC-PR=0.3189 (base 0.2515) ROC-AUC=0.4701 | FPR non-attack 0.006 (as shipped 0.009)
+  [02-Semiurban] lstm_ae          events detected 6/29
+  [02-Semiurban] zscore_mean_abs  events detected 4/29
+
+arm B: zero-shot cross-network transfer ...
+
+arm C: supervised transfer matrix (shared bus-voltage subspace) ...
+  building twin scenarios (same call as exp07 stage 4) ...
+    twin transfer scenario 1/10 done
+    twin transfer scenario 2/10 done
+    twin transfer scenario 3/10 done
+    twin transfer scenario 4/10 done
+    twin transfer scenario 5/10 done
+    twin transfer scenario 6/10 done
+    twin transfer scenario 7/10 done
+    twin transfer scenario 8/10 done
+    twin transfer scenario 9/10 done
+    twin transfer scenario 10/10 done
+  train=twin          eval=02-Semiurban  AUC-PR=0.2547 (base 0.2441, lift 1.04x)
+  train=02-Semiurban  eval=twin          AUC-PR=1.0000 (base 0.9992, lift 1.00x)
+
+attack-type breakdown, lstm_ae (alarm counts depend on the calibration-chunk threshold; event AUROC does not):
+  02-Semiurban  arp-spoof:arp-spoof-dos            alarmed 0/6; threshold-free: mean event AUROC 0.33, 0/6 events >= 0.9 (~0.0 attack points)
+  02-Semiurban  control-and-freeze:control-and-freeze alarmed 1/5; threshold-free: mean event AUROC 0.37, 0/5 events >= 0.9 (~0.0 attack points)
+  02-Semiurban  drift-off:drift-off                alarmed 1/9; threshold-free: mean event AUROC 0.44, 1/9 events >= 0.9 (~0.0 attack points)
+  02-Semiurban  industroyer:industroyer            alarmed 4/9; threshold-free: mean event AUROC 0.78, 2/9 events >= 0.9 (~1.2 attack points)
+
+writing outputs ...
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_anomaly_metrics_20261003T093637Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_events_20261003T093637Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_attack_type_summary_20261003T093637Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_attack_feature_profile_20261003T093637Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_training_20261003T093637Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_cross_network_20261003T093637Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_transfer_matrix_20261003T093637Z.csv
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp13_raw_scores_20261003T093637Z.npz
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/summaries/exp13_summary_20261003T093637Z.csv
+
+=== VALIDATION GATE ===
+(a) every raw `malicious` label classifiable (False / benign / numeric id), all files ... PASS
+(b) cadence verified within tolerance (configured expected cadence) on every file ... FAIL
+(c) feature tensors finite, all files ... PASS
+(d) event runs partition exactly the positive slices, every file ... PASS
+(e) every in-domain source trained on a file with ZERO real attack slices ... PASS
+(f) all detector scores finite ... PASS
+(g) in-domain metrics finite (skipped under --smoke: a 6k prefix may hold no attack) ... PASS
+(h) AE scoring deterministic (same weights, same input, twice) ... PASS
+(i) at least one in-domain (clean-train, attack-file) scenario evaluated (1) ... PASS
+(k) every labelled attack run is in the dataset's own event catalog and starts within 4 s of its catalogued start (uncatalogued runs=0, worst offset=1.991s) ... PASS
+(l) every catalogued attack that starts inside a file's time span has a labelled run (no label/catalog mismatch) ... PASS
+(j) seed/git sha logged in every output row (seed=42, sha=2c3439ac) ... PASS
+
+NOTE: AUC-PR / ROC-AUC / lift above are REPORTED, not gated (CLAUDE.md rule 3). A null on H1 (no better than base rate) is a valid result, not a gate failure. See LAB_NOTEBOOK.md 2026-09-28.
+
+GATE FAILED:
+  - 02-Semiurban/train: 22 inter-record gaps outside 1.0s -- window-in-slices semantics need real-timestamp slicing
+  - 02-Semiurban/test: 432 inter-record gaps outside 1.0s -- window-in-slices semantics need real-timestamp slicing
+exit=1

@@ -3508,3 +3508,257 @@ whole-zip md5 was not computed (members were fetched individually), and nested
 `physical.zip` / `control-center.zip` are kept zipped. No exp13 number changes:
 the experiment never read these members. Whether 02's raw `physical.zip` holds the
 full 12 h timeline is still unchecked.
+
+## 2026-10-03 Experiment: exp13 (physical variant) -- 02-Semiurban full 12 h from raw `physical.zip`
+
+**Context.** exp13's 02-Semiurban numbers use a state export truncated to ~3 h
+(7 of 29 test attacks). `raw/{train,test}/physical.zip` hold ~2 s simulator-side
+snapshots for the whole 12.03 h (train 21,656 snapshots, test 22,053; verified
+by listing the zips). Config `configs/sherlock_full_physical.yaml`, loader
+`src/perception/sherlock_physical.py`, run via `exp13_sherlock_full.py --config`.
+
+**Differences from the state-view run (all stated, none tuned):** source is the
+simulator-side export (178 buses / 126 lines ... vs the network-reconstructed
+subset), so the same 11 aggregate names are computed over a different component
+set -- NOT the same features; cadence ~2 s with 1-4 s jitter, so a 63-slice
+window spans ~126 s; labels come from the dataset's event catalog
+(`start <= t < end`, non-benign events), because snapshots carry no `malicious`
+field. 02 only (physical view is not comparable with 01/03 state view), so arm B
+has no pairs and arm C is twin <-> 02-physical.
+
+**Hypothesis (written before the run):**
+H-P1. The catalog rule reproduces the state file's own labels on the ~3 h both
+cover with >= 99% agreement (disagreement limited to edge slices at event
+boundaries). If not, the catalog start/end are not the labelling rule and the
+labels here are untrustworthy -- that would be reported and block the result.
+H-P2. With all 29 attacks scored, in-domain ROC-AUC stays low (< 0.65) and AUC-PR
+lift < 2x, because most attack families (arp-spoof, drift-off, control-and-freeze)
+are expected to move none of the 11 aggregates; only industroyer (breaker
+opening -> `switch_open_fraction`, bus voltages) is expected to separate
+(per-event AUROC >= 0.9 for most industroyer events). Reason: same aggregates
+logic as the 3 h result; physical view may be slightly more sensitive (178 buses
+vs the state subset) so it is not predicted to be worse.
+H-P3. LSTM-AE is no better than mean-|z| (as in the state view).
+Null/refutation: lift >= 2x overall or LSTM-AE clearly beating mean-|z| (> 0.05
+ROC-AUC) would refute H-P2/H-P3 and be reported as such.
+
+**Result (run `20261003T093637Z`, seed 42, log `results/exp13_physical_full_run_20261003T093637Z.log`; config `configs/sherlock_full_physical.yaml`).**
+Data: train 21,656 snapshots (0 attacks), test 22,053 snapshots, 29 of 29 catalogued attacks inside the span
+(state view: 7 of 29), base rate 0.2441. Features: 11 aggregates over the physical view; 23 NaN values
+(islanded buses) in a 3,000-snapshot probe were excluded and counted, never imputed (full-run count is in the
+inventory CSV, `n_nonfinite_values_excluded`).
+- Label rule vs the state file's own labels on the span both cover: train 11,116/11,116 agree (1.0);
+  test 10,803 compared, agreement 0.99898, 11 disagreements (2,496 state-attack vs 2,489 catalog-attack
+  slices) -- H-P1 holds (>= 0.99).
+- In-domain, 02-Semiurban, as shipped: LSTM-AE AUC-PR 0.2595 (lift 1.06x), ROC-AUC 0.4596;
+  mean-|z| AUC-PR 0.3032 (lift 1.24x), ROC-AUC 0.4699. Excluding recovery windows (2.9% of slices): AE
+  0.2685 / 0.4602, z 0.3189 / 0.4701. Events alarmed: AE 6/29, z 4/29.
+  False-alarm rate on the test file's non-attack slices: AE 0.119, z 0.009 (calibration-chunk budget was 1%).
+- By attack type (LSTM-AE, threshold-free mean event AUROC): arp-spoof 0.33 (0/6 >= 0.9), control-and-freeze
+  0.37 (0/5), drift-off 0.44 (1/9), industroyer 0.78 (2/9 >= 0.9; per-event 0.40-0.99).
+- Arm B: no pairs (one scenario). Arm C: twin -> 02-physical AUC-PR 0.2547 (base 0.2441, 1.04x);
+  02-physical -> twin 1.0000 (base 0.9992, uninformative as before).
+- State view for comparison (same notebook, 2026-09-28; 3 h, 7 attacks): lift 1.43x, ROC-AUC 0.51.
+
+**Validation gate: FAILED on (b), reported not relaxed.** 22 (train) and 432 (test) of ~22k inter-snapshot gaps lie
+outside 2 s +/- 1 s (test: 419 shorter than 1 s, 13 longer than 3 s, max 6.6 s), above the 0.1% allowance I set
+beforehand from a filename-second histogram that undercounted sub-second jitter. I did not retune the
+allowance to pass. Consequence: "63 slices" is a nominal ~126 s window, not exactly uniform; every number
+above carries that caveat. All other gates (a, c-l) PASS; gate (k) tolerance was set to 4 s (two nominal
+cadences) for this config a priori after the smoke run showed a 3.2 s offset on a non-contiguous prefix;
+the full run's worst offset is 1.991 s.
+
+**Interpretation.** H-P1 holds. H-P2 holds on the headline (ROC-AUC 0.46 < 0.65; lift 1.06-1.24x < 2x) but
+fails on its detail: only 2 of 9 industroyer events reach AUROC >= 0.9, not "most" (mean 0.78). H-P3 holds
+(AE and mean-|z| within 0.05 ROC-AUC; z is higher on AUC-PR). Scoring all 29 attacks did not give the
+detector more to find: the 7-attack truncated view was, if anything, the easier subset (lift 1.43x vs 1.06x).
+ROC-AUC below 0.5 and event AUROC 0.33-0.37 for arp-spoof/control-and-freeze mean attack slices score LOWER
+than the file's normal slices -- the aggregates carry no attack signal for these families and the test file's
+normal operation differs from the clean-train period (AE false-alarm rate 11.9% vs a 1% calibration budget),
+i.e. a train-to-test operating-regime shift, so absolute alarm counts here are pessimistic for that reason.
+
+**Surprised? Yes, mildly:** I expected the full-length physical view to be at least as informative as the 3 h
+state view; it was not. Checked: the label rule (99.9% agreement), NaN handling (excluded + counted), cadence
+(gate b, failed and reported), and that train/test parse separately (the two zips share a file name, so an
+early cache key collided; fixed to include the split -- the run itself parsed both fresh, as the differing
+record counts 21,656 / 22,053 in its log show). Not checked: the other physical-view columns (per-component
+features), which could expose attacks the 11 aggregates miss; a per-component view remains the open follow-up.
+
+**Addendum (same run): NaN counts.** Non-finite source values excluded: train 199, test 181,948 (inventory CSV).
+The test file's NaNs are ~900x more frequent, so de-energised/NaN components are a feature of the test
+period (plausibly of attacks that open breakers) that the 11 aggregates throw away by excluding NaNs. Not
+analysed per event; a "count of non-finite values" feature is an untested follow-up, and excluding NaNs is a
+choice that may understate detectability of breaker-opening attacks in this view.
+
+## 2026-10-03 Experiment: exp14 -- component-view detectors on 02-Semiurban physical (plan step 1)
+
+**Why.** The 11 grid-wide aggregates gave lift 1.06-1.24x, ROC-AUC ~0.46 (entry above). Two diagnosed
+suspects: averaging over 178 buses / 360 switches hides local changes; and the aggregates exclude NaN
+(de-energised) values, which are ~900x more frequent in test (181,948 vs 199).
+
+**Design (fixed before any exp14 number exists).** Same data (02 physical train = attack-free fit/val/calib
+blocks, test = 29 attacks), config `configs/sherlock_component.yaml`, code
+`src/perception/sherlock_component_detectors.py`, `experiments/exp14_sherlock_component.py`.
+View: every MEASUREMENT key + switch `closed` + trafo `tap_position` (5,731 columns minus the appended
+non-finite counts, 5,722+9 total) -- chosen from the key schema, not from labels. NaN -> clean-fit column
+median (the non-finite counts carry the NaN information). Standardize on clean fit blocks, |z| clipped at
+10 (as exp13). Detectors, all label-free: `pca_spe` (PRIMARY, pre-named), `pca_t2`, `max_abs_z`,
+`top_k_mean_abs_z` (k=10), and a diagnostic `nonfinite_total` (the NaN count alone). PCA k = fewest
+components reaching 99% of fit variance, cap 64. Alarm threshold = 99th percentile on interleaved calib
+blocks (as exp13). No LSTM-AE in this step (it matched mean-|z| before; not the bottleneck).
+No hyperparameter is searched; nothing here is tuned on test labels.
+
+**Hypotheses and pre-registered success criteria (evaluated on the PRIMARY detector `pca_spe`):**
+- H-C1: ROC-AUC >= 0.70 AND AUC-PR lift >= 2.0x on the test file (as shipped labels).
+- H-C2: industroyer events with event AUROC >= 0.9: at least 7 of 9.
+- H-C3: mean event AUROC >= 0.60 for each of arp-spoof, control-and-freeze, drift-off.
+- H-C4 (diagnostic, `nonfinite_total`): at least 5 of 9 industroyer events with event AUROC >= 0.9
+  (would mean the NaN count alone exposes breaker-opening attacks).
+Secondary (reported, not criteria): `max_abs_z` / `top_k_mean_abs_z` on the local families.
+Each criterion missed is reported as missed. My prior: roughly even odds that H-C1 fails, because the
+test period has a different operating regime from clean train (AE false-alarm 11.9% vs 1% in exp13);
+a regime shift would inflate every unsupervised score during the whole test file, not just attacks.
+Fix for that is plan step 2, not retuning here.
+
+**Result (exp14, run `20261003T122426Z`, seed 42, log `results/exp14_full_run_20261003T122421Z.log`).**
+Component view (5,731 columns, 1,915 constant in the clean fit chunk), PCA k=64 capturing 96.2% (cap hit, target 99% not reached).
+Test file, as shipped labels, base rate 0.2441:
+| detector | AUC-PR | lift | ROC-AUC | non-attack FPR (calib-clean FPR) |
+|---|---|---|---|---|
+| pca_spe (primary) | 0.2295 | 0.94x | 0.512 | 1.000 (0.010) |
+| pca_t2 | 0.2117 | 0.87x | 0.456 | 0.891 (0.010) |
+| max_abs_z | 0.2441 | 1.00x | 0.500 | 1.000 (0.162) |
+| top_k_mean_abs_z | 0.2441 | 1.00x | 0.500 | 1.000 (0.010) |
+| nonfinite_total | 0.2319 | 0.95x | 0.474 | 0.757 (0.246) |
+Pre-registered criteria: H-C1 MISSED (ROC 0.512, lift 0.94x), H-C2 MISSED (pca_spe industroyer 0/9 events >= 0.9;
+mean event AUROC 0.73), H-C3 MISSED (arp-spoof 0.28, control-and-freeze 0.37, drift-off 0.54), H-C4 MISSED
+(NaN count alone: industroyer 2/9 >= 0.9, mean 0.77). Structural gate passed; cadence as in exp13 (22 / 432 gaps).
+
+**Interpretation.** The component view did NOT help; every criterion missed. The cause is visible in the
+non-attack FPR column: at the thresholds set on clean calibration blocks (1% false alarms), 100% of
+the test file's non-attack slices alarm for pca_spe, max_abs_z and top_k. max_abs_z / top_k sit at the
+clip ceiling (|z|=10) on essentially every slice, so their AUROC is exactly 0.5 -- a saturated score, not
+a weak one. A diagnostic on the cached features (no labels used for any fit): in an ordinary non-attack
+test slice ~107 non-constant columns exceed 10 clean standard deviations, and 27 columns do so in over half of
+the non-attack test slices (20 line, 4 switch, 2 sgen, 1 bus quantities). The test run sits in a materially
+different operating regime from the clean-train run across many columns, so a detector fit on train
+measures regime distance, not attack-ness. This is the third cause I named before this step, now
+quantified; it was the actual bottleneck, not the feature granularity. H-C1's prior (about even odds of failing for
+exactly this reason) was borne out.
+
+**Surprised? Partly:** I expected a regime shift to hurt, not to dominate this completely (ROC ~0.5 for the
+two clipped detectors, 100% non-attack FPR). Checked: scores finite; the constant-in-fit columns explain only
+6 of the 27 saturating columns; thresholds do hit 1% FPR on the clean calibration blocks (so the code is
+doing what it says, the data differ). Not yet checked: whether the shift is a slow drift (a trailing baseline
+would remove it) or a permanent offset between runs (a trailing baseline would remove it too, but so could
+hide a sustained attack -- see exp15's design).
+
+## 2026-10-03 Experiment: exp15 -- causal rolling baseline normalisation (plan step 2)
+
+**Hypothesis (written before the run).** If the train->test failure is a run-level operating-point
+offset/drift rather than missing feature granularity, then scoring each snapshot against the file's OWN
+trailing baseline (per column, over the previous W snapshots; no future data, no labels) removes it, and the
+same detectors then separate attacks that move columns abruptly. Applied identically to the clean train
+file (fit/calib) and the test file; so it needs no knowledge of the test regime.
+Design (fixed now): robust z_t = (x_t - median_{t-W..t-1}) / (1.4826*MAD_{t-W..t-1}, floored at the
+clean-train per-column median MAD -- never below it, so a column quiet in the window is not blown up), |z|
+clipped at 10; W = 450 snapshots (~15 min at 2 s; chosen a priori, equal to half a calibration block, NOT
+searched). NaN handling as exp14 (fit medians of the normalised clean features; NaN counts kept as
+columns, also normalised). Detectors as exp14 (pca_spe primary, pca_t2, max_abs_z, top_k_mean_abs_z,
+nonfinite_total). Same data/split/threshold rule.
+**Success criteria (primary = pca_spe):** E-1 ROC-AUC >= 0.70 and lift >= 2.0; E-2 non-attack-slice FPR
+<= 0.05 at the calibration-set threshold (the shift is gone); E-3 industroyer >= 7/9 events AUROC >= 0.9;
+E-4 each other family mean event AUROC >= 0.60. Missing any is reported.
+**Known risk, stated now:** a trailing baseline absorbs any attack longer than ~W (industroyer ~3 min,
+drift-off 5-16 min, control-and-freeze 5-11 min, arp-spoof ~2 min), so long attacks are expected to be
+detected at onset only and then normalised away; I expect E-3 to hold more easily than E-4 for drift-off.
+This is a design limitation of causal-baseline detection, reported rather than hidden.
+
+**Result (exp15, run `20261003T123459Z`, seed 42, log `results/exp15_full_run_20261003T123455Z.log`).**
+Same data/detectors as exp14; every snapshot normalised against its own causal trailing baseline (W=450, min_history=30,
+scale floor fit on clean train). PCA k=64 (93.8% of fit variance). Test file, as shipped labels, base rate 0.2441:
+| detector | AUC-PR | lift | ROC-AUC | non-attack FPR (calib-clean FPR) |
+|---|---|---|---|---|
+| pca_spe (primary) | 0.2794 | 1.14x | 0.5013 | 0.106 (0.010) |
+| pca_t2 | 0.2601 | 1.07x | 0.5114 | 0.029 (0.010) |
+| max_abs_z | 0.2475 | 1.01x | 0.4921 | 0.401 (0.062) |
+| top_k_mean_abs_z | 0.2516 | 1.03x | 0.4886 | 0.116 (0.010) |
+Per attack type, pca_spe (mean event AUROC; events >= 0.9): industroyer 0.85 (6/9), control-and-freeze 0.60 (0/5),
+drift-off 0.44 (0/9), arp-spoof 0.29 (0/6). top_k_mean_abs_z: industroyer 0.81 (6/9).
+Pre-registered criteria: E-1 MISSED (ROC 0.501, lift 1.14x); E-2 MISSED (non-attack FPR 0.106 > 0.05);
+E-3 MISSED (industroyer 6/9, needed 7); E-4 MISSED (arp-spoof 0.295, control-and-freeze 0.595, drift-off 0.44).
+
+**Interpretation.** Two real effects, one null. (1) The baseline fixed the regime problem: non-attack FPR fell from
+1.000 to 0.106 (pca_spe) / 0.029 (pca_t2) with the clean-calibration threshold unchanged, so the diagnosis in exp14 was
+right. (2) Industroyer (breaker opening) is now detected: 6/9 events with AUROC >= 0.9 vs 0/9 in exp14 and 2/9 in the
+11-aggregate view; mean 0.85 vs 0.73 -- a genuine gain, though E-3 (>= 7/9) missed by one event. (3) The other three
+families are not visible: arp-spoof (0.29), drift-off (0.44) and control-and-freeze (0.60) stay at or below chance, and
+they are 20 of 29 events, so pooled ROC-AUC/lift stay ~0.50/1.14x. A causal trailing baseline also absorbs long attacks (drift-off
+5-16 min vs W of 15 min), as stated in the pre-registration, which may explain part of drift-off. ARP-spoof
+is a network-layer attack; whether it has ANY footprint in the simulator's physical state is exactly what an
+unsupervised detector cannot tell us. Next: the event-held-out supervised arm (plan step 3), which can.
+The claimed improvement is therefore specific -- industroyer detection and regime robustness -- not overall detection.
+
+**Surprised? Mildly:** the pooled ROC-AUC did not move at all (0.512 -> 0.501) even though industroyer improved. Checked: the
+positives are dominated by the three families that carry no signal (20/29 events), and the gain from 9 industroyer events
+(~1,100 of ~5,400 attack slices) is too small to move the pooled score; per-family AUROC is the informative number.
+
+## 2026-10-03 Experiment: exp16 -- event-held-out supervised detection (plan step 3)
+
+**Question.** Is there ANY signal for arp-spoof / drift-off / control-and-freeze in the physical state? Unsupervised
+detectors cannot distinguish "no signal" from "detector too weak"; a supervised model with held-out events can.
+**Design (fixed now).** Features: exp15's baseline-normalised component view (causal, label-free), dropping columns
+constant in the clean-train fit chunk. Model: sklearn HistGradientBoostingClassifier, fixed hyperparameters
+(max_iter 100, max_depth 4, learning_rate 0.1, class_weight balanced, random_state = seed) -- NOT tuned.
+Split: the 29 attack events are dealt round-robin BY TYPE into K=5 folds (every fold holds every type); the test
+file's non-attack time is cut into 30-min blocks dealt cyclically to the same folds; the train set excludes any
+slice within 150 slices (5 min) of a held-out-fold slice. Train data is the test file's OTHER folds only (the clean
+train file gives no positives); repeated for 3 deal-shuffles (seeds 42, 43, 44). Report pooled out-of-fold AUC-PR,
+ROC-AUC, and per-event AUROC by type, mean +/- sd over repeats.
+**Criteria:** S-1 pooled out-of-fold ROC-AUC >= 0.80; S-2 each of arp-spoof, control-and-freeze, drift-off mean
+event AUROC >= 0.70; S-3 industroyer >= 7/9 events >= 0.9. If S-2 fails for a family, the finding is: the
+physical state carries no learnable footprint for that family at this feature level (reported as such).
+Caveat stated now: supervised on the test file's own period absorbs its regime, so these numbers are NOT comparable
+with the clean-train unsupervised ones and do not transfer to another network without labelled data from it.
+
+**Amendment to exp16 (before any exp16 number exists).** The pre-registered feature set (all ~3.9k non-constant
+normalised columns) is computationally infeasible with the fixed HistGradientBoosting: a 4,000-row fold did not
+finish in 100 s standalone and a 6,000-row smoke run needed over an hour (full file would be ~5x rows per fold, 15 folds).
+Deviation, label-free and fixed now: features are the PCA scores (<= 128 components, 99% of fit variance) of the
+same baseline-normalised view, PCA fit on CLEAN-TRAIN fit blocks only, plus the squared residual outside that
+subspace (keeps low-variance directions visible) plus the 9 NaN-count columns. Model, folds, guard, criteria
+S-1..S-3 unchanged. A footprint that lives only in low-variance directions and is not captured by the residual
+energy could be missed; a null here is therefore "no footprint at this reduction", stated as such.
+
+**Result (exp16, run `20261003T153317Z`, seed 42-44, log `results/exp16_full_run_20261003T153314Z.log`).**
+Features: 128 PCA scores (95.7% of clean-fit variance) + SPE + 9 NaN counts = 138 columns; HistGradientBoosting fixed
+(100 iters, depth 4, lr 0.1, balanced); 5 folds by event type, 150-slice guard, 3 repeats. Pooled out-of-fold:
+ROC-AUC 0.444 +/- 0.027, AUC-PR 0.232 +/- 0.011 (base 0.2441), lift 0.95x. Per type, mean event AUROC (mean over repeats):
+arp-spoof 0.53, control-and-freeze 0.51, drift-off 0.38, industroyer 0.61 (1.3/9 events >= 0.9).
+Criteria: S-1 MISSED (0.444), S-2 MISSED (0.53 / 0.51 / 0.38), S-3 MISSED (1.3/9).
+
+**Interpretation.** Trained WITH labels on other events of the same file, at this feature reduction, the model does not
+separate held-out attacks from normal (pooled ROC below 0.5). For arp-spoof, control-and-freeze and drift-off this
+supports "no learnable footprint in these features", but NOT "none in the physical state": the 11-aggregate and
+component views plus a 138-column PCA reduction are all the evidence, and a footprint in a few specific columns
+inside the low-variance subspace could be missed (the SPE column only partly covers that). The ROC < 0.5 and the
+industroyer drop (0.61 vs 0.85 for the unsupervised exp15 detector) are consistent with the classifier fitting
+event-specific, time-localised structure that does not generalise to other events; I did not test that explanation. The supervised
+arm therefore did not rescue the three families; the unsupervised exp15 industroyer result remains the only real gain.
+
+**Surprised? Yes:** I expected a supervised model to at least match the unsupervised one on industroyer. It was clearly
+worse. Checked: the fold construction (every fold has positives; guard 150 slices; all three repeats agree: ROC
+0.48 / 0.42 / 0.43), and the amended feature reduction (disclosed above, a possible cause of the loss). Not checked: the same
+model on all ~3.9k columns (infeasible with this learner), a different learner, or targeted per-component features.
+
+## Summary of the 2026-10-03 improvement attempt (02-Semiurban, full 12 h physical view; honest bottom line)
+| step | what changed | pooled ROC-AUC | industroyer events AUROC>=0.9 |
+|---|---|---|---|
+| exp13 physical | 11 aggregates, LSTM-AE / mean-|z| | 0.46 / 0.47 | 2/9 (AE) |
+| exp14 | 5,731 per-component columns, clean-train baseline | 0.51 | 0/9 |
+| exp15 | + causal rolling baseline | 0.50 | 6/9 |
+| exp16 | event-held-out supervised, 138 PCA features | 0.44 | 1.3/9 |
+Real gains: regime-robustness (non-attack FPR 1.00 -> 0.11) and breaker-opening (industroyer) detection (6/9). Not achieved:
+overall detection (ROC ~0.5, lift 1.14x best) because arp-spoof, drift-off and control-and-freeze (20 of 29 events) left no
+detectable trace in any physical-state view tried. Untried and the most plausible remaining lever: the raw network
+captures (`pcap/`, `control-center.zip`), since arp-spoof/DoS act on the network layer.

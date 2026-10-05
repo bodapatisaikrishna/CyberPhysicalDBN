@@ -1,0 +1,49 @@
+# exp16: event-held-out supervised arm (LAB_NOTEBOOK.md 2026-10-03, exp16; pre-registered).
+data:
+  root: "data/sherlock"
+  cache_dir: "data/sherlock/_feature_cache"
+  scenarios:
+    - name: "02-Semiurban"
+      dir: "02-Semiurban/02-Semiurban"
+      physical:
+        view: "component"
+        train_zip: "raw/train/physical.zip"
+        test_zip: "raw/test/physical.zip"
+  train_glob: "train.*.state.gz"
+  test_glob: "test.*.state.gz"
+
+timebase:
+  expected_cadence_seconds: 2.0
+  cadence_tolerance_seconds: 1.0
+  max_frac_gaps_outside_tol: 0.001   # exp13 gate (b) failed at this setting; exp14 reports cadence the same way
+  label_start_tolerance_seconds: 4.0
+
+splits:
+  block_slices: 900
+  pattern: [fit, fit, fit, val, calib]
+
+component:
+  standardizer_eps: 1.0e-6
+  z_clip: 10.0
+  explained_variance_target: 0.99
+  max_components: 64
+  top_k: 10
+  rolling_baseline:
+    window: 450        # ~15 min at 2 s; fixed a priori (half a calibration block), not searched
+    min_history: 30    # fewer past values in a column -> z = 0
+  alarm_percentile: 99.0
+  score_batch_size: 4096
+
+supervised:
+  n_folds: 5
+  n_repeats: 3
+  guard_slices: 150      # 5 min at 2 s
+  block_slices: 900      # 30 min non-attack blocks
+  max_iter: 100
+  max_depth: 4
+  learning_rate: 0.1
+  pca_components: 128          # cap; fewest components reaching pca_explained_variance
+  pca_explained_variance: 0.99
+
+smoke:
+  max_records: 6000

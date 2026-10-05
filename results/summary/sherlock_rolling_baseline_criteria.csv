@@ -1,0 +1,5 @@
+criterion,met,detail,git_sha,seed,source_file,ablation_axis
+E-1 pca_spe ROC-AUC>=0.70 and lift>=2.0,False,"ROC-AUC 0.501, lift 1.14x",2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp15_criteria_20261003T123459Z.csv,sherlock_rolling_baseline
+E-2 pca_spe non-attack FPR<=0.05 at calib threshold,False,0.106,2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp15_criteria_20261003T123459Z.csv,sherlock_rolling_baseline
+E-3 pca_spe industroyer >=7/9 events AUROC>=0.9,False,6/9,2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp15_criteria_20261003T123459Z.csv,sherlock_rolling_baseline
+E-4 pca_spe mean event AUROC>=0.60 for each other family,False,"{""arp-spoof"": 0.295, ""control-and-freeze"": 0.595, ""drift-off"": 0.44}",2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty,42,exp15_criteria_20261003T123459Z.csv,sherlock_rolling_baseline

@@ -1,0 +1,54 @@
+exp16 seed=42 git_sha=2c3439ac7cc77a52a17679e2470ddacfc31035c5-dirty smoke=False
+  02-Semiurban: /Users/bodapati/Downloads/CyberPhysicalDBN/data/sherlock/02-Semiurban/02-Semiurban
+    train_glob 'train.*.state.gz' matched: ['train.n406.state.gz']
+    cache hit: 02-Semiurban__physical_component__train__physical.zip.npz
+    cache hit: 02-Semiurban__train.n406.state.gz.npz
+    label agreement physical(catalog rule) vs state-file labels on shared span: {'n_compared': 11116, 'agreement': 1.0, 'n_state_attack': 0, 'n_phys_attack': 0, 'n_disagree': 0}
+    test_glob 'test.*.state.gz' matched: ['test.n406.state.gz']
+    cache hit: 02-Semiurban__physical_component__test__physical.zip.npz
+    cache hit: 02-Semiurban__test.n406.state.gz.npz
+    label agreement physical(catalog rule) vs state-file labels on shared span: {'n_compared': 10803, 'agreement': 0.9989817643247246, 'n_state_attack': 2496, 'n_phys_attack': 2489, 'n_disagree': 11}
+    event catalog: ipal/test/events.json
+  PCA features: k=128 (0.9568 of fit variance) + SPE + 9 NaN-count columns
+  features: 138 columns; 22053 slices, base rate 0.2441, 29 events
+  rep 0 fold 0: train 15171 (3227 attack), test 3704
+  rep 0 fold 1: train 14841 (3293 attack), test 4399
+  rep 0 fold 2: train 14077 (3224 attack), test 4808
+  rep 0 fold 3: train 13503 (3529 attack), test 4787
+  rep 0 fold 4: train 14722 (3161 attack), test 4355
+  rep 0: pooled out-of-fold AUC-PR=0.2464 (base 0.2441, lift 1.01x) ROC-AUC=0.4807
+  rep 1 fold 0: train 13760 (3620 attack), test 4660
+  rep 1 fold 1: train 14324 (3009 attack), test 4340
+  rep 1 fold 2: train 14077 (2690 attack), test 4060
+  rep 1 fold 3: train 14680 (3419 attack), test 4147
+  rep 1 fold 4: train 14432 (3174 attack), test 4846
+  rep 1: pooled out-of-fold AUC-PR=0.2299 (base 0.2441, lift 0.94x) ROC-AUC=0.4172
+  rep 2 fold 0: train 14010 (3650 attack), test 4620
+  rep 2 fold 1: train 14154 (2995 attack), test 4300
+  rep 2 fold 2: train 14353 (3074 attack), test 3883
+  rep 2 fold 3: train 14430 (3032 attack), test 4534
+  rep 2 fold 4: train 14004 (3046 attack), test 4716
+  rep 2: pooled out-of-fold AUC-PR=0.2207 (base 0.2441, lift 0.90x) ROC-AUC=0.4345
+
+per attack type (mean event AUROC over events, then mean/sd over repeats):
+                                           mean       std
+attack_type                                              
+arp-spoof:arp-spoof-dos                0.531215  0.037256
+control-and-freeze:control-and-freeze  0.505702  0.080971
+drift-off:drift-off                    0.382026  0.029279
+industroyer:industroyer                0.614405  0.074367
+
+pooled out-of-fold over 3 repeats: ROC-AUC 0.4441 +/- 0.0268, AUC-PR 0.2323 +/- 0.0106, lift 0.95x
+
+pre-registered criteria (REPORTED, not gated):
+  MISSED S-1 pooled out-of-fold ROC-AUC>=0.80: 0.444
+  MISSED S-2 each non-industroyer family mean event AUROC>=0.70: {"arp-spoof": 0.531, "control-and-freeze": 0.506, "drift-off": 0.382}
+  MISSED S-3 industroyer >=7/9 events AUROC>=0.9 (mean over repeats): 1.3/9
+
+wrote exp16_*_20261003T153317Z.csv
+
+=== VALIDATION GATE (structural only) ===
+  every fold had train positives and a held-out set ... PASS
+  train/eval separated by guard ... PASS
+  all scores finite where scored ... PASS
+exit=0

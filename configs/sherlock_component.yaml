@@ -1,0 +1,39 @@
+# exp14: per-component view of 02-Semiurban's full 12 h physical snapshots,
+# label-free multivariate detectors (LAB_NOTEBOOK.md 2026-10-03, plan step 1).
+# Data/timebase/splits/anomaly keys are read by exp13's loader (same file layout
+# as configs/sherlock_full_physical.yaml); the `component` block is exp14's own.
+
+data:
+  root: "data/sherlock"
+  cache_dir: "data/sherlock/_feature_cache"
+  scenarios:
+    - name: "02-Semiurban"
+      dir: "02-Semiurban/02-Semiurban"
+      physical:
+        view: "component"
+        train_zip: "raw/train/physical.zip"
+        test_zip: "raw/test/physical.zip"
+  train_glob: "train.*.state.gz"
+  test_glob: "test.*.state.gz"
+
+timebase:
+  expected_cadence_seconds: 2.0
+  cadence_tolerance_seconds: 1.0
+  max_frac_gaps_outside_tol: 0.001   # exp13 gate (b) failed at this setting; exp14 reports cadence the same way
+  label_start_tolerance_seconds: 4.0
+
+splits:
+  block_slices: 900
+  pattern: [fit, fit, fit, val, calib]
+
+component:
+  standardizer_eps: 1.0e-6
+  z_clip: 10.0
+  explained_variance_target: 0.99
+  max_components: 64
+  top_k: 10
+  alarm_percentile: 99.0
+  score_batch_size: 4096
+
+smoke:
+  max_records: 6000
