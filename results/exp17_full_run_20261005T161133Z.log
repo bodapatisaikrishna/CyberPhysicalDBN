@@ -1,0 +1,49 @@
+exp17 seed=42 git_sha=cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty smoke=False
+  train: 21651 uniform 2s bins; 0 grid points before the first snapshot; max LOCF staleness 7.10s
+  test: 21652 uniform 2s bins; 0 grid points before the first snapshot; max LOCF staleness 5.75s
+  attack-free train bins carry 0 attack labels; test base rate 0.2308
+  view P: k=64 (0.9380 of fit variance), 1860/5731 constant in fit
+  view N: k=5 (0.9912 of fit variance), 9/23 constant in fit
+  P_pca_spe            AUC-PR=0.2766 (base 0.2308, lift 1.20x) ROC-AUC=0.5210 | FPR non-attack 0.105
+  N_pca_spe            AUC-PR=0.5599 (base 0.2308, lift 2.43x) ROC-AUC=0.6778 | FPR non-attack 0.079
+  N_top_k_mean_abs_z   AUC-PR=0.5574 (base 0.2308, lift 2.41x) ROC-AUC=0.6811 | FPR non-attack 0.066
+  PN_max               AUC-PR=0.5989 (base 0.2308, lift 2.59x) ROC-AUC=0.7276 | FPR non-attack 0.171
+
+attack-type breakdown (mean event AUROC; events >= 0.9):
+  N_pca_spe            arp-spoof:arp-spoof-dos                0.96  (5/6)
+  N_pca_spe            control-and-freeze:control-and-freeze  0.66  (1/5)
+  N_pca_spe            drift-off:drift-off                    0.71  (2/9)
+  N_pca_spe            industroyer:industroyer                0.49  (1/9)
+  N_top_k_mean_abs_z   arp-spoof:arp-spoof-dos                0.94  (5/6)
+  N_top_k_mean_abs_z   control-and-freeze:control-and-freeze  0.64  (1/5)
+  N_top_k_mean_abs_z   drift-off:drift-off                    0.70  (2/9)
+  N_top_k_mean_abs_z   industroyer:industroyer                0.55  (1/9)
+  PN_max               arp-spoof:arp-spoof-dos                0.94  (5/6)
+  PN_max               control-and-freeze:control-and-freeze  0.73  (1/5)
+  PN_max               drift-off:drift-off                    0.66  (2/9)
+  PN_max               industroyer:industroyer                0.86  (7/9)
+  P_pca_spe            arp-spoof:arp-spoof-dos                0.29  (0/6)
+  P_pca_spe            control-and-freeze:control-and-freeze  0.62  (0/5)
+  P_pca_spe            drift-off:drift-off                    0.44  (0/9)
+  P_pca_spe            industroyer:industroyer                0.85  (6/9)
+
+pre-registered criteria (REPORTED, not gated):
+  MET    N-0 cadence sensitivity: P pooled ROC within 0.05 of 0.501 and industroyer>=0.9 events within 1 of 6/9: ROC 0.521, industroyer 6/9
+  MET    N-1 arp-spoof mean event AUROC>=0.70 (N pca_spe): 0.955
+  MISSED N-2 control-and-freeze mean event AUROC>=0.70 (N pca_spe): 0.658
+  MET    N-3 drift-off mean event AUROC>=0.70 (N pca_spe): 0.713
+  MET    N-4 fused: industroyer>=7/9 events AUROC>=0.9 and pooled ROC>=0.70 and lift>=2.0: industroyer 7/9, ROC 0.728, lift 2.59x
+  MISSED N-5 non-attack FPR<=0.05 for N and for P+N: N 0.079, PN 0.171
+
+wrote exp17_*_20261005T161136Z.csv
+
+=== VALIDATION GATE (structural only) ===
+  train grid has zero attack labels ... PASS
+  all scores finite ... PASS
+  grid uniform by construction (bin_s constant; staleness reported above) ... PASS
+  event runs partition positive slices ... PASS
+  every catalogued attack labelled ... PASS
+  network features finite ... PASS
+
+GATE PASSED (structural). Metrics above are reported, not gated.
+exit=0

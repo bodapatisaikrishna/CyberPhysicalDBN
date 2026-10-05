@@ -129,6 +129,11 @@ AXES: dict[str, list[tuple[str, Path | None]]] = {
         ("events", RESULTS_DIR / "exp16_events_20261003T153317Z.csv"),
         ("criteria", RESULTS_DIR / "exp16_criteria_20261003T153317Z.csv"),
     ],
+    # 2026-10-05: network-capture view + uniform-grid cadence sensitivity (pinned)
+    "sherlock_network": [
+        (m, RESULTS_DIR / f"exp17_{m}_20261005T161136Z.csv")
+        for m in ("anomaly_metrics", "events", "attack_type_summary", "criteria", "grid_info")
+    ],
     "gnn_cluster_vs_heuristic": [
         ("cluster_assignment", CANONICAL["exp12_cluster_assignment"]),
         ("observable_kl", CANONICAL["exp12_observable_kl"]),

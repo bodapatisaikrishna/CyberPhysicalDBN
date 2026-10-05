@@ -755,5 +755,12 @@ build_summary_tables/generate_publication_plots pin exp13 run timestamps; do not
 **Session 13 follow-up (2026-10-03, exp14-16).** Tried to improve the 02 physical-view result: per-component view (exp14),
 causal rolling baseline (exp15), event-held-out supervised (exp16). Only gain: regime robustness + industroyer 6/9 events
 AUROC>=0.9; overall ROC ~0.50, all pre-registered criteria missed. The three non-breaker families show no footprint in any
-physical view tried; the untried lever is the raw network captures. Do not claim "improved detection" beyond industroyer.
+physical view tried; the untried lever is the raw network captures. Do not claim "improved detection" beyond industroyer
+FROM PHYSICAL VIEWS ALONE.
+**exp17 (2026-10-05): the network captures DO carry the missing signal.** `src/perception/sherlock_network.py` (pure-numpy
+classic-pcap parser, equals tcpdump exactly), 23 count features on a uniform 2 s grid, same label-free causal-baseline + PCA detector:
+arp-spoof mean event AUROC 0.96 (5/6 events >= 0.9; physical views 0.29); fused physical+network: pooled ROC-AUC 0.73, lift 2.59x,
+indroyer 7/9. Misses: control-and-freeze 0.66-0.73, fused non-attack FPR 17%. Uniform-grid rerun of the physical view reproduces exp15
+(cadence conclusions are not jitter artefacts). Caches: data/sherlock/_feature_cache/02-Semiurban__network__*.npz
+(scripts/build_sherlock_network_features.py).
 A clean-train detector scored on a different run saturates (100% non-attack FPR) unless a per-run causal baseline is used.

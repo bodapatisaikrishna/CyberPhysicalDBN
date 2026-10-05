@@ -1,0 +1,17 @@
+scenario,detector,attack_type,n_events,n_detected,mean_event_auroc,n_events_auroc_ge_0.9,git_sha,source_file,ablation_axis
+02-Semiurban,N_pca_spe,arp-spoof:arp-spoof-dos,6,6,0.9553679231971928,5,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,N_pca_spe,control-and-freeze:control-and-freeze,5,5,0.6581144515087123,1,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,N_pca_spe,drift-off:drift-off,9,9,0.713214990946248,2,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,N_pca_spe,industroyer:industroyer,9,7,0.4929732650869611,1,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,N_top_k_mean_abs_z,arp-spoof:arp-spoof-dos,6,6,0.9387571174018148,5,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,N_top_k_mean_abs_z,control-and-freeze:control-and-freeze,5,4,0.6401694839623355,1,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,N_top_k_mean_abs_z,drift-off:drift-off,9,9,0.7031679850821039,2,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,N_top_k_mean_abs_z,industroyer:industroyer,9,8,0.5521406900227007,1,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,PN_max,arp-spoof:arp-spoof-dos,6,6,0.93988700973303,5,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,PN_max,control-and-freeze:control-and-freeze,5,5,0.7279627509018877,1,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,PN_max,drift-off:drift-off,9,9,0.6614944702967592,2,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,PN_max,industroyer:industroyer,9,7,0.857738246433965,7,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,P_pca_spe,arp-spoof:arp-spoof-dos,6,0,0.2929716628469075,0,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,P_pca_spe,control-and-freeze:control-and-freeze,5,0,0.6230152431899858,0,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,P_pca_spe,drift-off:drift-off,9,2,0.4357138622858657,0,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network
+02-Semiurban,P_pca_spe,industroyer:industroyer,9,6,0.8505313841640731,6,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,exp17_attack_type_summary_20261005T161136Z.csv,sherlock_network

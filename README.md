@@ -7,12 +7,12 @@
 [![Python](https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-torch--geometric-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![pandapower](https://img.shields.io/badge/pandapower-power--flow-2b7a78)](https://www.pandapower.org/)
-[![Tests](https://img.shields.io/badge/tests-579%20passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-582%20passing-brightgreen)](tests/)
 [![Experiments](https://img.shields.io/badge/experiments-13-blue)](experiments/)
 [![Figures](https://img.shields.io/badge/figures-49%20generated-orange)](results/figures/)
 [![LOC](https://img.shields.io/badge/python-24%2C161%20LOC-lightgrey)](src/)
 
-[Overview](#overview) · [Novelty](#novelty-beyond-the-source-paper) · [Architecture](#architecture) · [Key equations](#key-equations) · [Claims &amp; results](#three-falsifiable-claims) · [Experiment suite](#experiment-suite-exp01exp16) · [Quickstart](#quickstart) · [Module map](#module-map) · [Findings](#notable-findings-including-nulls) · [Citation](#citation)
+[Overview](#overview) · [Novelty](#novelty-beyond-the-source-paper) · [Architecture](#architecture) · [Key equations](#key-equations) · [Claims &amp; results](#three-falsifiable-claims) · [Experiment suite](#experiment-suite-exp01exp17) · [Quickstart](#quickstart) · [Module map](#module-map) · [Findings](#notable-findings-including-nulls) · [Citation](#citation)
 
 </div>
 
@@ -42,7 +42,7 @@ simulated power grid closes a physical feedback loop the source paper
 never attempts.
 
 The project is organized as thirteen sequential experiments (`exp01`
-through `exp16`), each gated by a structural validation check before its
+through `exp17`), each gated by a structural validation check before its
 numbers are trusted, and every hypothesis pre-registered in
 [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md) *before* the corresponding code was
 written — the standard lab-notebook discipline of "hypothesis before,
@@ -157,7 +157,7 @@ SHA and random seed. Full hypothesis → result → interpretation record:
 [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md) (3,200+ lines). All 49 generated
 figures: [`results/figures/`](results/figures/).
 
-## Experiment suite (exp01–exp16)
+## Experiment suite (exp01–exp17)
 
 Each experiment is a standalone, runnable script under `experiments/`
 that writes seeded, git-SHA-stamped CSVs to `results/` and ends with a
@@ -182,6 +182,7 @@ see [Research integrity principles](#research-integrity-principles)).
 | 14 | `exp14_sherlock_component.py` | 02-Semiurban's full 12 h physical snapshots (raw `physical.zip`): all 5,731 per-component columns instead of 11 aggregates, label-free PCA detectors; pre-registered criteria all missed (a clean-train detector saturates at 100% non-attack false alarms because the test run is in a different operating regime) |
 | 15 | `exp14_sherlock_component.py --config configs/sherlock_baseline.yaml` | Same, with every snapshot scored against the file's own causal trailing baseline: non-attack false alarms 100% → 11%, industroyer (breaker-opening) events 6/9 at AUROC ≥ 0.9; other families still at chance; overall ROC-AUC ≈ 0.50 |
 | 16 | `exp16_sherlock_supervised.py` | Event-held-out supervised arm (gradient boosting on label-free PCA features; fixed hyperparameters): pooled out-of-fold ROC-AUC 0.44 — no learnable footprint found for arp-spoof / drift-off / control-and-freeze at this feature reduction |
+| 17 | `exp17_sherlock_network.py` | Parses the raw switch packet captures (own numpy pcap parser, verified against tcpdump) into 23 IEC-104 traffic counts on a uniform 2 s grid; label-free detector with causal baseline; also reruns the physical view on the uniform grid (cadence sensitivity) and fuses both: arp-spoof AUROC 0.96, fused ROC-AUC 0.73 / lift 2.6×, industroyer 7/9; control-and-freeze weak, fused false alarms 17% |
 
 ## Quickstart
 
@@ -189,7 +190,7 @@ see [Research integrity principles](#research-integrity-principles)).
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
 python scripts/verify_stack.py          # smoke-tests every dependency
-pytest tests/ -q                        # 579 tests
+pytest tests/ -q                        # 582 tests
 ```
 
 Run any experiment — each writes seeded, git-SHA-stamped CSVs to `results/`:
@@ -307,7 +308,9 @@ ones — a sample, in full detail in [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md):
   false alarms 100% → 11%) and made breaker-opening attacks detectable (6/9
   events at AUROC ≥ 0.9), but overall ROC-AUC stayed ≈ 0.50 and a supervised
   event-held-out model did no better (0.44); every pre-registered success
-  criterion was missed. The remaining untried lever is the raw network captures.
+  criterion was missed. The raw network captures (exp17) then carried the missing signal: a label-free detector on 23 IEC-104
+  traffic counts detects arp-spoof (mean event AUROC 0.96 vs 0.29 from physical state), and fusing it with the physical view gives pooled
+  ROC-AUC 0.73 / 2.6× lift / industroyer 7 of 9 events — with control-and-freeze still weak and a 17% fused false-alarm rate.
 - **The real dataset has defects worth knowing.** 02-Semiurban's shipped
   state export covers ~3 h of a 12 h run (7 of 29 attacks) and ends mid-line;
   03-Rural's "train" file is actually its attack data.
@@ -363,16 +366,16 @@ pre-registered success criterion was missed (details in the notebook). The datas
 | [`networkx`](https://networkx.org/) | Attack-graph representation before DBN compilation |
 | [`scikit-learn`](https://scikit-learn.org/) | Calibration, PR curves, KMeans, Adjusted Rand Index |
 | [`stable-baselines3`](https://github.com/DLR-RM/stable-baselines3) | PPO for the adversarial RL attacker (C3) |
-| [`pytest`](https://pytest.org/) | 579 tests, one per numerical component |
+| [`pytest`](https://pytest.org/) | 582 tests, one per numerical component |
 
 ## Project structure
 
 ```
 src/                    see Module map above
-experiments/             exp01-exp16 (exp15 = exp14's script + configs/sherlock_baseline.yaml)
+experiments/             exp01-exp17 (exp15 = exp14's script + configs/sherlock_baseline.yaml)
 results/                CSV outputs (git-SHA + seed logged), figures/, summary/
 configs/                 YAML experiment configs — no magic numbers in source
-tests/                   579 tests, one per numerical component
+tests/                   582 tests, one per numerical component
 scripts/                 cross-experiment consolidation and figure-generation scripts
 webapp/                  Streamlit demo dashboard
 docs/                    Sherlock dataset download notes, literature review

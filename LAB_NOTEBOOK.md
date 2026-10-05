@@ -3762,3 +3762,70 @@ Real gains: regime-robustness (non-attack FPR 1.00 -> 0.11) and breaker-opening 
 overall detection (ROC ~0.5, lift 1.14x best) because arp-spoof, drift-off and control-and-freeze (20 of 29 events) left no
 detectable trace in any physical-state view tried. Untried and the most plausible remaining lever: the raw network
 captures (`pcap/`, `control-center.zip`), since arp-spoof/DoS act on the network layer.
+
+## 2026-10-05 Experiment: exp17 -- network-capture view + cadence sensitivity (02-Semiurban, full 12 h)
+
+**Why (user asked to complete both open items).** (1) The cadence gate (b) failed in exp13/14 (jittered ~2 s physical
+snapshots; 22 / 432 gaps outside 2 s +/- 1 s). Rather than relax the gate, test whether the conclusions survive a
+UNIFORM grid. (2) arp-spoof / control-and-freeze / drift-off show no footprint in any physical view; they act on the
+network/control path, so the raw packet captures are the remaining place to look.
+
+**Data facts verified before any detector (parser check, not a result).** `raw/<split>/pcap/switch-*.pcap`: six classic
+little-endian microsecond Ethernet pcaps per split (818 MB each split). My numpy parser (`src/perception/sherlock_network.py`)
+agrees EXACTLY with `tcpdump` on `switch-n407-pcap-mir5.pcap`: 198,296 packets, 198,213 IPv4, 83 IPv6, 0 ARP, 193,889 TCP,
+2 SYN, 2 RST, all TCP on port 2404 (IEC 60870-5-104). This capture has no ARP/UDP/ICMP; the mirrored traffic is IEC-104 between
+control center and substations (96,942 packets with APDU payload). So "network view" = IEC-104 traffic volume/structure
+(I/S/U frames, SYN/RST/FIN, distinct pairs), not ARP content. Capture spans 12.001 h.
+
+**Design (fixed before any exp17 number).** Common 2 s grid per split starting at the first physical snapshot time t0;
+bin k = [t0+2k, t0+2k+2); label of bin k from the event catalog at the bin END time (same rule as before).
+Views: (P) physical component view carried onto the grid by last-observation-carried-forward (latest snapshot with
+t <= bin end; causal, no interpolation) -- this is the cadence sensitivity run; (N) 23 network count features summed over
+the six switch captures; (P+N) fused. Detectors identical in kind to exp15 (label-free; per-column causal rolling robust
+baseline W=450 bins (15 min), min_history 30, scale floor from clean train; PCA fit on clean-train fit blocks; thresholds
+= 99th pct on calib blocks): P -> pca_spe (k up to 64); N -> pca_spe (99% variance) and top_k_mean_abs_z (k=3); P+N -> max of
+the two views' scores each divided by its own calibration-block 99th percentile. PRIMARY detector per view is pca_spe
+(fusion: the max-score).
+**Hypotheses / pre-registered criteria:**
+- N-0 (cadence sensitivity): on the uniform grid P reproduces exp15: pooled ROC-AUC within +/-0.05 of 0.501 and industroyer
+  AUROC>=0.9 events within +/-1 of 6/9. If not, the exp13-15 conclusions were artefacts of the jitter and are retracted.
+- N-1: arp-spoof (a DoS on the comms path) mean event AUROC >= 0.70 with view N (pca_spe). Prior: more likely than not.
+- N-2: control-and-freeze mean event AUROC >= 0.70 with view N. Prior: even odds (attacker I-frames change the pattern).
+- N-3: drift-off mean event AUROC >= 0.70 with view N. Prior: unlikely (it perturbs setpoints slowly, a physical effect).
+- N-4: fused P+N: industroyer >= 7/9 events AUROC >= 0.9 AND pooled ROC-AUC >= 0.70 with lift >= 2.0.
+- N-5: non-attack false-alarm rate of the primary detector <= 0.05 for N and for P+N at the calibration threshold.
+Each criterion missed will be reported as missed; nothing is tuned on test labels.
+Known risk: the causal baseline absorbs long attacks (drift-off 5-16 min vs 15 min window).
+
+**Result (exp17, run `20261005T161136Z`, seed 42, log `results/exp17_full_run_20261005T161133Z.log`).**
+Uniform 2 s grid: 21,651 train / 21,652 test bins, 0 grid points before the first snapshot, max LOCF staleness 7.10 s / 5.75 s;
+test base rate 0.2308 (labels at bin end). Network view N: 23 features, PCA k=5 (99.1%), 9/23 constant in fit; physical view P: k=64.
+| detector | AUC-PR | lift | ROC-AUC | non-attack FPR |
+|---|---|---|---|---|
+| P_pca_spe (physical, LOCF grid) | 0.2766 | 1.20x | 0.521 | 0.105 |
+| N_pca_spe (network) | 0.5599 | 2.43x | 0.678 | 0.079 |
+| N_top3_mean_abs_z | 0.5574 | 2.41x | 0.681 | 0.066 |
+| PN_max (fused) | 0.5989 | 2.59x | 0.728 | 0.171 |
+Mean event AUROC (events >= 0.9): arp-spoof N 0.96 (5/6) / P 0.29 (0/6) / PN 0.94 (5/6); control-and-freeze N 0.66 (1/5) / P 0.62 / PN 0.73 (1/5);
+drift-off N 0.71 (2/9) / P 0.44 (0/9) / PN 0.66 (2/9); industroyer N 0.49 (1/9) / P 0.85 (6/9) / PN 0.86 (7/9).
+Criteria: N-0 MET (P on the uniform grid: ROC 0.521, industroyer 6/9 -- same as exp15's 0.501 / 6/9); N-1 MET (arp-spoof 0.955);
+N-2 MISSED (control-and-freeze 0.658 < 0.70); N-3 MET (drift-off 0.713, narrowly); N-4 MET (fused industroyer 7/9, ROC 0.728, lift 2.59x);
+N-5 MISSED (non-attack FPR N 0.079, P+N 0.171, both > 0.05). Structural gate passed.
+Packet-parser facts: parser equals `tcpdump` exactly on switch-n407 (see above); train captures hold 4 ARP packets in total, test 5,372.
+
+**Interpretation.** (1) The cadence concern is resolved the right way: the exp13-15 physical conclusions are not artefacts of the
+snapshot jitter (N-0 met on a uniform grid; LOCF staleness at most 7.1 s). The earlier gate (b) failure stays on record for those runs;
+exp17's grid is uniform by construction. (2) The network captures are the missing signal: arp-spoof, invisible in every physical view
+(AUROC 0.29), is detected from network counts (0.96, 5/6 events >= 0.9). Plausibly the ARP storm itself (5,372 ARP packets in test vs 4
+in train) plus IEC-104 disruption; I did not isolate which feature drives it. (3) The views are complementary: network sees
+arp-spoof (and partly drift-off, control-and-freeze), physical sees industroyer; the fused detector is the first at lift 2.59x / ROC-AUC 0.73
+and 7/9 industroyer. (4) Not achieved: control-and-freeze stays moderate (0.66 / 0.73 fused, 1/5 events >= 0.9) and the fused false-alarm
+rate is 17.1% -- a max of two scores unions their false alarms, so fusion buys recall at the price of precision (N-5 missed).
+Roughly one third of events (control-and-freeze, drift-off) remain weakly detected. Detection claims are for 02-Semiurban only, one run, one seed
+(PCA/baselines are deterministic given the data; no stochastic training in these detectors).
+
+**Surprised? Yes, in two ways:** (a) the size of the arp-spoof gain (0.29 -> 0.96) -- checked: the parser matches tcpdump, the train grid has
+0 attack labels, thresholds come from clean calib blocks, and the network features are label-free counts; the ARP-count asymmetry between train
+and test is directly visible in the raw captures. (b) the network view is at chance on industroyer (0.49) although it opens breakers -- the
+breaker change is a physical-state event with little IEC-104 traffic signature at these 23 counts. Not checked: per-feature attribution, other
+scenarios (03-Rural has pcaps too), and whether the 2 s grid hides sub-second ARP bursts.

@@ -1,0 +1,3 @@
+n_before_first,max_staleness_s,n_bins,names_net,split,source_file,ablation_axis
+0,5.745956659317017,21652,,test,exp17_grid_info_20261005T161136Z.csv,sherlock_network
+0,7.101989507675171,21651,,train,exp17_grid_info_20261005T161136Z.csv,sherlock_network

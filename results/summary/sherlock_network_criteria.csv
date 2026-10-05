@@ -1,0 +1,7 @@
+criterion,met,detail,git_sha,seed,source_file,ablation_axis
+N-0 cadence sensitivity: P pooled ROC within 0.05 of 0.501 and industroyer>=0.9 events within 1 of 6/9,True,"ROC 0.521, industroyer 6/9",cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,42,exp17_criteria_20261005T161136Z.csv,sherlock_network
+N-1 arp-spoof mean event AUROC>=0.70 (N pca_spe),True,0.955,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,42,exp17_criteria_20261005T161136Z.csv,sherlock_network
+N-2 control-and-freeze mean event AUROC>=0.70 (N pca_spe),False,0.658,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,42,exp17_criteria_20261005T161136Z.csv,sherlock_network
+N-3 drift-off mean event AUROC>=0.70 (N pca_spe),True,0.713,cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,42,exp17_criteria_20261005T161136Z.csv,sherlock_network
+N-4 fused: industroyer>=7/9 events AUROC>=0.9 and pooled ROC>=0.70 and lift>=2.0,True,"industroyer 7/9, ROC 0.728, lift 2.59x",cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,42,exp17_criteria_20261005T161136Z.csv,sherlock_network
+N-5 non-attack FPR<=0.05 for N and for P+N,False,"N 0.079, PN 0.171",cf4e4236ce8e7523d8bf4d3c2271a2b4fe7e1c60-dirty,42,exp17_criteria_20261005T161136Z.csv,sherlock_network

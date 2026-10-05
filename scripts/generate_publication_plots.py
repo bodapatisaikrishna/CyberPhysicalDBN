@@ -270,27 +270,29 @@ def exp14_16_plots() -> None:
         ("exp14\ncomponent view, PCA-SPE", RESULTS_DIR / "exp14_events_20261003T122426Z.csv", "pca_spe"),
         ("exp15\n+ causal rolling baseline", RESULTS_DIR / "exp15_events_20261003T123459Z.csv", "pca_spe"),
         ("exp16\nsupervised, held-out events", RESULTS_DIR / "exp16_events_20261003T153317Z.csv", None),
+        ("exp17\nnetwork captures only", RESULTS_DIR / "exp17_events_20261005T161136Z.csv", "N_pca_spe"),
+        ("exp17\nphysical + network fused", RESULTS_DIR / "exp17_events_20261005T161136Z.csv", "PN_max"),
     ]
     if not all(p.exists() for _, p, _ in stages):
         print("  skipping exp14-16: source files not found")
         return
     fams = ["industroyer", "control-and-freeze", "drift-off", "arp-spoof"]
-    fig, ax = plt.subplots(figsize=(9, 4.8))
-    width = 0.2
+    fig, ax = plt.subplots(figsize=(10, 5.2))
+    width = 0.14
     for i, (label, path, det) in enumerate(stages):
         df = pd.read_csv(path)
         if det is not None:
             df = df[df["detector"] == det]
         vals = [df[df["attack_type"].str.startswith(f)]["event_auroc"].mean() for f in fams]
-        ax.bar(np.arange(len(fams)) + (i - 1.5) * width, vals, width=width, label=label)
+        ax.bar(np.arange(len(fams)) + (i - 2.5) * width, vals, width=width, label=label)
     ax.axhline(0.5, color="k", lw=0.8, ls="--")
     ax.text(len(fams) - 0.55, 0.51, "chance", fontsize=8, ha="right")
     ax.set_xticks(np.arange(len(fams)))
     ax.set_xticklabels(fams)
     ax.set_ylabel("mean per-event AUROC vs. normal")
     ax.set_ylim(0, 1.0)
-    ax.set_title("02-Semiurban (full 12 h): per-family event AUROC at each step")
-    ax.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=2, frameon=False)
+    ax.set_title("02-Semiurban (full 12 h): per-family event AUROC by view and step")
+    ax.legend(fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=3, frameon=False)
     ax.grid(alpha=0.3, axis="y")
     fig.tight_layout()
     savefig(fig, "exp14_16_family_auroc.png")
