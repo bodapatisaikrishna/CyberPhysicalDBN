@@ -371,6 +371,100 @@ def exp19_universal_plot() -> None:
     savefig(fig, "exp19_universal_loso.png")
 
 
+def exp02_latched_kl_plot() -> None:
+    """exp02: latched-reaction KL(EX||FF) and EX vs FF posteriors over time, Scenario 1, from
+    the longer logged run (433 slices; the 250-slice run is its prefix)."""
+    path = RESULTS_DIR / "exp02_latched_kl_scenario1_20260731T192753Z.csv"
+    if not path.exists():
+        print("  skipping exp02: source file not found")
+        return
+    df = pd.read_csv(path)
+    nodes = list(dict.fromkeys(df["node"]))
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2))
+    for node in nodes:
+        g = df[df["node"] == node]
+        axes[0].plot(g["t_units"], g["kl_ex_ff"], label=node)
+        line, = axes[1].plot(g["t_units"], g["p_ex"], label=f"{node} EX")
+        axes[1].plot(g["t_units"], g["p_ff"], ls="--", color=line.get_color(), label=f"{node} FF")
+    axes[0].set_xlabel("time (TTC units)")
+    axes[0].set_ylabel("KL(EX || FF)")
+    axes[0].set_title("Latched reactions: KL divergence, Scenario 1")
+    axes[0].legend(fontsize=8)
+    axes[0].grid(alpha=0.3)
+    axes[1].set_xlabel("time (TTC units)")
+    axes[1].set_ylabel("posterior P(node = 1)")
+    axes[1].set_title("EX (solid) vs FF (dashed)")
+    axes[1].legend(fontsize=7, ncol=2)
+    axes[1].grid(alpha=0.3)
+    savefig(fig, "exp02_latched_kl.png")
+
+
+def _pr_panel(ax, y, score, label):
+    from sklearn.metrics import precision_recall_curve
+    pr, rc, _ = precision_recall_curve(y, score)
+    ax.plot(rc, pr, label=f"{label} (AP {average_precision_score(y, score):.3f})")
+
+
+def exp17_19_pr_curves() -> None:
+    """PR curves from the logged raw scores: exp17 (02-Semiurban, physical / network / fused)
+    and exp19 (scenario-agnostic detector on each leave-one-out target)."""
+    p17 = RESULTS_DIR / "exp17_raw_scores_20261005T161136Z.npz"
+    p19 = RESULTS_DIR / "exp19_raw_scores_20261009T163931Z.npz"
+    if not (p17.exists() and p19.exists()):
+        print("  skipping exp17/19 PR curves: source files not found")
+        return
+    z17, z19 = np.load(p17), np.load(p19)
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.4))
+    for det, lab in (("P_pca_spe", "physical"), ("N_pca_spe", "network"), ("PN_max", "fused")):
+        _pr_panel(axes[0], z17[f"{det}__y"], z17[f"{det}__score"], lab)
+    base17 = float(z17["PN_max__y"].mean())
+    axes[0].axhline(base17, color="k", lw=0.8, ls="--", label=f"base rate {base17:.3f}")
+    axes[0].set_title("exp17, 02-Semiurban (in-network)")
+    for t, lab in (("01-Basic", "01-Basic (fit 02)"), ("02-Semiurban", "02-Semiurban (fit 01)"), ("03-Rural", "03-Rural (fit 01+02, unseen)")):
+        _pr_panel(axes[1], z19[f"{t}__pca_spe__y"], z19[f"{t}__pca_spe__score"], lab)
+    axes[1].set_title("exp19, scenario-agnostic, leave-one-scenario-out")
+    for ax in axes:
+        ax.set_xlabel("recall")
+        ax.set_ylabel("precision")
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1.02)
+        ax.legend(fontsize=8)
+        ax.grid(alpha=0.3)
+    savefig(fig, "exp17_19_pr_curves.png")
+
+
+def exp19_score_timeline() -> None:
+    """Score timeline on the unseen 03-Rural run: adaptive-normalised pca_spe score, its threshold,
+    and the catalogued attack windows coloured by family."""
+    p19 = RESULTS_DIR / "exp19_raw_scores_20261009T163931Z.npz"
+    pev = RESULTS_DIR / "exp19_events_20261009T163931Z.csv"
+    pm = RESULTS_DIR / "exp19_anomaly_metrics_20261009T163931Z.csv"
+    if not (p19.exists() and pev.exists() and pm.exists()):
+        print("  skipping exp19 timeline: source files not found")
+        return
+    z = np.load(p19)
+    s = z["03-Rural__pca_spe_adaptive__score"]
+    theta = float(pd.read_csv(pm).query("target == '03-Rural' and detector == 'pca_spe_adaptive'")["theta"].iloc[0])
+    ev = pd.read_csv(pev).query("scenario == '03-Rural' and detector == 'pca_spe_adaptive'")
+    hours = np.arange(len(s)) * 2.0 / 3600.0
+    colors = {"industroyer": "tab:red", "control-and-freeze": "tab:purple", "drift-off": "tab:orange", "arp-spoof": "tab:green"}
+    fig, ax = plt.subplots(figsize=(13, 4.8))
+    for _, r in ev.iterrows():
+        fam = r["attack_type"].split(":")[0]
+        a = r["start"] * 2.0 / 3600.0
+        ax.axvspan(a, a + r["n_slices"] * 2.0 / 3600.0, color=colors.get(fam, "grey"), alpha=0.25, lw=0)
+    ax.plot(hours, np.clip(s, -5, 60), lw=0.4, color="k")
+    ax.axhline(theta, color="r", lw=0.8, ls="--")
+    handles = [plt.Rectangle((0, 0), 1, 1, color=c, alpha=0.4) for c in colors.values()]
+    ax.legend(handles + [plt.Line2D([0], [0], color="r", ls="--")], list(colors) + [f"alarm threshold ({theta:.2f})"],
+              fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=5, frameon=False)
+    ax.set_xlabel("hours since start of the 03-Rural run")
+    ax.set_ylabel("adaptive score (clipped at 60)")
+    ax.set_title("Unseen network 03-Rural: scenario-agnostic detector score vs. catalogued attacks")
+    ax.grid(alpha=0.3)
+    savefig(fig, "exp19_03rural_timeline.png")
+
+
 # -------------------------------------------------------- exp13 ---------
 
 def exp13_plots() -> None:
@@ -703,6 +797,11 @@ def main() -> int:
     exp18_replication_plot()
     print("exp19 leave-one-scenario-out ...")
     exp19_universal_plot()
+    print("exp02 latched KL ...")
+    exp02_latched_kl_plot()
+    print("exp17/19 PR curves and timeline ...")
+    exp17_19_pr_curves()
+    exp19_score_timeline()
     print("exp12 spatial zone map ...")
     exp12_spatial_zone_map()
     print("architecture diagram ...")
