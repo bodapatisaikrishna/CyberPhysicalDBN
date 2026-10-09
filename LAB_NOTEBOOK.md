@@ -3829,3 +3829,94 @@ Roughly one third of events (control-and-freeze, drift-off) remain weakly detect
 and test is directly visible in the raw captures. (b) the network view is at chance on industroyer (0.49) although it opens breakers -- the
 breaker change is a physical-state event with little IEC-104 traffic signature at these 23 counts. Not checked: per-feature attribution, other
 scenarios (03-Rural has pcaps too), and whether the 2 s grid hides sub-second ARP bursts.
+
+## 2026-10-09 Experiment: exp18 -- out-of-sample replication on 01-Basic + two pre-registered fixes
+
+**Why.** Final verification (user request) flags two weaknesses of exp17: (i) everything was developed on ONE scenario
+(02-Semiurban), so the exp17 numbers are in-sample with respect to every design choice made in exp13-17; (ii) its misses --
+control-and-freeze (0.66 N / 0.73 fused) and fused non-attack FPR 17%. A fix tuned on 02 and evaluated on 02 would be
+circular. Design: freeze everything, then test on 01-Basic, which no exp14-17 design choice has looked at (01-Basic test:
+7 industroyer, 5 control-and-freeze, 4 drift-off, 2 arp-spoof, 10 benign events; train: 7 benign events only; 4 switch pcaps
+per split; ~40k physical snapshots per split).
+
+**Arm R (replication, frozen).** exp17 exactly as run on 02 (same config `configs/sherlock_network.yaml`, same 23 network
+features, same detectors and fusion rule PN_max), applied to 01-Basic. Criteria (fixed now):
+- R-1 fused PN_max pooled ROC-AUC >= 0.70 and lift >= 2.0.
+- R-2 industroyer: PN_max >= 5 of 7 events with AUROC >= 0.9.
+- R-3 arp-spoof: N_pca_spe mean event AUROC >= 0.70 (only 2 events -- reported as weak evidence either way).
+**Arm F (two fixes, chosen after seeing 02, so 02 numbers for them are EXPLORATORY and 01-Basic is the confirmatory test).**
+- F-a fusion by MEAN instead of MAX of the two calibration-normalised scores (PN_mean): a max unions the two views' false alarms;
+  a mean should not. Threshold: 99th pct of the fused score on clean calib blocks, as before.
+- F-b two extra label-free network features motivated by the attack's own name (a "freeze" replays/holds measurement values):
+  per bin, the number of DISTINCT IEC-104 I-frame payloads (byte-exact, first 64 payload bytes) and the number of REPEATED
+  I-frame payloads (I-frames minus distinct). Network view N+ = 25 features; fused PN+_mean.
+Criteria (on 01-Basic):
+- F-1 PN_mean non-attack FPR <= 0.05 (vs PN_max's on the same scenario).
+- F-2 control-and-freeze mean event AUROC >= 0.70 with N+ pca_spe.
+- F-3 PN+_mean pooled ROC-AUC >= 0.70 and lift >= 2.0.
+Every miss is reported. Prior: R-1 roughly even odds (01-Basic is smaller and the earlier state-view result there was better,
+lift 2.88x); F-1 likely; F-2 unlikely-to-even.
+
+**Amendment to exp18 F-b (before any exp18 number; only label-free CLEAN-TRAIN data inspected).** The pre-registered
+"distinct / repeated I-frame payload" counts are degenerate: on clean train captures every I-frame is byte-unique, first
+because the APCI carries send/receive sequence numbers, and still after skipping the APCI (n406: 1,927,467 I-frames, all
+distinct ASDUs) because each ASDU bundles several float measurements that move. Replaced, same intent, by decoding the
+dominant ASDU type (sampled clean train: essentially all I-frames are type 13 = M_ME_NC_1, short float + quality, no time tag,
+SQ=0): per bin, `n_iec104_measurements` (information objects) and `n_iec104_unchanged_measurements` (objects whose value bits
+equal the previous report of the same (common address, IOA) in the same capture file). Clean-train check on switch-n407:
+418,665 measurements, 47,494 unchanged (11%) -- non-degenerate. N+ = the 23 exp17 features + these 2. Criteria F-1..F-3 unchanged.
+
+**Result (exp18; 01-Basic run `20261009T150348Z`, log `results/exp18_01_full_run_20261009T150344Z.log`; 02-Semiurban run
+`20261009T150422Z`, log `results/exp18_02_full_run_20261009T150419Z.log`; seed 42).** 01-Basic grid: 21,615 bins/split, base
+rate 0.1328; physical view 493 columns (131 constant in fit). Network caches for 02: the first 23 columns are byte-identical
+to exp17's cache after the parser extension (checked with np.array_equal on both splits).
+| 01-Basic (confirmatory) | AUC-PR | lift | ROC-AUC | non-attack FPR |
+|---|---|---|---|---|
+| P_pca_spe | 0.171 | 1.29x | 0.536 | 0.075 |
+| N_pca_spe | 0.503 | 3.79x | 0.770 | 0.121 |
+| PN_max (exp17 rule, frozen) | 0.495 | 3.73x | 0.768 | 0.186 |
+| PN_mean (F-a) | 0.527 | 3.97x | 0.775 | 0.184 |
+| Nplus_pca_spe (F-b) | 0.516 | 3.88x | 0.769 | 0.087 |
+| PNplus_mean | 0.534 | 4.02x | 0.777 | 0.164 |
+01-Basic mean event AUROC (PN_max): arp-spoof 0.98 (2/2 events >= 0.9), control-and-freeze 0.88 (3/5), drift-off 0.70 (2/4),
+industroyer 0.72 (1/7; physical view alone 0.82, 2/7).
+Criteria on 01-Basic: R-1 MET (ROC 0.768, lift 3.73x); R-2 MISSED (industroyer 1/7 >= 0.9); R-3 MET (arp-spoof 0.963, 2 events);
+F-1 MISSED (PN_mean FPR 0.184 vs PN_max 0.186 -- no reduction); F-2 MET (control-and-freeze 0.901) BUT the base N view already
+gives 0.893, so the two new features are not what makes it pass; F-3 MET (ROC 0.777, lift 4.02x).
+02-Semiurban (exploratory, same code): F-1 MISSED (0.148 vs 0.171), F-2 MISSED (0.656 vs N 0.658), F-3 MET (0.722 / 2.58x).
+Reproducibility: rerunning exp17's frozen config (`results/exp17repro_full_run_20261009T151016Z.log`, run `20261009T151020Z`)
+reproduces every exp17 number exactly (ROC 0.5210 / 0.6778 / 0.6811 / 0.7276; FPR 0.105 / 0.079 / 0.066 / 0.171).
+
+**Interpretation.** The main result replicates out of sample: on a second network, with nothing tuned on it, the frozen
+exp17 pipeline gives pooled ROC-AUC 0.77 and 3.7x lift (02: 0.73 / 2.6x), detects arp-spoof (0.98) and, on 01-Basic, also
+control-and-freeze (0.88) -- so control-and-freeze weakness on 02 is scenario-specific, not a blind spot of the method. What
+did NOT replicate: industroyer (7/9 events >= 0.9 on 02, 1/7 on 01-Basic; the physical view is weaker on 01's 493-column grid).
+Both pre-registered fixes failed as fixes: mean-fusion does not lower the false-alarm rate (0.184 vs 0.186 on 01) -- so the 15-19%
+non-attack FPR is not a fusion artefact but a train->test threshold shift present in each view (N alone 12% on 01); and the
+decoded "unchanged measurement" features add nothing measurable (+0.008 on 01, -0.002 on 02). I am not iterating further on
+these two: with two scenarios, a third round of fixes chosen after seeing both would no longer have an untouched test set.
+
+**Surprised? Yes:** that the fixed physical view's industroyer detection collapsed on 01-Basic (0.82 mean but only 2/7 events
+>= 0.9, vs 6/9 on 02). Checked: the 01 physical view has 493 columns vs 5,731 (smaller network, fewer breakers), and the
+rolling baseline / PCA configuration is identical; not investigated further (no third scenario with clean data to test a fix on).
+
+## 2026-10-09 Verification: exp03 reproducibility root cause (correction of the 2026-08-06 entry)
+
+**What the final verification found.** `scripts/verify_reproducibility.py`: exp01 PASS bit-for-bit; exp03 FAIL with the same
++-2-slice difference first seen 2026-08-06 (`median_first_unstable_slice` 45.5 fresh vs 43.5 canonical; `open_loop_lag_slices`
+-7.5 / +72.5 / +79.5 fresh vs -5.5 / +74.5 / +81.5 canonical). The 2026-08-06 entry attributed this to run-to-run BLAS
+non-determinism and left it unconfirmed.
+
+**Checks (not assumed).** (1) Four current-code runs -- 2026-08-06, today's multi-threaded run (20261009T150730Z), and two
+single-threaded runs with VECLIB/OMP/OPENBLAS/MKL threads = 1 (20261009T151353Z, 20261009T151932Z) -- are identical in every
+column of grid_sweep, twin_slices and summary. The code is deterministic; the BLAS hypothesis is REFUTED. (2) Bisection in
+scratch worktrees, same libraries, today: commit 35e5db0 (the twin as first committed) reproduces the 2026-08-01 canonical files
+EXACTLY (43.5 / -5.5 / +74.5 / +81.5); 7e3831f (Session 4: WrongLogicExec forces its DER's setpoint directly, the documented M1
+fidelity fix) gives 55.5 / -17.5 / +62.5 / +69.5; b65f1f3 (Session 5: UnauthCommand also forces every DER directly, documented
+fidelity fix) and every later commit tested (4f4c048, 2ffa641, HEAD) give 45.5 / -7.5 / +72.5 / +79.5.
+**Conclusion.** Not a reproducibility defect: exp03's published Session-3 numbers are correct for the Session-3 twin and were
+superseded by two deliberate, documented bug fixes that no session re-ran exp03 after. Current-code exp03 values: median first
+unstable slice 45.5 (shown as 46), open-loop lags -7.5 / +72.5 / +79.5 (shown as -8 / +72 / +80 with round-half-to-even); the
+qualitative exp03 conclusion (twin posteriors lag/lead the scripted scenario by these slice counts) is unchanged in sign for all
+three rows. The reproducibility reference is repointed to 20261009T151353Z (old files kept); the 2026-08-06 "BLAS" explanation
+above should be read as superseded by this entry.

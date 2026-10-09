@@ -32,7 +32,11 @@ FEATURE_NAMES: tuple[str, ...] = (
     "n_tcp", "n_udp", "n_icmp", "n_syn", "n_rst", "n_fin",
     "n_iec104_pkts", "n_iec104_i", "n_iec104_s", "n_iec104_u", "iec104_payload_bytes",
     "n_eth_broadcast", "n_distinct_ip_pairs", "n_distinct_src_ip", "arp_ip_multi_mac",
+    # exp18 additions (appended so the first 23 columns stay exactly exp17's feature set)
+    "n_iec104_measurements", "n_iec104_unchanged_measurements",
 )
+N_BASE_FEATURES = 23  # exp17's feature set = FEATURE_NAMES[:23]
+
 
 
 @dataclass(frozen=True)
@@ -84,6 +88,8 @@ def pcap_to_bins(path: Path, t0: float, n_bins: int, bin_s: float = 2.0, chunk: 
     pair_keys: list[np.ndarray] = []  # (bin, src_u32, dst_u32) per IPv4 packet, uniqued per chunk later
     src_keys: list[np.ndarray] = []
     arp_rows: list[np.ndarray] = []
+    meas_rows: list[np.ndarray] = []  # (common addr, IOA, value bits, bin) per M_ME_NC_1 object
+    meas_t: list[np.ndarray] = []
     n_out = n_trunc = 0
     bins_all = np.floor((ts - t0) / bin_s).astype(np.int64)
     for a in range(0, len(ts), chunk):
@@ -172,16 +178,50 @@ def pcap_to_bins(path: Path, t0: float, n_bins: int, bin_s: float = 2.0, chunk: 
                     np.add.at(counts[:, F["n_iec104_s"]], bb[(cc & 3) == 1], 1.0)
                     np.add.at(counts[:, F["n_iec104_u"]], bb[(cc & 3) == 3], 1.0)
                     np.add.at(counts[:, F["iec104_payload_bytes"]], bb, pay[m104].astype(np.float64))
+                    # exp18: decode M_ME_NC_1 (type 13, short float + QDS, no time tag; ~all I-frames
+                    # here) information objects -> (common address, IOA, value bits, time, bin).
+                    isI = (cc & 1) == 0
+                    if isI.any():
+                        pI = pb[m104][isI]
+                        capI = c[im][tm][m104][isI] - (pI - o[im][tm][m104][isI])
+                        payI = pay[m104][isI]
+                        ok13 = (capI >= 12) & (payI >= 12)
+                        pI, capI, payI = pI[ok13], capI[ok13], payI[ok13]
+                        tI = ts[sl][ok][im][tm][m104][isI][ok13]
+                        bI = bb[isI][ok13]
+                        typ = _u8(buf, pI + 6)
+                        vsq = _u8(buf, pI + 7)
+                        nobj = vsq & 0x7F
+                        keep = (typ == 13) & ((vsq & 0x80) == 0) & (nobj > 0) & (12 + 8 * nobj <= np.minimum(capI, payI))
+                        if keep.any():
+                            pI, tI, bI, nobj = pI[keep], tI[keep], bI[keep], nobj[keep]
+                            ca = _u8(buf, pI + 10) | (_u8(buf, pI + 11) << 8)
+                            rep = np.repeat(np.arange(pI.size), nobj)
+                            within = np.arange(rep.size) - np.repeat(np.cumsum(nobj) - nobj, nobj)
+                            ob = pI[rep] + 12 + 8 * within
+                            ioa = _u8(buf, ob) | (_u8(buf, ob + 1) << 8) | (_u8(buf, ob + 2) << 16)
+                            val = (_u8(buf, ob + 3) | (_u8(buf, ob + 4) << 8) | (_u8(buf, ob + 5) << 16) | (_u8(buf, ob + 6) << 24))
+                            meas_rows.append(np.stack([ca[rep], ioa, val, bI[rep]], axis=1).astype(np.int64))
+                            meas_t.append(tI[rep])
     # distinct IP pairs / sources / multi-MAC ARP per bin
     if pair_keys:
         pk = np.unique(np.concatenate(pair_keys), axis=0)
         np.add.at(counts[:, F["n_distinct_ip_pairs"]], pk[:, 0].astype(np.int64), 1.0)
         sk = np.unique(np.concatenate(src_keys), axis=0)
         np.add.at(counts[:, F["n_distinct_src_ip"]], sk[:, 0].astype(np.int64), 1.0)
+    if meas_rows:
+        mr, mt = np.concatenate(meas_rows), np.concatenate(meas_t)
+        np.add.at(counts[:, F["n_iec104_measurements"]], mr[:, 3], 1.0)
+        # a measurement is "unchanged" if its value bits equal the previous report of the same
+        # (common address, IOA) in this capture file (time order; first report never counts)
+        order = np.lexsort((mt, mr[:, 1], mr[:, 0]))
+        m2 = mr[order]
+        same_key = (m2[1:, 0] == m2[:-1, 0]) & (m2[1:, 1] == m2[:-1, 1])
+        unchanged = same_key & (m2[1:, 2] == m2[:-1, 2])
+        np.add.at(counts[:, F["n_iec104_unchanged_measurements"]], m2[1:, 3][unchanged], 1.0)
     arp_pairs = np.concatenate(arp_rows) if arp_rows else np.zeros((0, 3), dtype=np.uint64)
     if len(arp_pairs):
         up = np.unique(arp_pairs, axis=0)  # distinct (bin, ip, mac)
-        ipb = np.unique(up[:, :2], axis=0, return_counts=False)
         # count IPs with >1 distinct MAC in a bin
         key = up[:, 0] * np.uint64(1 << 32) + up[:, 1]
         uk, cnt = np.unique(key, return_counts=True)

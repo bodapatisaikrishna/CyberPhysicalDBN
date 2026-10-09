@@ -86,3 +86,31 @@ def test_locf_alignment_hand_computed():
     assert locf_index(snaps, t_end).tolist() == [1, 1, 2, 2]  # 12 -> snapshot 12 (<=); 14 -> 12; 16 -> 15; 18 -> 15
     assert n_before_first(snaps, np.array([9.0, 10.0])) == 1
     assert max_locf_staleness(snaps, t_end) == pytest.approx(3.0)
+
+
+def _asdu13(ca, objs):
+    """M_ME_NC_1 ASDU: type 13, VSQ = n objects (SQ=0), COT 3, common address, then IOA(3)+float(4)+QDS(1) each."""
+    body = struct.pack("<BBHH", 13, len(objs), 3, ca)
+    for ioa, val in objs:
+        body += struct.pack("<I", ioa)[:3] + struct.pack("<f", val) + b"\x00"
+    apci = bytes([0x68, 4 + len(body), 0x00, 0x00, 0x00, 0x00])  # I-frame
+    return apci + body
+
+
+def test_iec104_measurement_unchanged_counts(tmp_path):
+    ipa, ipb = [10, 0, 0, 1], [10, 0, 0, 2]
+
+    def pkt(t, pay):
+        return (t, _eth(MAC_B, MAC_A, 0x0800, _ipv4(ipa, ipb, 6, _tcp(2404, 5000, 0x18, pay))))
+
+    p = tmp_path / "m.pcap"
+    _pcap(p, [
+        pkt(0.1, _asdu13(1, [(100, 1.5), (101, 2.0)])),  # first reports: 2 measurements, 0 unchanged
+        pkt(0.5, _asdu13(1, [(100, 1.5)])),              # IOA 100 same value -> unchanged
+        pkt(2.1, _asdu13(1, [(101, 2.5), (100, 1.5)])),  # 101 changed; 100 unchanged again
+        pkt(2.2, _asdu13(2, [(100, 9.0)])),              # other common address: first report
+    ])
+    r = pcap_to_bins(p, 0.0, n_bins=2, bin_s=2.0)
+    b0, b1 = r.counts
+    assert b0[F["n_iec104_measurements"]] == 3 and b0[F["n_iec104_unchanged_measurements"]] == 1
+    assert b1[F["n_iec104_measurements"]] == 3 and b1[F["n_iec104_unchanged_measurements"]] == 1

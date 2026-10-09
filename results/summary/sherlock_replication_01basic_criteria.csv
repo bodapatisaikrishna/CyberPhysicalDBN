@@ -1,0 +1,7 @@
+criterion,met,detail,git_sha,seed,source_file,ablation_axis
+R-1 fused PN_max pooled ROC>=0.70 and lift>=2.0,True,"ROC 0.768, lift 3.73x",7c5ff51e5b48a684593a7e390e9a0bc65a0cc94d-dirty,42,exp18_criteria_20261009T150348Z.csv,sherlock_replication_01basic
+R-2 industroyer PN_max >=5 events AUROC>=0.9,False,1/7,7c5ff51e5b48a684593a7e390e9a0bc65a0cc94d-dirty,42,exp18_criteria_20261009T150348Z.csv,sherlock_replication_01basic
+R-3 arp-spoof N_pca_spe mean event AUROC>=0.70,True,0.963 over 2 events,7c5ff51e5b48a684593a7e390e9a0bc65a0cc94d-dirty,42,exp18_criteria_20261009T150348Z.csv,sherlock_replication_01basic
+F-1 PN_mean non-attack FPR<=0.05,False,PN_mean 0.184 vs PN_max 0.186,7c5ff51e5b48a684593a7e390e9a0bc65a0cc94d-dirty,42,exp18_criteria_20261009T150348Z.csv,sherlock_replication_01basic
+F-2 control-and-freeze Nplus_pca_spe mean event AUROC>=0.70,True,0.901 (N: 0.893),7c5ff51e5b48a684593a7e390e9a0bc65a0cc94d-dirty,42,exp18_criteria_20261009T150348Z.csv,sherlock_replication_01basic
+F-3 PNplus_mean pooled ROC>=0.70 and lift>=2.0,True,"ROC 0.777, lift 4.02x",7c5ff51e5b48a684593a7e390e9a0bc65a0cc94d-dirty,42,exp18_criteria_20261009T150348Z.csv,sherlock_replication_01basic

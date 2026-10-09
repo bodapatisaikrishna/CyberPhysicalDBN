@@ -68,10 +68,18 @@ EXP01_KEY_COLUMNS = {
 EXP01_FRESH_PATTERN = re.compile(r"^exp01_(scenario[12]_(?:ff|ex))_\w*_?\d{8}T\d{6}Z\.csv$")
 EXP01_SUMMARY_PATTERN = re.compile(r"^exp01_summary_\w*_?\d{8}T\d{6}Z\.csv$")
 
+# exp03 canonical repointed 2026-10-09 (LAB_NOTEBOOK.md, "exp03 reproducibility root cause"). The
+# original 2026-08-01T123239Z run predates two documented twin fidelity fixes (Session 4's
+# WrongLogicExec direct-setpoint fix, commit 7e3831f; Session 5's UnauthCommand direct-setpoint fix,
+# commit b65f1f3), each of which legitimately changes exp03's output. Bisection: 35e5db0 reproduces
+# 20260801T123239Z exactly today; 7e3831f gives a third set of values; b65f1f3..HEAD all give the
+# values below, identically across multi- and single-threaded BLAS runs. So the 2026-08-06
+# "BLAS non-determinism" explanation was wrong. The reference is now a current-code run
+# (single-threaded BLAS, at HEAD 7c5ff51); the 2026-08-01 files are kept, not deleted.
 EXP03_CANONICAL = {
-    "grid_sweep": RESULTS_DIR / "exp03_grid_sweep_20260801T123239Z.csv",
-    "twin_slices": RESULTS_DIR / "exp03_twin_slices_20260801T123239Z.csv",
-    "summary": SUMMARIES_DIR / "exp03_twin_summary_20260801T123239Z.csv",
+    "grid_sweep": RESULTS_DIR / "exp03_grid_sweep_20261009T151353Z.csv",
+    "twin_slices": RESULTS_DIR / "exp03_twin_slices_20261009T151353Z.csv",
+    "summary": SUMMARIES_DIR / "exp03_twin_summary_20261009T151353Z.csv",
 }
 EXP03_KEY_COLUMNS = {
     "grid_sweep": ["p_mw_per_der"],

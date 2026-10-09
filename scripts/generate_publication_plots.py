@@ -298,6 +298,36 @@ def exp14_16_plots() -> None:
     savefig(fig, "exp14_16_family_auroc.png")
 
 
+def exp18_replication_plot() -> None:
+    """Per-family mean event AUROC of the frozen exp17 fused detector (PN_max) on the
+    development scenario (02-Semiurban) vs. the untouched replication scenario (01-Basic)."""
+    runs = [("02-Semiurban (development)", RESULTS_DIR / "exp17_attack_type_summary_20261005T161136Z.csv"),
+            ("01-Basic (out-of-sample)", RESULTS_DIR / "exp18_attack_type_summary_20261009T150348Z.csv")]
+    if not all(p.exists() for _, p in runs):
+        print("  skipping exp18: source files not found")
+        return
+    fams = ["industroyer", "control-and-freeze", "drift-off", "arp-spoof"]
+    fig, ax = plt.subplots(figsize=(8, 4.6))
+    for i, (label, path) in enumerate(runs):
+        df = pd.read_csv(path)
+        df = df[df["detector"] == "PN_max"]
+        vals = [df[df["attack_type"].str.startswith(f)]["mean_event_auroc"].mean() for f in fams]
+        ns = [int(df[df["attack_type"].str.startswith(f)]["n_events"].sum()) for f in fams]
+        bars = ax.bar(np.arange(len(fams)) + (i - 0.5) * 0.38, vals, width=0.38, label=label)
+        for b, n in zip(bars, ns):
+            ax.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.01, f"n={n}", ha="center", fontsize=7)
+    ax.axhline(0.5, color="k", lw=0.8, ls="--")
+    ax.set_xticks(np.arange(len(fams)))
+    ax.set_xticklabels(fams)
+    ax.set_ylim(0, 1.08)
+    ax.set_ylabel("mean per-event AUROC (fused physical + network)")
+    ax.set_title("Frozen exp17 detector: development vs. out-of-sample scenario")
+    ax.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2, frameon=False)
+    ax.grid(alpha=0.3, axis="y")
+    fig.tight_layout()
+    savefig(fig, "exp18_replication_family_auroc.png")
+
+
 # -------------------------------------------------------- exp13 ---------
 
 def exp13_plots() -> None:
@@ -626,6 +656,8 @@ def main() -> int:
     exp13_plots()
     print("exp14-16 improvement attempts ...")
     exp14_16_plots()
+    print("exp18 replication ...")
+    exp18_replication_plot()
     print("exp12 spatial zone map ...")
     exp12_spatial_zone_map()
     print("architecture diagram ...")

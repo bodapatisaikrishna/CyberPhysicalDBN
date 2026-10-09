@@ -134,6 +134,15 @@ AXES: dict[str, list[tuple[str, Path | None]]] = {
         (m, RESULTS_DIR / f"exp17_{m}_20261005T161136Z.csv")
         for m in ("anomaly_metrics", "events", "attack_type_summary", "criteria", "grid_info")
     ],
+    # 2026-10-09: out-of-sample replication on 01-Basic (confirmatory) + exploratory rerun on 02 (pinned)
+    "sherlock_replication_01basic": [
+        (m, RESULTS_DIR / f"exp18_{m}_20261009T150348Z.csv")
+        for m in ("anomaly_metrics", "events", "attack_type_summary", "criteria", "grid_info")
+    ],
+    "sherlock_fixes_02semiurban_exploratory": [
+        (m, RESULTS_DIR / f"exp18_{m}_20261009T150422Z.csv")
+        for m in ("anomaly_metrics", "attack_type_summary", "criteria")
+    ],
     "gnn_cluster_vs_heuristic": [
         ("cluster_assignment", CANONICAL["exp12_cluster_assignment"]),
         ("observable_kl", CANONICAL["exp12_observable_kl"]),

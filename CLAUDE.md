@@ -760,7 +760,17 @@ FROM PHYSICAL VIEWS ALONE.
 **exp17 (2026-10-05): the network captures DO carry the missing signal.** `src/perception/sherlock_network.py` (pure-numpy
 classic-pcap parser, equals tcpdump exactly), 23 count features on a uniform 2 s grid, same label-free causal-baseline + PCA detector:
 arp-spoof mean event AUROC 0.96 (5/6 events >= 0.9; physical views 0.29); fused physical+network: pooled ROC-AUC 0.73, lift 2.59x,
-indroyer 7/9. Misses: control-and-freeze 0.66-0.73, fused non-attack FPR 17%. Uniform-grid rerun of the physical view reproduces exp15
+industroyer 7/9. Misses: control-and-freeze 0.66-0.73, fused non-attack FPR 17%. Uniform-grid rerun of the physical view reproduces exp15
 (cadence conclusions are not jitter artefacts). Caches: data/sherlock/_feature_cache/02-Semiurban__network__*.npz
 (scripts/build_sherlock_network_features.py).
 A clean-train detector scored on a different run saturates (100% non-attack FPR) unless a per-run causal baseline is used.
+**exp18 (2026-10-09): out-of-sample replication.** Frozen exp17 pipeline on 01-Basic (untouched by exp14-17 design):
+pooled ROC 0.77, lift 3.7x, arp-spoof 0.98, control-and-freeze 0.88; industroyer did NOT replicate (1/7 events >= 0.9).
+Pre-registered fixes failed: mean fusion leaves non-attack FPR at 15-19% (a per-view train->test threshold shift, not a
+fusion artefact); decoded IEC-104 "unchanged measurement" counts add nothing. With only two scenarios that have clean
+train data, do not run a third round of fixes on them -- there is no untouched test set left. Configs:
+configs/sherlock_network_exp18_{01,02}.yaml (02 = exploratory). Network caches now have 25 columns; exp17 uses the
+first 23 (`n_network_features`), verified byte-identical, and the exp17 rerun reproduces exactly.
+**Verification 2026-10-09.** verify_stack PASS; 583 tests pass; verify_reproducibility PASS (exp01 + exp03 bit-for-bit).
+exp03's old +-2-slice "BLAS non-determinism" was wrong: bisection shows exp03 output changed with the Session 4 and Session 5
+twin fidelity fixes (7e3831f, b65f1f3); current code is deterministic; canonical repointed to 20261009T151353Z.

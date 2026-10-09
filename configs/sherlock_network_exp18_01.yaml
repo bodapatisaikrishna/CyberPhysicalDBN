@@ -1,0 +1,25 @@
+# exp18 on 01-Basic (LAB_NOTEBOOK.md 2026-10-09). Identical to configs/sherlock_network.yaml (exp17, frozen) except scenario/experiment/extended_network.
+experiment: exp18
+scenario: 01-Basic
+extended_network: true
+n_network_features: 23
+grid:
+  bin_seconds: 2.0
+splits:
+  block_slices: 900          # 30 min at 2 s bins
+  pattern: [fit, fit, fit, val, calib]
+rolling_baseline:
+  window: 450                # 15 min of 2 s bins; same as exp15, not searched
+  min_history: 30
+component:
+  standardizer_eps: 1.0e-6
+  z_clip: 10.0
+  explained_variance_target: 0.99
+  max_components_physical: 64
+  max_components_net: 23
+  top_k: 10
+  top_k_net: 3
+  alarm_percentile: 99.0
+  score_batch_size: 4096
+smoke:
+  max_bins: 6000
