@@ -147,7 +147,7 @@ M_KL      = max over time t ∈ [0,T] of D_KL at t
 | **Paper reproduction** | Measured FF-vs-EX KL orders of magnitude below the paper's own `2×10⁻²` target; EX/FF latency close to its reference numbers | [`exp01_reproduction_gate.png`](results/figures/exp01_reproduction_gate.png) |
 | **C1 — closed loop** | Closed-loop wins at high detection thresholds (θ≥0.7), and the gap widens as θ rises; open-loop has longer raw lead time at low θ — reported both ways, not cherry-picked | [`claims_c1_c2_c3_summary.png`](results/figures/claims_c1_c2_c3_summary.png) |
 | **C2 — learned TTC** | `amortized` model, zero expert input, matches or beats expert-elicited TTCs on 25 held-out test graphs (detection rate 1.0 vs. 0.8 at θ=0.5) | [`exp08_ttc_fit_scatter.png`](results/figures/exp08_ttc_fit_scatter.png) |
-| **C3 — adversarial robustness** | DBN stays within a narrow ±20-slice lead-time band across attacker-knowledge levels; `lstm_ae`/`rule_based` baselines swing to −100+ slices | [`exp09_robustness_full_sweep.png`](results/figures/exp09_robustness_full_sweep.png) |
+| **C3 — adversarial robustness** | At θ = 0.49 the DBN's mean lead stays within 0–15 slices across attacker-knowledge levels and it detects 30/30 runs; LSTM-AE swings from 23 to 136 slices, and the rule-based IDS is fully evaded by the analytics-aware attacker (θ > 0.25) and falls to −80 / −105 slices at high θ. At θ ≥ 0.95 the DBN's lead also turns negative | [`exp09_robustness_full_sweep.png`](results/figures/exp09_robustness_full_sweep.png) |
 | **External baselines** | Several baselines (GBM, rule-based) match or beat the DBN on raw AUC-PR — the DBN's edge is lead time and calibration, not detection accuracy, and that's stated plainly, not buried | [`exp06_pr_curve.png`](results/figures/exp06_pr_curve.png) |
 | **Real-data grounding** | Final detector (exp19): label-free, scenario-agnostic (IEC-104 traffic counts + physical event counts), fitted on two real networks and tested on the third. On the never-opened 03-Rural network: ROC-AUC 0.75, 2.5× AUC-PR lift, arp-spoof AUROC 0.94, every attack alarmed at least once, 7.8% false alarms. Industroyer and the 5% false-alarm target remain unmet — see [Final real-data results](#final-real-data-results-sherlock) | [`exp19_universal_loso.png`](results/figures/exp19_universal_loso.png), [`exp17_19_pr_curves.png`](results/figures/exp17_19_pr_curves.png), [`exp19_03rural_timeline.png`](results/figures/exp19_03rural_timeline.png) |
 | **GNN clustering vs. heuristic zoning** *(faculty-requested KL-divergence analysis)* | Unsupervised GNN clustering barely agrees with a hand-built heuristic zoning (Adjusted Rand Index = 0.09, a degenerate 31-vs-2 split). A zone-supervised auxiliary loss fixes the partition (ARI → 0.22, balanced) but has **zero** measurable effect on downstream detection KL — the clustering wasn't the actual bottleneck | [`exp12_spatial_zone_map.png`](results/figures/exp12_spatial_zone_map.png) |
@@ -462,8 +462,10 @@ If referencing the source formalism this project extends:
 @article{cerotti2025dbn,
   title   = {Dynamic {B}ayesian {N}etworks for the {D}etection and {A}nalysis
              of {C}yber {A}ttacks to {P}ower {S}ystems},
-  author  = {Cerotti, Davide and Raiteri, Daniele Codetta and
-             Franceschinis, Giuliana and others},
+  author  = {Cerotti, Davide and Savarro, Davide and Codetta Raiteri, Daniele and
+             Dondossola, Giovanna and Egidi, Lavinia and Franceschinis, Giuliana and
+             Portinale, Luigi and Terruggia, Roberta},
+  doi     = {10.1109/ACCESS.2025.3624345},
   journal = {IEEE Access},
   volume  = {13},
   pages   = {186289--186306},
@@ -478,8 +480,8 @@ If referencing the real dataset used for grounding (Section
 @inproceedings{wagner2025sherlock,
   title     = {Sherlock: A Dataset for Process-aware Intrusion Detection
                Research on Power Grid Networks},
-  author    = {Wagner, Marija and Bader, Lennart and Wolsing, Konrad and
-               Serror, Martin and others},
+  author    = {Wagner, Eric and Bader, Lennart and Wolsing, Konrad and
+               Serror, Martin},
   booktitle = {Proceedings of the 15th ACM Conference on Data and
                Application Security and Privacy (CODASPY)},
   year      = {2025}

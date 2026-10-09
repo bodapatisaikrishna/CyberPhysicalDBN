@@ -13,7 +13,8 @@ it fills relative to that source.
 
 ## 1. Base formalism — the source paper (Layer 3: DBN causal core)
 
-**Cerotti, D., Raiteri, D.C., Franceschinis, G., et al. "Dynamic Bayesian
+**Cerotti, D., Savarro, D., Codetta Raiteri, D., Dondossola, G., Egidi, L.,
+Franceschinis, G., Portinale, L., Terruggia, R. "Dynamic Bayesian
 Networks for the Detection and Analysis of Cyber Attacks to Power
 Systems."** *IEEE Access*, vol. 13, pp. 186289-186306, 2025.
 DOI/IEEE Xplore: https://ieeexplore.ieee.org/document/11214202/
@@ -52,7 +53,7 @@ establishes as achievable).
 
 ## 3. Digital-twin / co-simulation grounding (Layer 0)
 
-**Wagner, M., Bader, L., Wolsing, K., Serror, M., et al. "Sherlock: A
+**Wagner, E., Bader, L., Wolsing, K., Serror, M. "Sherlock: A
 Dataset for Process-aware Intrusion Detection Research on Power Grid
 Networks."** *Proceedings of the 15th ACM Conference on Data and
 Application Security and Privacy (CODASPY 2025)*.
