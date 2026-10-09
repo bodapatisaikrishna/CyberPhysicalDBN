@@ -9,7 +9,7 @@
 [![pandapower](https://img.shields.io/badge/pandapower-power--flow-2b7a78)](https://www.pandapower.org/)
 [![Tests](https://img.shields.io/badge/tests-585%20passing-brightgreen)](tests/)
 [![Experiments](https://img.shields.io/badge/experiments-19-blue)](experiments/)
-[![Figures](https://img.shields.io/badge/figures-54%20generated-orange)](results/figures/)
+[![Figures](https://img.shields.io/badge/figures-48%20generated-orange)](results/figures/)
 [![LOC](https://img.shields.io/badge/python-25%2C308%20LOC-lightgrey)](src/)
 
 [Overview](#overview) · [Novelty](#novelty-beyond-the-source-paper) · [Architecture](#architecture) · [Key equations](#key-equations) · [Claims &amp; results](#three-falsifiable-claims) · [Real-data results](#final-real-data-results-sherlock) · [Experiment suite](#experiment-suite-exp01exp19) · [Quickstart](#quickstart) · [Module map](#module-map) · [Findings](#notable-findings-including-nulls) · [Citation](#citation)
@@ -154,7 +154,7 @@ M_KL      = max over time t ∈ [0,T] of D_KL at t
 
 Every number above traces to a logged experiment run stamped with a git
 SHA and random seed. Full hypothesis → result → interpretation record:
-[`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md) (~4,000 lines). All 54 generated
+[`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md) (~4,000 lines). All 48 generated
 figures: [`results/figures/`](results/figures/).
 
 ## Final real-data results (Sherlock)

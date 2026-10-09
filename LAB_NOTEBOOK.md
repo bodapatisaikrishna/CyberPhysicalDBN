@@ -3980,3 +3980,10 @@ network and did not replicate on 01. No further iterations: 03 is now spent as a
 **Surprised? Mildly:** that the transfer to 03 is as good as in-network numbers on 02 (0.746 vs 0.728 for exp17's fused
 detector). Checked: the fit set excludes 03 (structural gate), 03 labels were never printed before this run, the clean fit data
 carries zero attack labels, and the per-run robust z with a self-estimated floor uses no 03 statistics beyond the run's own past.
+
+**2026-10-09 housekeeping (figures).** Deleted six orphan figures no current code writes:
+`exp01_scenario{1,2}_{kl,probs_a,probs_b}.png` (Session 2 naming). exp01 now writes the same plots as
+`exp01_memoryless_scenario{1,2}_{kl,probs_a,probs_b}.png` (a `reaction_mode` segment was added later); the
+Session 2 references above to `exp01_scenario2_probs_b.png` / `exp01_scenario1_probs_a.png` correspond to those.
+All remaining figures are regenerated from code (`scripts/generate_journal_plots.py`,
+`scripts/generate_publication_plots.py`, `scripts/build_summary_tables.py`, and the experiment scripts themselves).
