@@ -8,11 +8,11 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-torch--geometric-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![pandapower](https://img.shields.io/badge/pandapower-power--flow-2b7a78)](https://www.pandapower.org/)
 [![Tests](https://img.shields.io/badge/tests-585%20passing-brightgreen)](tests/)
-[![Experiments](https://img.shields.io/badge/experiments-13-blue)](experiments/)
+[![Experiments](https://img.shields.io/badge/experiments-19-blue)](experiments/)
 [![Figures](https://img.shields.io/badge/figures-54%20generated-orange)](results/figures/)
-[![LOC](https://img.shields.io/badge/python-24%2C161%20LOC-lightgrey)](src/)
+[![LOC](https://img.shields.io/badge/python-25%2C308%20LOC-lightgrey)](src/)
 
-[Overview](#overview) · [Novelty](#novelty-beyond-the-source-paper) · [Architecture](#architecture) · [Key equations](#key-equations) · [Claims &amp; results](#three-falsifiable-claims) · [Experiment suite](#experiment-suite-exp01exp19) · [Quickstart](#quickstart) · [Module map](#module-map) · [Findings](#notable-findings-including-nulls) · [Citation](#citation)
+[Overview](#overview) · [Novelty](#novelty-beyond-the-source-paper) · [Architecture](#architecture) · [Key equations](#key-equations) · [Claims &amp; results](#three-falsifiable-claims) · [Real-data results](#final-real-data-results-sherlock) · [Experiment suite](#experiment-suite-exp01exp19) · [Quickstart](#quickstart) · [Module map](#module-map) · [Findings](#notable-findings-including-nulls) · [Citation](#citation)
 
 </div>
 
@@ -41,8 +41,8 @@ perceives it, a second neural model learns the timing parameters, and a
 simulated power grid closes a physical feedback loop the source paper
 never attempts.
 
-The project is organized as thirteen sequential experiments (`exp01`
-through `exp19`), each gated by a structural validation check before its
+The project is organized as nineteen sequential experiments (`exp01`
+through `exp19`; 17 scripts, two of which are config variants), each gated by a structural validation check before its
 numbers are trusted, and every hypothesis pre-registered in
 [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md) *before* the corresponding code was
 written — the standard lab-notebook discipline of "hypothesis before,
@@ -55,7 +55,7 @@ finding after," applied to a software research project.
 | Grid physics | Instability *asserted* by a hand-picked probability | Instability *measured* from a real `pandapower` power-flow solve, fed back as evidence — a closed loop (**C1**) |
 | Attack-step timing (TTC) | Hand-elicited from a static Table 3, no stated derivation | Learned by a GNN from digital-twin executions; transfers to **unseen attack graphs with zero expert input** (**C2**) |
 | Evaluation baseline | Compares only its own inference variants (EX / CL / FF) | Adds four external baselines (gradient-boosted trees, rule-based, LSTM-AE, GNN classifier) — and reports honestly when they win on raw accuracy |
-| Real-world grounding | None — twin/simulation only | Perception layer trained *and* evaluated on real network captures ([Sherlock](https://sherlock.wattson.it/), ACM CODASPY 2025); the resulting twin↔real-data transfer gap is reported as a finding, not hidden |
+| Real-world grounding | None — twin/simulation only | All three real [Sherlock](https://sherlock.wattson.it/) networks (ACM CODASPY 2025): physical snapshots *and* raw IEC-104 packet captures; a label-free detector fitted on two networks transfers to a third, never-seen one (ROC-AUC 0.75); the twin↔real-data gap is reported as a finding, not hidden |
 | Adversarial robustness | Flagged as a future concern, never tested | An RL attacker (PPO, three escalating knowledge levels: blind → analytics-aware → full-DBN-aware) is trained specifically to evade the detector (**C3**) |
 | Perception evidence | Fixed `p_pos = p_neg = 10⁻⁴` for every analytic, regardless of true reliability | Learned, temperature-calibrated per-analytic likelihoods entered as virtual/soft evidence |
 
@@ -149,13 +149,70 @@ M_KL      = max over time t ∈ [0,T] of D_KL at t
 | **C2 — learned TTC** | `amortized` model, zero expert input, matches or beats expert-elicited TTCs on 25 held-out test graphs (detection rate 1.0 vs. 0.8 at θ=0.5) | [`exp08_ttc_fit_scatter.png`](results/figures/exp08_ttc_fit_scatter.png) |
 | **C3 — adversarial robustness** | DBN stays within a narrow ±20-slice lead-time band across attacker-knowledge levels; `lstm_ae`/`rule_based` baselines swing to −100+ slices | [`exp09_robustness_full_sweep.png`](results/figures/exp09_robustness_full_sweep.png) |
 | **External baselines** | Several baselines (GBM, rule-based) match or beat the DBN on raw AUC-PR — the DBN's edge is lead time and calibration, not detection accuracy, and that's stated plainly, not buried | [`exp06_pr_curve.png`](results/figures/exp06_pr_curve.png) |
-| **Real-data grounding** | All three real [Sherlock](https://sherlock.wattson.it/) scenarios. Supervised training on 01-Basic collapsed to base rate (its train split has no attacks), so the dataset is used as designed: an unsupervised detector fit on attack-free data. On 01-Basic it reaches 2.9× the base-rate AUC-PR (ROC-AUC 0.70); on 02-Semiurban 1.4× with ROC-AUC ≈ 0.51 — essentially chance. It sees the attack that opens breakers (industroyer) and not the network-layer or single-bus manipulations, and an LSTM autoencoder adds nothing over a trivial mean-\|z\| detector. Zero-shot cross-network transfer is weak (lift 0.7–1.9×; 01→02 is worse than chance) because network scale dominates. Reported as a limit of topology-free aggregate features, not smoothed over | [`exp13_anomaly_pr_curves.png`](results/figures/exp13_anomaly_pr_curves.png), [`exp13_transfer_lift_heatmaps.png`](results/figures/exp13_transfer_lift_heatmaps.png), [`exp14_16_family_auroc.png`](results/figures/exp14_16_family_auroc.png), [`exp18_replication_family_auroc.png`](results/figures/exp18_replication_family_auroc.png), [`exp19_universal_loso.png`](results/figures/exp19_universal_loso.png), [`exp17_19_pr_curves.png`](results/figures/exp17_19_pr_curves.png), [`exp19_03rural_timeline.png`](results/figures/exp19_03rural_timeline.png) |
+| **Real-data grounding** | Final detector (exp19): label-free, scenario-agnostic (IEC-104 traffic counts + physical event counts), fitted on two real networks and tested on the third. On the never-opened 03-Rural network: ROC-AUC 0.75, 2.5× AUC-PR lift, arp-spoof AUROC 0.94, every attack alarmed at least once, 7.8% false alarms. Industroyer and the 5% false-alarm target remain unmet — see [Final real-data results](#final-real-data-results-sherlock) | [`exp19_universal_loso.png`](results/figures/exp19_universal_loso.png), [`exp17_19_pr_curves.png`](results/figures/exp17_19_pr_curves.png), [`exp19_03rural_timeline.png`](results/figures/exp19_03rural_timeline.png) |
 | **GNN clustering vs. heuristic zoning** *(faculty-requested KL-divergence analysis)* | Unsupervised GNN clustering barely agrees with a hand-built heuristic zoning (Adjusted Rand Index = 0.09, a degenerate 31-vs-2 split). A zone-supervised auxiliary loss fixes the partition (ARI → 0.22, balanced) but has **zero** measurable effect on downstream detection KL — the clustering wasn't the actual bottleneck | [`exp12_spatial_zone_map.png`](results/figures/exp12_spatial_zone_map.png) |
 
 Every number above traces to a logged experiment run stamped with a git
 SHA and random seed. Full hypothesis → result → interpretation record:
-[`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md) (3,200+ lines). All 54 generated
+[`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md) (~4,000 lines). All 54 generated
 figures: [`results/figures/`](results/figures/).
+
+## Final real-data results (Sherlock)
+
+Real-data grounding took seven experiments (exp07, exp13–exp19); the full path,
+including every failed attempt, is in [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md). The
+final state:
+
+**Final detector (exp19).** 26 label-free features per 2-second bin — 23
+IEC-104 traffic counts parsed from the raw switch packet captures, the count of
+IEC-104 control commands, the number of switch state changes, and the number of
+de-energised values from the physical snapshots. Each run is normalised against
+its own past (causal rolling robust z), so no clean data from the evaluated
+network is needed. PCA reconstruction error is the score; the alarm threshold
+adapts to the run's own recent scores. Every network is scored by a model fitted
+only on the *other* networks.
+
+| Network (model fitted on) | Role | ROC-AUC | AUC-PR lift | False alarms (adaptive) | Recall at alarm |
+|---|---|---|---|---|---|
+| 01-Basic (02) | exploratory | 0.79 | 4.5× | 4.5% | 54% |
+| 02-Semiurban (01) | exploratory | 0.72 | 2.3× | 7.7% | 46% |
+| **03-Rural (01 + 02), never opened before** | **confirmatory** | **0.75** | **2.5×** | **7.8%** | **52%** |
+
+Per attack family (mean per-event AUROC, 0.5 = chance):
+
+| Network | arp-spoof | control-and-freeze | drift-off | industroyer |
+|---|---|---|---|---|
+| 01-Basic | 0.97 | 0.88 | 0.77 | 0.70 |
+| 02-Semiurban | 0.94 | 0.69 | 0.73 | 0.64 |
+| 03-Rural (unseen) | 0.94 | 0.73 | 0.76 | 0.75 |
+
+Pre-registered criteria on 03-Rural: overall detection (ROC ≥ 0.70, lift ≥ 2)
+**met**; arp-spoof ≥ 0.80 **met**; false alarms ≤ 5% **missed** (7.8%);
+industroyer ≥ 5 of 8 events at AUROC ≥ 0.9 **missed** (3 of 8).
+
+**How it got here — what moved the result:**
+
+| Step | Change | Effect |
+|---|---|---|
+| exp13 | 11 aggregate state features, LSTM autoencoder | 01: 2.9× lift; 02: ~chance (ROC 0.51) |
+| exp14–16 | full 12 h physical snapshots, 5,731 per-component columns, supervised variant | no gain (ROC ≈ 0.44–0.51); one real finding: test runs sit in a different operating regime, so a clean-train detector false-alarms on 100% of normal slices |
+| exp15 | per-run causal baseline | regime problem fixed (100% → 11% false alarms); industroyer 6/9 on 02 |
+| **exp17** | **raw packet captures** (own pcap parser, equal to `tcpdump`) | **the missing signal**: arp-spoof 0.29 → 0.96; fused physical + network ROC 0.73 / 2.6× on 02 |
+| exp18 | frozen exp17 pipeline on 01-Basic | replicates (ROC 0.77, 3.7×); two pre-registered fixes failed |
+| **exp19** | scenario-agnostic features, leave-one-network-out, adaptive threshold | **transfers to an unseen network** (03-Rural ROC 0.75); false alarms 12–19% → 4.5–7.8% |
+
+**Open limits:** industroyer (breaker-opening) is detected reliably only on
+02-Semiurban, by the per-component physical view (6/9 events) and its fusion with
+the network view (7/9); that view needs clean data from the same network and did
+not replicate on 01-Basic (1/7 fused); false
+alarms are above 5% on two of three networks; all three networks have now been
+used for testing, so no untouched Sherlock data remains for further tuning.
+
+**Verification (2026-10-09).** `verify_stack` passes; 585 tests pass;
+`verify_reproducibility.py` reproduces exp01 and exp03 bit-for-bit; the exp17
+rerun reproduces every number exactly. An earlier ±2-slice exp03 drift,
+previously blamed on BLAS non-determinism, was traced by bisection to two
+documented twin bug fixes (Sessions 4 and 5); the reference run was updated.
 
 ## Experiment suite (exp01–exp19)
 
@@ -203,6 +260,14 @@ python experiments/exp04_closed_loop_c1.py      # closed-loop lead time (C1)
 python experiments/exp09_adversarial_c3.py      # adversarial robustness (C3)
 ```
 
+Real-data pipeline (needs the Sherlock download, see [Data](#data)):
+
+```bash
+python scripts/build_sherlock_network_features.py --scenario 02-Semiurban   # pcap -> 2 s traffic bins
+python experiments/exp17_sherlock_network.py                               # physical + network, 02-Semiurban
+python experiments/exp19_sherlock_universal.py                             # final detector, leave-one-network-out
+```
+
 Most experiments accept `--smoke` for a fast, tiny-scale correctness run
 (structural gate only, explicitly not treated as a real result) before
 committing to the full multi-minute run:
@@ -248,7 +313,12 @@ src/
 │                         encoder.py            HGT/RGCN heterogeneous GNN + temporal encoder
 │                         features.py            dynamic feature construction from telemetry
 │                         calibration.py         temperature scaling, ECE
-│                         sherlock_loader.py      real Sherlock dataset → project's feature schema
+│                         sherlock_loader.py      real Sherlock state export → feature schema
+│                         sherlock_physical.py     Sherlock raw physical snapshots (aggregate + per-component views)
+│                         sherlock_network.py      pure-numpy pcap parser → IEC-104 traffic counts per bin
+│                         sherlock_grid.py         uniform-grid alignment (last observation carried forward)
+│                         sherlock_anomaly.py      blocked splits, standardiser, autoencoder scoring helpers
+│                         sherlock_component_detectors.py  causal robust z, PCA SPE / T² detectors
 ├── parameterization/      amortized.py         learned (technique, context) → TTC model (C2)
 ├── baselines/             lstm_ae.py, gbm.py, gnn_classifier.py, rule_based.py, common.py
 └── eval/                  metrics.py            KL divergence, M_KL
@@ -297,30 +367,18 @@ ones — a sample, in full detail in [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md):
   project's actual argument — lead time, calibration, explainability,
   robustness under adversarial adaptation — is stated as such, not
   disguised as a raw-accuracy win.
-- **Real-data (Sherlock) results are modest, and one earlier number was
-  uninformative.** exp07's "Sherlock→twin ≈ 0.99 AUC-PR" is meaningless: the
-  twin's own base rate is 0.9992, so every →twin cell scores 1.00× (confirmed
-  across all real scenarios in exp13). What survives: an unsupervised detector
-  trained on attack-free Sherlock data reaches 2.9× base rate on 01-Basic but
-  ~chance ROC on 02-Semiurban, sees only the breaker-opening attack family,
-  and transfers across networks poorly; twin→Sherlock lifts are 0.99–1.27×.
-  Topology-free aggregate features are the limit, not the training recipe.
-  Follow-up (exp14–exp16, full 12 h physical snapshots of 02-Semiurban): a
-  per-run causal baseline removed the train/test regime shift (non-attack
-  false alarms 100% → 11%) and made breaker-opening attacks detectable (6/9
-  events at AUROC ≥ 0.9), but overall ROC-AUC stayed ≈ 0.50 and a supervised
-  event-held-out model did no better (0.44); every pre-registered success
-  criterion was missed. The raw network captures (exp17) then carried the missing signal: a label-free detector on 23 IEC-104
-  traffic counts detects arp-spoof (mean event AUROC 0.96 vs 0.29 from physical state), and fusing it with the physical view gives pooled
-  ROC-AUC 0.73 / 2.6× lift / industroyer 7 of 9 events — with control-and-freeze still weak and a 17% fused false-alarm rate.
-  **Out-of-sample replication (exp18):** the same frozen pipeline on 01-Basic, which no design choice had looked at,
-  gives pooled ROC-AUC 0.77 / 3.7× lift, arp-spoof 0.98 and control-and-freeze 0.88; industroyer did not replicate
-  (1 of 7 events at AUROC ≥ 0.9). Two pre-registered fixes failed: mean-fusion did not lower the 15–19% non-attack
-  false-alarm rate, and decoded "unchanged IEC-104 measurement" features added nothing measurable.
-  **Unseen-network test (exp19):** a scenario-agnostic version (26 traffic/event counts, per-run causal normalisation,
-  self-calibrating threshold) fitted only on 01+02 and applied to 03-Rural — never opened before — gives ROC-AUC 0.75 /
-  2.5× lift, arp-spoof 0.94, every attack alarmed at least once, and 7.8% false alarms (4.5–7.8% across all three
-  networks, down from 12–19%). Still short of target: industroyer (3 of 8 events at AUROC ≥ 0.9) and the 5% false-alarm goal on 02/03.
+- **Real data took seven attempts, and the physical state alone was not
+  enough.** exp07's "Sherlock→twin ≈ 0.99 AUC-PR" was uninformative (the twin's
+  base rate is 0.9992). Every physical-state view tried (aggregates, 5,731
+  per-component columns, supervised) stayed near chance on 02-Semiurban; only the
+  raw packet captures exposed arp-spoof, drift-off and control-and-freeze. The
+  final detector transfers to an unseen network (ROC 0.75), but industroyer and
+  the 5% false-alarm target remain open — see
+  [Final real-data results](#final-real-data-results-sherlock).
+- **A reproducibility explanation was wrong and has been corrected.** exp03's
+  ±2-slice drift was attributed to BLAS non-determinism in 2026-08; single-
+  threaded reruns and bisection showed the code is deterministic and the drift
+  came from two documented twin bug fixes made after exp03's original run.
 - **The real dataset has defects worth knowing.** 02-Semiurban's shipped
   state export covers ~3 h of a 12 h run (7 of 29 attacks) and ends mid-line;
   03-Rural's "train" file is actually its attack data.
@@ -354,16 +412,11 @@ every discrepancy found between the dataset's documented and actual
 structure — notably that 02-Semiurban's shipped state export covers ~3 of its
 12 hours (7 of its 29 catalogued attacks) and that the state is what a
 network vantage point reconstructs from IEC-104 packets, not simulator truth.
-All members of all three scenarios are now downloaded and CRC-32 verified
-(nested `physical.zip` / `control-center.zip` kept as zips); exp13 reads the state files and
-event catalogs; a second exp13 run (`configs/sherlock_full_physical.yaml`) reads 02-Semiurban's full 12 h
-`physical.zip` snapshots: all 29 attacks, in-domain AUC-PR lift 1.06x (LSTM-AE) / 1.24x (mean-|z|),
-ROC-AUC 0.46-0.47 -- no better than the truncated state view. Its cadence gate failed and is reported
-(LAB_NOTEBOOK.md 2026-10-03). Follow-up attempts to improve it (exp14 per-component view, exp15 causal rolling
-baseline, exp16 event-held-out supervised arm): industroyer (breaker-opening) detection reached 6/9 events with
-AUROC >= 0.9 and non-attack false alarms fell from 100% to 11%, but overall ROC-AUC stayed ~0.50 (lift 1.14x) --
-arp-spoof, drift-off and control-and-freeze showed no footprint in any physical-state view tried; every
-pre-registered success criterion was missed (details in the notebook). The dataset itself is never committed.
+All members of all three scenarios are downloaded and CRC-32 verified (nested
+`physical.zip` / `control-center.zip` kept as zips). The final experiments read
+the raw physical snapshots and the raw switch packet captures (01-Basic: 4
+captures per split, 02-Semiurban: 6, 03-Rural: 8 test-only). The dataset itself
+is never committed.
 
 ## Tech stack
 
@@ -382,7 +435,7 @@ pre-registered success criterion was missed (details in the notebook). The datas
 
 ```
 src/                    see Module map above
-experiments/             exp01-exp19 (exp15, exp18 = config variants = exp14's script + configs/sherlock_baseline.yaml)
+experiments/             exp01-exp19 (17 scripts; exp15 = exp14 + configs/sherlock_baseline.yaml, exp18 = exp17 + configs/sherlock_network_exp18_*.yaml)
 results/                CSV outputs (git-SHA + seed logged), figures/, summary/
 configs/                 YAML experiment configs — no magic numbers in source
 tests/                   585 tests, one per numerical component
