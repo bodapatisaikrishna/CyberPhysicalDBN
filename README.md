@@ -7,12 +7,12 @@
 [![Python](https://img.shields.io/badge/python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-torch--geometric-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![pandapower](https://img.shields.io/badge/pandapower-power--flow-2b7a78)](https://www.pandapower.org/)
-[![Tests](https://img.shields.io/badge/tests-583%20passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-585%20passing-brightgreen)](tests/)
 [![Experiments](https://img.shields.io/badge/experiments-13-blue)](experiments/)
-[![Figures](https://img.shields.io/badge/figures-50%20generated-orange)](results/figures/)
+[![Figures](https://img.shields.io/badge/figures-51%20generated-orange)](results/figures/)
 [![LOC](https://img.shields.io/badge/python-24%2C161%20LOC-lightgrey)](src/)
 
-[Overview](#overview) · [Novelty](#novelty-beyond-the-source-paper) · [Architecture](#architecture) · [Key equations](#key-equations) · [Claims &amp; results](#three-falsifiable-claims) · [Experiment suite](#experiment-suite-exp01exp18) · [Quickstart](#quickstart) · [Module map](#module-map) · [Findings](#notable-findings-including-nulls) · [Citation](#citation)
+[Overview](#overview) · [Novelty](#novelty-beyond-the-source-paper) · [Architecture](#architecture) · [Key equations](#key-equations) · [Claims &amp; results](#three-falsifiable-claims) · [Experiment suite](#experiment-suite-exp01exp19) · [Quickstart](#quickstart) · [Module map](#module-map) · [Findings](#notable-findings-including-nulls) · [Citation](#citation)
 
 </div>
 
@@ -42,7 +42,7 @@ simulated power grid closes a physical feedback loop the source paper
 never attempts.
 
 The project is organized as thirteen sequential experiments (`exp01`
-through `exp18`), each gated by a structural validation check before its
+through `exp19`), each gated by a structural validation check before its
 numbers are trusted, and every hypothesis pre-registered in
 [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md) *before* the corresponding code was
 written — the standard lab-notebook discipline of "hypothesis before,
@@ -149,15 +149,15 @@ M_KL      = max over time t ∈ [0,T] of D_KL at t
 | **C2 — learned TTC** | `amortized` model, zero expert input, matches or beats expert-elicited TTCs on 25 held-out test graphs (detection rate 1.0 vs. 0.8 at θ=0.5) | [`exp08_ttc_fit_scatter.png`](results/figures/exp08_ttc_fit_scatter.png) |
 | **C3 — adversarial robustness** | DBN stays within a narrow ±20-slice lead-time band across attacker-knowledge levels; `lstm_ae`/`rule_based` baselines swing to −100+ slices | [`exp09_robustness_full_sweep.png`](results/figures/exp09_robustness_full_sweep.png) |
 | **External baselines** | Several baselines (GBM, rule-based) match or beat the DBN on raw AUC-PR — the DBN's edge is lead time and calibration, not detection accuracy, and that's stated plainly, not buried | [`exp06_pr_curve.png`](results/figures/exp06_pr_curve.png) |
-| **Real-data grounding** | All three real [Sherlock](https://sherlock.wattson.it/) scenarios. Supervised training on 01-Basic collapsed to base rate (its train split has no attacks), so the dataset is used as designed: an unsupervised detector fit on attack-free data. On 01-Basic it reaches 2.9× the base-rate AUC-PR (ROC-AUC 0.70); on 02-Semiurban 1.4× with ROC-AUC ≈ 0.51 — essentially chance. It sees the attack that opens breakers (industroyer) and not the network-layer or single-bus manipulations, and an LSTM autoencoder adds nothing over a trivial mean-\|z\| detector. Zero-shot cross-network transfer is weak (lift 0.7–1.9×; 01→02 is worse than chance) because network scale dominates. Reported as a limit of topology-free aggregate features, not smoothed over | [`exp13_anomaly_pr_curves.png`](results/figures/exp13_anomaly_pr_curves.png), [`exp13_transfer_lift_heatmaps.png`](results/figures/exp13_transfer_lift_heatmaps.png), [`exp14_16_family_auroc.png`](results/figures/exp14_16_family_auroc.png), [`exp18_replication_family_auroc.png`](results/figures/exp18_replication_family_auroc.png) |
+| **Real-data grounding** | All three real [Sherlock](https://sherlock.wattson.it/) scenarios. Supervised training on 01-Basic collapsed to base rate (its train split has no attacks), so the dataset is used as designed: an unsupervised detector fit on attack-free data. On 01-Basic it reaches 2.9× the base-rate AUC-PR (ROC-AUC 0.70); on 02-Semiurban 1.4× with ROC-AUC ≈ 0.51 — essentially chance. It sees the attack that opens breakers (industroyer) and not the network-layer or single-bus manipulations, and an LSTM autoencoder adds nothing over a trivial mean-\|z\| detector. Zero-shot cross-network transfer is weak (lift 0.7–1.9×; 01→02 is worse than chance) because network scale dominates. Reported as a limit of topology-free aggregate features, not smoothed over | [`exp13_anomaly_pr_curves.png`](results/figures/exp13_anomaly_pr_curves.png), [`exp13_transfer_lift_heatmaps.png`](results/figures/exp13_transfer_lift_heatmaps.png), [`exp14_16_family_auroc.png`](results/figures/exp14_16_family_auroc.png), [`exp18_replication_family_auroc.png`](results/figures/exp18_replication_family_auroc.png), [`exp19_universal_loso.png`](results/figures/exp19_universal_loso.png) |
 | **GNN clustering vs. heuristic zoning** *(faculty-requested KL-divergence analysis)* | Unsupervised GNN clustering barely agrees with a hand-built heuristic zoning (Adjusted Rand Index = 0.09, a degenerate 31-vs-2 split). A zone-supervised auxiliary loss fixes the partition (ARI → 0.22, balanced) but has **zero** measurable effect on downstream detection KL — the clustering wasn't the actual bottleneck | [`exp12_spatial_zone_map.png`](results/figures/exp12_spatial_zone_map.png) |
 
 Every number above traces to a logged experiment run stamped with a git
 SHA and random seed. Full hypothesis → result → interpretation record:
-[`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md) (3,200+ lines). All 50 generated
+[`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md) (3,200+ lines). All 51 generated
 figures: [`results/figures/`](results/figures/).
 
-## Experiment suite (exp01–exp18)
+## Experiment suite (exp01–exp19)
 
 Each experiment is a standalone, runnable script under `experiments/`
 that writes seeded, git-SHA-stamped CSVs to `results/` and ends with a
@@ -184,6 +184,7 @@ see [Research integrity principles](#research-integrity-principles)).
 | 16 | `exp16_sherlock_supervised.py` | Event-held-out supervised arm (gradient boosting on label-free PCA features; fixed hyperparameters): pooled out-of-fold ROC-AUC 0.44 — no learnable footprint found for arp-spoof / drift-off / control-and-freeze at this feature reduction |
 | 17 | `exp17_sherlock_network.py` | Parses the raw switch packet captures (own numpy pcap parser, verified against tcpdump) into 23 IEC-104 traffic counts on a uniform 2 s grid; label-free detector with causal baseline; also reruns the physical view on the uniform grid (cadence sensitivity) and fuses both: arp-spoof AUROC 0.96, fused ROC-AUC 0.73 / lift 2.6×, industroyer 7/9; control-and-freeze weak, fused false alarms 17% |
 | 18 | `exp17_sherlock_network.py --config configs/sherlock_network_exp18_01.yaml` | Out-of-sample replication of the frozen exp17 pipeline on 01-Basic (pooled ROC-AUC 0.77, lift 3.7×; industroyer did not replicate) plus two pre-registered fixes (mean fusion; decoded IEC-104 unchanged-measurement counts), both of which failed |
+| 19 | `exp19_sherlock_universal.py` | Scenario-agnostic detector, leave-one-scenario-out, self-calibrating threshold; confirmatory test on the never-opened 03-Rural: ROC-AUC 0.75, lift 2.5×, arp-spoof 0.94, false alarms 7.8% (4.5–7.8% across networks); industroyer still weak |
 
 ## Quickstart
 
@@ -191,7 +192,7 @@ see [Research integrity principles](#research-integrity-principles)).
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
 python scripts/verify_stack.py          # smoke-tests every dependency
-pytest tests/ -q                        # 583 tests
+pytest tests/ -q                        # 585 tests
 ```
 
 Run any experiment — each writes seeded, git-SHA-stamped CSVs to `results/`:
@@ -316,6 +317,10 @@ ones — a sample, in full detail in [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md):
   gives pooled ROC-AUC 0.77 / 3.7× lift, arp-spoof 0.98 and control-and-freeze 0.88; industroyer did not replicate
   (1 of 7 events at AUROC ≥ 0.9). Two pre-registered fixes failed: mean-fusion did not lower the 15–19% non-attack
   false-alarm rate, and decoded "unchanged IEC-104 measurement" features added nothing measurable.
+  **Unseen-network test (exp19):** a scenario-agnostic version (26 traffic/event counts, per-run causal normalisation,
+  self-calibrating threshold) fitted only on 01+02 and applied to 03-Rural — never opened before — gives ROC-AUC 0.75 /
+  2.5× lift, arp-spoof 0.94, every attack alarmed at least once, and 7.8% false alarms (4.5–7.8% across all three
+  networks, down from 12–19%). Still short of target: industroyer (3 of 8 events at AUROC ≥ 0.9) and the 5% false-alarm goal on 02/03.
 - **The real dataset has defects worth knowing.** 02-Semiurban's shipped
   state export covers ~3 h of a 12 h run (7 of 29 attacks) and ends mid-line;
   03-Rural's "train" file is actually its attack data.
@@ -371,16 +376,16 @@ pre-registered success criterion was missed (details in the notebook). The datas
 | [`networkx`](https://networkx.org/) | Attack-graph representation before DBN compilation |
 | [`scikit-learn`](https://scikit-learn.org/) | Calibration, PR curves, KMeans, Adjusted Rand Index |
 | [`stable-baselines3`](https://github.com/DLR-RM/stable-baselines3) | PPO for the adversarial RL attacker (C3) |
-| [`pytest`](https://pytest.org/) | 583 tests, one per numerical component |
+| [`pytest`](https://pytest.org/) | 585 tests, one per numerical component |
 
 ## Project structure
 
 ```
 src/                    see Module map above
-experiments/             exp01-exp18 (exp15, exp18 = config variants = exp14's script + configs/sherlock_baseline.yaml)
+experiments/             exp01-exp19 (exp15, exp18 = config variants = exp14's script + configs/sherlock_baseline.yaml)
 results/                CSV outputs (git-SHA + seed logged), figures/, summary/
 configs/                 YAML experiment configs — no magic numbers in source
-tests/                   583 tests, one per numerical component
+tests/                   585 tests, one per numerical component
 scripts/                 cross-experiment consolidation and figure-generation scripts
 webapp/                  Streamlit demo dashboard
 docs/                    Sherlock dataset download notes, literature review

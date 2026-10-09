@@ -3920,3 +3920,63 @@ unstable slice 45.5 (shown as 46), open-loop lags -7.5 / +72.5 / +79.5 (shown as
 qualitative exp03 conclusion (twin posteriors lag/lead the scripted scenario by these slice counts) is unchanged in sign for all
 three rows. The reproducibility reference is repointed to 20261009T151353Z (old files kept); the 2026-08-06 "BLAS" explanation
 above should be read as superseded by this entry.
+
+## 2026-10-09 Experiment: exp19 -- scenario-agnostic detector, self-calibrating threshold, 03-Rural as the untouched test
+
+**Why.** User asked to fix the three remaining weaknesses: (i) 12-19% non-attack false alarms (train->test threshold shift);
+(ii) industroyer strong on 02 (7/9) but poor on 01-Basic (1/7); (iii) 03-Rural unused (no clean train data). Every design choice
+so far has seen 01 and 02, so any new fix is in-sample there. 03-Rural (28 attacks: 9 drift-off, 8 industroyer, 6 arp-spoof,
+5 control-and-freeze; 8 benign events; raw test captures + physical.zip only) has never been opened by any experiment beyond
+the exp13 state-file inventory, so it is the confirmatory test set. Nothing on 03 is looked at before the run below.
+
+**Label-free inspection done before writing this (clean TRAIN captures of 01/02 only).** IEC-104 I-frame ASDU types in clean
+train: almost all type 13 (measurements); control-direction command types are rare: 01-Basic 45 (x16), 47 (x4), 50 (x4);
+02-Semiurban 45 (x27), 50 (x6) over 12 h each. Industroyer is a command-injection attack, so commands are its direct footprint.
+
+**Design (fixed now).**
+Features per 2 s bin, all scenario-agnostic (no per-component columns, so a model can be fitted on one network and applied to
+another): the 23 exp17 network counts + `n_iec104_commands` (I-frames with ASDU type 45..69, the IEC 60870-5-104 control
+direction) + two physical event counts from the LOCF physical grid: `n_switch_changes` (number of switch `closed` states that
+differ from the previous grid point) and `nonfinite_total` (de-energised values) = 26 features.
+Normalisation: per-run causal rolling robust z as exp15/17 (W=450 bins, min_history 30), but the scale floor is the run's OWN
+expanding median of past scales (causal, label-free) -- so no clean data of the evaluated network is needed.
+Model: PCA (99% variance) fit on clean-train fit blocks of the OTHER scenarios only (leave-one-scenario-out): 01 <- fit on 02;
+02 <- fit on 01; 03 <- fit on 01+02. Scores: `pca_spe` (PRIMARY) and `top_k_mean_abs_z` (k=3).
+Threshold, two variants, both reported: (S) static = 99th pct of the score on the fit scenarios' clean calib blocks; (A) adaptive
+causal = rolling median + c * 1.4826 * rolling MAD of the run's OWN past scores over the previous 1800 bins (1 h), with c chosen on
+the fit scenarios' clean data so that (A) gives 1% false alarms there. PRIMARY threshold for the false-alarm criterion: (A).
+**Criteria, CONFIRMATORY on 03-Rural (PRIMARY detector pca_spe):**
+- U-1 pooled ROC-AUC >= 0.70 and AUC-PR lift >= 2.0.
+- U-2 non-attack false-alarm rate <= 0.05 with the adaptive threshold (A).
+- U-3 industroyer >= 5 of 8 events with event AUROC >= 0.9.
+- U-4 arp-spoof mean event AUROC >= 0.80.
+Same metrics on 01-Basic and 02-Semiurban are reported as EXPLORATORY (design informed by them). Every miss is reported.
+Known risks stated now: an adaptive threshold also adapts to long attacks (drift-off up to 16 min) and will under-alarm on
+them; a model fitted on other networks may not transfer (02's network is ~10x larger in packet volume than 01's) -- the
+per-run robust z is meant to remove scale, and that is exactly what 03 tests.
+
+**Result (exp19, run `20261009T163931Z`, seed 42, log `results/exp19_full_run_20261009T163928Z.log`; a plumbing-only run on
+01/02 without 03 preceded it, `20261009T163900Z`, same 01/02 numbers).** PCA k=8 (99%) in every fold; 26 features.
+| target (fit on) | role | pca_spe ROC / lift | non-attack FPR static -> adaptive | recall at adaptive | industroyer >=0.9 | arp-spoof |
+|---|---|---|---|---|---|---|
+| 01-Basic (02) | exploratory | 0.793 / 4.50x | 0.145 -> 0.045 | 0.542 | 1/7 (mean 0.70) | 0.97 |
+| 02-Semiurban (01) | exploratory | 0.717 / 2.32x | 0.242 -> 0.077 | 0.462 | 2/9 (mean 0.64) | 0.94 |
+| **03-Rural (01+02)** | **confirmatory** | **0.746 / 2.48x** | 0.076 -> 0.078 | 0.516 | 3/8 (mean 0.75) | 0.94 |
+03-Rural per family (pca_spe mean event AUROC; events >= 0.9): arp-spoof 0.94 (4/6), drift-off 0.76 (3/9), industroyer 0.75 (3/8),
+control-and-freeze 0.73 (2/5); every one of the 28 attacks crosses the threshold at least once.
+Criteria (03-Rural): U-1 MET (ROC 0.746, lift 2.48x); U-2 MISSED (adaptive FPR 0.078 > 0.05; static was already 0.076);
+U-3 MISSED (industroyer 3/8); U-4 MET (arp-spoof 0.939).
+
+**Interpretation.** (1) The detector generalises to a network it never saw, with no clean data from that network: fitted only on
+01+02, it scores 03-Rural at ROC-AUC 0.75 / 2.5x lift and detects arp-spoof at 0.94 -- the strongest evidence in the project
+that the real-data result is not tuned to one scenario. (2) False alarms: the adaptive threshold cuts them sharply where the
+static threshold shifted (01: 14.5% -> 4.5%; 02: 24.2% -> 7.7%), but on 03 the static threshold was already at 7.6% and the adaptive
+one did not improve it (7.8%), so the 5% target is met on 01 only. Across all three networks false alarms are now 4.5-7.8% at
+roughly 50% slice recall, down from 12-19% in exp17/18 -- a real but partial fix. (3) Industroyer is still the weak family in
+the scenario-agnostic view (3/8, 1/7, 2/9 events >= 0.9); the command-count feature did not make it separable at slice level.
+The per-component physical view (exp15/17) remains the better industroyer detector on 02, but it needs clean data from the same
+network and did not replicate on 01. No further iterations: 03 is now spent as a test set.
+
+**Surprised? Mildly:** that the transfer to 03 is as good as in-network numbers on 02 (0.746 vs 0.728 for exp17's fused
+detector). Checked: the fit set excludes 03 (structural gate), 03 labels were never printed before this run, the clean fit data
+carries zero attack labels, and the per-run robust z with a self-estimated floor uses no 03 statistics beyond the run's own past.

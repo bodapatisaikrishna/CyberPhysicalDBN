@@ -774,3 +774,7 @@ first 23 (`n_network_features`), verified byte-identical, and the exp17 rerun re
 **Verification 2026-10-09.** verify_stack PASS; 583 tests pass; verify_reproducibility PASS (exp01 + exp03 bit-for-bit).
 exp03's old +-2-slice "BLAS non-determinism" was wrong: bisection shows exp03 output changed with the Session 4 and Session 5
 twin fidelity fixes (7e3831f, b65f1f3); current code is deterministic; canonical repointed to 20261009T151353Z.
+**exp19 (2026-10-09): unseen-network confirmation.** Scenario-agnostic 26-feature detector (23 IEC-104 counts + command count +
+switch changes + NaN count), per-run causal robust z with self-estimated floor, PCA fit leave-one-scenario-out, adaptive threshold.
+03-Rural (fit on 01+02, never opened before): ROC 0.746, lift 2.48x, arp-spoof 0.94, FPR 7.8%; industroyer 3/8 (missed),
+5% FPR target missed on 02/03 (met on 01). 03 is now SPENT as a test set; no clean, unseen Sherlock data remains.

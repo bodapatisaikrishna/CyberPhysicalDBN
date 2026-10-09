@@ -69,3 +69,16 @@ def test_rolling_robust_z_clips_and_handles_nan():
     x = torch.tensor([[1.0], [1.0], [1.0], [float("nan")], [1000.0]])
     z, _ = causal_rolling_robust_z(x, window=4, min_history=2, scale_floor=torch.tensor([0.001]), z_clip=10.0)
     assert torch.isfinite(z).all() and z[4, 0] == 10.0 and z[3, 0] == 0.0
+
+
+def test_rolling_robust_z_self_floor_is_causal_and_finite():
+    from src.perception.sherlock_component_detectors import causal_rolling_robust_z
+
+    g = torch.Generator().manual_seed(1)
+    x = torch.randn(200, 3, generator=g)
+    x[:, 2] = 5.0  # constant column: scale 0 everywhere -> must not blow up
+    z, _ = causal_rolling_robust_z(x, window=20, min_history=5, scale_floor=None, z_clip=10.0, self_floor=True)
+    assert torch.isfinite(z).all() and float(z[:, 2].abs().max()) == 0.0
+    x2 = x.clone(); x2[150:, 0] += 100.0
+    z2, _ = causal_rolling_robust_z(x2, window=20, min_history=5, scale_floor=None, z_clip=10.0, self_floor=True)
+    assert torch.equal(z[:150], z2[:150])  # future change does not affect the past

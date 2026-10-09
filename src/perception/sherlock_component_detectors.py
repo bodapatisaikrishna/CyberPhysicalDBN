@@ -101,7 +101,7 @@ def component_scores(model: ComponentModel, x_raw: torch.Tensor, top_k: int, bat
 
 def causal_rolling_robust_z(
     x: torch.Tensor, *, window: int, min_history: int, scale_floor: torch.Tensor | None, z_clip: float,
-    chunk_cols: int = 400,
+    chunk_cols: int = 400, self_floor: bool = False,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Score each snapshot against the file's OWN trailing baseline, per column.
 
@@ -110,7 +110,9 @@ def causal_rolling_robust_z(
     s_t = median of r over snapshots [t-window, t-1]             (causal MAD of residuals)
     z_t = (x_t - m_t) / (1.4826 * max(s_t, floor, 1e-6)), clipped to +-z_clip
 
-    `floor` (per column) is supplied by the caller from CLEAN TRAIN data only
+    `self_floor=True` (exp19) replaces the supplied floor by the run's OWN expanding median of
+    its past scales s_1..s_{t-1} (causal; needs no clean data of this network).
+    Otherwise `floor` (per column) is supplied by the caller from CLEAN TRAIN data only
     (`median_t s_t` there), so a column that is quiet in the trailing window is not
     blown up by a near-zero scale. Rows with fewer than `min_history` finite past
     values in a column get z = 0 (no baseline yet). NaN inputs give NaN baselines
@@ -134,7 +136,11 @@ def causal_rolling_robust_z(
         s_arr = s.to_numpy()
         with np.errstate(all="ignore"):
             s_med[a:a + chunk_cols] = torch.from_numpy(np.nan_to_num(np.nanmedian(s_arr, axis=0), nan=0.0).astype(np.float32))
-        fl = np.zeros(s_arr.shape[1], dtype=np.float64) if scale_floor is None else scale_floor[a:a + chunk_cols].numpy().astype(np.float64)
+        if self_floor:
+            fl = s.shift(1).expanding(min_periods=1).median().to_numpy()
+            fl = np.nan_to_num(fl, nan=0.0)
+        else:
+            fl = np.zeros(s_arr.shape[1], dtype=np.float64) if scale_floor is None else scale_floor[a:a + chunk_cols].numpy().astype(np.float64)
         scale = 1.4826 * np.maximum(np.nan_to_num(s_arr, nan=0.0), np.maximum(fl, 1e-6))
         z = (df.to_numpy() - m.to_numpy()) / scale
         z = np.where(np.isfinite(z), z, 0.0)

@@ -1,0 +1,13 @@
+target,role,criterion,met,detail,git_sha,seed,source_file,ablation_axis
+01-Basic,exploratory,U-1 pca_spe pooled ROC>=0.70 and lift>=2.0,True,"ROC 0.793, lift 4.50x",f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso
+01-Basic,exploratory,U-2 adaptive-threshold non-attack FPR<=0.05,True,0.045 (static 0.145); recall 0.542,f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso
+01-Basic,exploratory,U-3 industroyer >=5 events AUROC>=0.9 (03: of 8),False,1/7,f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso
+01-Basic,exploratory,U-4 arp-spoof mean event AUROC>=0.80,True,0.969,f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso
+02-Semiurban,exploratory,U-1 pca_spe pooled ROC>=0.70 and lift>=2.0,True,"ROC 0.717, lift 2.32x",f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso
+02-Semiurban,exploratory,U-2 adaptive-threshold non-attack FPR<=0.05,False,0.077 (static 0.242); recall 0.462,f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso
+02-Semiurban,exploratory,U-3 industroyer >=5 events AUROC>=0.9 (03: of 8),False,2/9,f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso
+02-Semiurban,exploratory,U-4 arp-spoof mean event AUROC>=0.80,True,0.944,f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso
+03-Rural,confirmatory,U-1 pca_spe pooled ROC>=0.70 and lift>=2.0,True,"ROC 0.746, lift 2.48x",f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso
+03-Rural,confirmatory,U-2 adaptive-threshold non-attack FPR<=0.05,False,0.078 (static 0.076); recall 0.516,f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso
+03-Rural,confirmatory,U-3 industroyer >=5 events AUROC>=0.9 (03: of 8),False,3/8,f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso
+03-Rural,confirmatory,U-4 arp-spoof mean event AUROC>=0.80,True,0.939,f24afa9489dc0a59612dfdf2bf691b87c7aeb71b-dirty,42,exp19_criteria_20261009T163931Z.csv,sherlock_universal_loso

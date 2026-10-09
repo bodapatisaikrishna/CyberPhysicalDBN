@@ -1,0 +1,23 @@
+# exp19: scenario-agnostic detector, leave-one-scenario-out; 03-Rural confirmatory (LAB_NOTEBOOK.md 2026-10-09).
+grid:
+  bin_seconds: 2.0
+clean_scenarios: ["01-Basic", "02-Semiurban"]
+evaluations:   # [target, fit-from scenarios, role]
+  - ["01-Basic", ["02-Semiurban"], "exploratory"]
+  - ["02-Semiurban", ["01-Basic"], "exploratory"]
+  - ["03-Rural", ["01-Basic", "02-Semiurban"], "confirmatory"]
+splits:
+  block_slices: 900
+  pattern: [fit, fit, fit, val, calib]
+rolling_baseline:
+  window: 450
+  min_history: 30
+component:
+  standardizer_eps: 1.0e-6
+  z_clip: 10.0
+  explained_variance_target: 0.99
+  top_k: 3
+threshold:
+  percentile: 99.0     # both thresholds target 1% false alarms on the fit scenarios' clean calib blocks
+  window: 1800         # adaptive: 1 h of past scores
+  min_periods: 30

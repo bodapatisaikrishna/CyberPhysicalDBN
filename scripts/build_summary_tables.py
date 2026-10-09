@@ -143,6 +143,11 @@ AXES: dict[str, list[tuple[str, Path | None]]] = {
         (m, RESULTS_DIR / f"exp18_{m}_20261009T150422Z.csv")
         for m in ("anomaly_metrics", "attack_type_summary", "criteria")
     ],
+    # 2026-10-09: scenario-agnostic detector, leave-one-scenario-out; 03-Rural confirmatory (pinned)
+    "sherlock_universal_loso": [
+        (m, RESULTS_DIR / f"exp19_{m}_20261009T163931Z.csv")
+        for m in ("anomaly_metrics", "events", "attack_type_summary", "criteria")
+    ],
     "gnn_cluster_vs_heuristic": [
         ("cluster_assignment", CANONICAL["exp12_cluster_assignment"]),
         ("observable_kl", CANONICAL["exp12_observable_kl"]),

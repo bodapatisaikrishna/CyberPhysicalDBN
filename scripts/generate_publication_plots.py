@@ -328,6 +328,49 @@ def exp18_replication_plot() -> None:
     savefig(fig, "exp18_replication_family_auroc.png")
 
 
+def exp19_universal_plot() -> None:
+    """Scenario-agnostic detector (exp19), leave-one-scenario-out: per-family mean event AUROC
+    and non-attack false-alarm rate (static vs adaptive threshold) on each target network."""
+    path = RESULTS_DIR / "exp19_attack_type_summary_20261009T163931Z.csv"
+    mpath = RESULTS_DIR / "exp19_anomaly_metrics_20261009T163931Z.csv"
+    if not (path.exists() and mpath.exists()):
+        print("  skipping exp19: source files not found")
+        return
+    df = pd.read_csv(path)
+    df = df[df["detector"] == "pca_spe"]
+    m = pd.read_csv(mpath)
+    targets = ["01-Basic", "02-Semiurban", "03-Rural"]
+    labels = {"01-Basic": "01-Basic (fit 02)", "02-Semiurban": "02-Semiurban (fit 01)", "03-Rural": "03-Rural (fit 01+02, unseen)"}
+    fams = ["industroyer", "control-and-freeze", "drift-off", "arp-spoof"]
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5.0), gridspec_kw={"width_ratios": [2.2, 1]})
+    for i, t in enumerate(targets):
+        g = df[df["target"] == t]
+        vals = [g[g["attack_type"].str.startswith(f)]["mean_event_auroc"].mean() for f in fams]
+        axes[0].bar(np.arange(len(fams)) + (i - 1) * 0.27, vals, width=0.27, label=labels[t])
+    axes[0].axhline(0.5, color="k", lw=0.8, ls="--")
+    axes[0].set_xticks(np.arange(len(fams)))
+    axes[0].set_xticklabels(fams)
+    axes[0].set_ylim(0, 1.0)
+    axes[0].set_ylabel("mean per-event AUROC (pca_spe)")
+    axes[0].set_title("Per-family detection, leave-one-scenario-out")
+    axes[0].legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=3, frameon=False)
+    axes[0].grid(alpha=0.3, axis="y")
+    x = np.arange(len(targets))
+    for j, (det, lab) in enumerate((("pca_spe", "static threshold"), ("pca_spe_adaptive", "adaptive threshold"))):
+        v = [float(m[(m["target"] == t) & (m["detector"] == det)]["fpr_nonattack"].iloc[0]) for t in targets]
+        axes[1].bar(x + (j - 0.5) * 0.38, v, width=0.38, label=lab)
+    axes[1].axhline(0.05, color="r", lw=0.8, ls="--")
+    axes[1].text(2.45, 0.052, "5% target", fontsize=7, ha="right", color="r")
+    axes[1].set_xticks(x)
+    axes[1].set_xticklabels([t.split("-")[0] for t in targets])
+    axes[1].set_ylabel("non-attack false-alarm rate")
+    axes[1].set_title("False alarms")
+    axes[1].legend(fontsize=8)
+    axes[1].grid(alpha=0.3, axis="y")
+    fig.tight_layout()
+    savefig(fig, "exp19_universal_loso.png")
+
+
 # -------------------------------------------------------- exp13 ---------
 
 def exp13_plots() -> None:
@@ -658,6 +701,8 @@ def main() -> int:
     exp14_16_plots()
     print("exp18 replication ...")
     exp18_replication_plot()
+    print("exp19 leave-one-scenario-out ...")
+    exp19_universal_plot()
     print("exp12 spatial zone map ...")
     exp12_spatial_zone_map()
     print("architecture diagram ...")

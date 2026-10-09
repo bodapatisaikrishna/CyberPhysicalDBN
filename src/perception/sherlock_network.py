@@ -34,6 +34,8 @@ FEATURE_NAMES: tuple[str, ...] = (
     "n_eth_broadcast", "n_distinct_ip_pairs", "n_distinct_src_ip", "arp_ip_multi_mac",
     # exp18 additions (appended so the first 23 columns stay exactly exp17's feature set)
     "n_iec104_measurements", "n_iec104_unchanged_measurements",
+    # exp19 addition: I-frames whose ASDU type is in the control direction (45..69)
+    "n_iec104_commands",
 )
 N_BASE_FEATURES = 23  # exp17's feature set = FEATURE_NAMES[:23]
 
@@ -185,6 +187,10 @@ def pcap_to_bins(path: Path, t0: float, n_bins: int, bin_s: float = 2.0, chunk: 
                         pI = pb[m104][isI]
                         capI = c[im][tm][m104][isI] - (pI - o[im][tm][m104][isI])
                         payI = pay[m104][isI]
+                        has_type = (capI >= 7) & (payI >= 7)
+                        t_all = _u8(buf, np.where(has_type, pI + 6, 0))
+                        is_cmd = has_type & (t_all >= 45) & (t_all <= 69)
+                        np.add.at(counts[:, F["n_iec104_commands"]], bb[isI][is_cmd], 1.0)
                         ok13 = (capI >= 12) & (payI >= 12)
                         pI, capI, payI = pI[ok13], capI[ok13], payI[ok13]
                         tI = ts[sl][ok][im][tm][m104][isI][ok13]

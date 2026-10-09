@@ -89,6 +89,8 @@ def main() -> int:
     n_base = int(cfg.get("n_network_features", 23))
     xp_tr, xn_tr_all, y_tr, _, _, _, info_tr = load_split(SC, "train", bin_s)
     xp_te, xn_te_all, y_te, ids_te, t_end_te, catalog, info_te = load_split(SC, "test", bin_s)
+    n_ext = int(cfg.get("n_network_features_extended", 25))  # exp18's N+ = first 25 (later columns added by exp19)
+    xn_tr_all, xn_te_all = xn_tr_all[:, :n_ext], xn_te_all[:, :n_ext]
     xn_tr, xn_te = xn_tr_all[:, :n_base], xn_te_all[:, :n_base]  # exp17 = first 23 network features
     extended = bool(cfg.get("extended_network", False))
     print(f"  scenario {SC}; network features: {n_base} base" + (f" + {xn_te_all.shape[1] - n_base} extended (view N+)" if extended else ""), flush=True)

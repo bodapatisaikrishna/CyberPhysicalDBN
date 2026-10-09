@@ -114,3 +114,13 @@ def test_iec104_measurement_unchanged_counts(tmp_path):
     b0, b1 = r.counts
     assert b0[F["n_iec104_measurements"]] == 3 and b0[F["n_iec104_unchanged_measurements"]] == 1
     assert b1[F["n_iec104_measurements"]] == 3 and b1[F["n_iec104_unchanged_measurements"]] == 1
+
+
+def test_iec104_command_count(tmp_path):
+    ipa, ipb = [10, 0, 0, 1], [10, 0, 0, 2]
+    cmd = bytes([0x68, 0x0E, 0x00, 0x00, 0x00, 0x00]) + struct.pack("<BBHH", 45, 1, 6, 1) + bytes([1, 0, 0, 1])  # C_SC_NA_1
+    p = tmp_path / "c.pcap"
+    _pcap(p, [(0.1, _eth(MAC_B, MAC_A, 0x0800, _ipv4(ipa, ipb, 6, _tcp(5000, 2404, 0x18, cmd)))),
+              (0.2, _eth(MAC_B, MAC_A, 0x0800, _ipv4(ipa, ipb, 6, _tcp(2404, 5000, 0x18, _asdu13(1, [(100, 1.0)])))))])
+    r = pcap_to_bins(p, 0.0, n_bins=1, bin_s=2.0)
+    assert r.counts[0, F["n_iec104_commands"]] == 1 and r.counts[0, F["n_iec104_measurements"]] == 1
