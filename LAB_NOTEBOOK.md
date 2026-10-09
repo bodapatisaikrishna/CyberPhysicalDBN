@@ -3987,3 +3987,17 @@ carries zero attack labels, and the per-run robust z with a self-estimated floor
 Session 2 references above to `exp01_scenario2_probs_b.png` / `exp01_scenario1_probs_a.png` correspond to those.
 All remaining figures are regenerated from code (`scripts/generate_journal_plots.py`,
 `scripts/generate_publication_plots.py`, `scripts/build_summary_tables.py`, and the experiment scripts themselves).
+
+## 2026-10-09 Summary: the real-data (Sherlock) arc, closed
+
+Seven real-data experiments (exp07, exp13-exp19). Final state, every number from the entries above:
+- Final detector exp19 (scenario-agnostic, leave-one-network-out, adaptive threshold). Confirmatory on the never-opened
+  03-Rural: ROC-AUC 0.746, lift 2.48x, arp-spoof 0.94, non-attack false alarms 7.8%; U-1 and U-4 met, U-2 (<= 5% false
+  alarms) and U-3 (industroyer >= 5/8 events) missed. Exploratory 01-Basic / 02-Semiurban: ROC 0.79 / 0.72.
+- What moved the result: per-run causal normalisation (exp15: removes the train->test operating-regime shift) and the raw
+  packet captures (exp17: arp-spoof 0.29 -> 0.96). What did not: more physical columns (exp14), supervised training on the
+  test file (exp16), mean fusion and decoded unchanged-measurement counts (exp18), the command-count feature for
+  industroyer (exp19).
+- All three Sherlock networks have now served as test sets. Further changes on them are exploratory by construction.
+- Verification the same day: 585 tests pass; exp01 and exp03 reproduce bit-for-bit (exp03 reference repointed after the
+  bisection above); exp17 reproduces exactly; 48 figures, all produced by code.

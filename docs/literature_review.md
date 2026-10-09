@@ -59,7 +59,8 @@ Application Security and Privacy (CODASPY 2025)*.
 https://dl.acm.org/doi/10.1145/3714393.3726006 — preprint:
 https://arxiv.org/pdf/2504.06102 — dataset: https://sherlock.wattson.it/
 *(ACM conference paper + real dataset, digitally downloaded and used
-directly in `experiments/exp07_sherlock.py`)*
+directly in `experiments/exp07_sherlock.py` and exp13-exp19 -- state
+exports, raw physical snapshots and raw switch packet captures)*
 
 **Wattson co-simulation framework.** https://github.com/fkie-cad/wattson
 *(GitHub software repository)*
@@ -221,15 +222,74 @@ verification work this library's own test suite already provides.
 
 ---
 
+## 11. Real-data anomaly detection (exp13-exp19, `src/perception/sherlock_*`)
+
+**Jackson, J.E., Mudholkar, G.S. "Control procedures for residuals associated
+with principal component analysis."** *Technometrics*, vol. 21, no. 3,
+pp. 341-349, 1979. *(journal paper)*
+
+**MacGregor, J.F., Kourti, T. "Statistical process control of multivariate
+processes."** *Control Engineering Practice*, vol. 3, no. 3, pp. 403-414,
+1995. *(journal paper)*
+
+The two detection statistics in `src/perception/sherlock_component_detectors.py`
+are the classical multivariate process-monitoring pair these papers define and
+review: the squared prediction error outside a PCA subspace (`pca_spe`, the Q
+statistic) and Hotelling's T² inside it (`pca_t2`). Reused unchanged as
+statistics; what this project adds is fitting them on attack-free Sherlock
+runs and, in exp19, on *other* networks than the one scored. No control-limit
+formula from these papers is used: thresholds are empirical percentiles on
+held-out clean data (static) or on the run's own past scores (adaptive).
+
+**Lakhina, A., Crovella, M., Diot, C. "Diagnosing network-wide traffic
+anomalies."** *Proceedings of ACM SIGCOMM*, 2004. *(ACM conference paper)*
+
+The precedent for applying the PCA subspace / residual method to network
+*traffic counts* rather than process variables -- exactly what exp17-exp19 do
+with per-bin IEC-104 traffic counts. Extended here by fusing the traffic view
+with a physical-state view and by per-run causal normalisation.
+
+**Rousseeuw, P.J., Croux, C. "Alternatives to the median absolute
+deviation."** *Journal of the American Statistical Association*, vol. 88,
+no. 424, pp. 1273-1283, 1993. *(journal paper)*
+
+The robust location/scale (median, MAD with the 1.4826 consistency factor)
+behind `causal_rolling_robust_z` and exp19's adaptive threshold. Extended to a
+strictly causal rolling form (past values only) with a scale floor, because a
+MAD of zero over a quiet window would otherwise turn any change into an
+unbounded z-score.
+
+**IEC 60870-5-104:2006, "Telecontrol equipment and systems -- Part 5-104:
+Transmission protocols -- Network access for IEC 60870-5-101 using standard
+transport profiles."** International Electrotechnical Commission.
+*(standard)*
+
+Defines the APCI framing (start byte 0x68, I/S/U frame types from the first
+control octet) and the ASDU type identifiers that `src/perception/sherlock_network.py`
+decodes: type 13 (M_ME_NC_1, short-float measurement) for the
+unchanged-measurement count, and the control-direction range 45-69 for the
+command count. Only these fields are decoded; no full protocol stack is
+implemented (consistent with CLAUDE.md's rejected directions).
+
+**Cherepanov, A. "Win32/Industroyer: A new threat for industrial control
+systems."** ESET white paper, 2017. *(industry technical report)*
+
+Describes the real malware the dataset's `industroyer` attack family imitates
+-- an attacker issuing IEC-104 control commands to open breakers. It motivated
+exp19's command-count feature. The feature did not make industroyer separable
+at slice level (3 of 8 events at AUROC >= 0.9 on 03-Rural), which is reported
+as such.
+
 ## Summary: source types actually used
 
 | Type | Count | Examples |
 |---|---|---|
-| Journal paper | 3 | Cerotti et al. (IEEE Access), pandapower (IEEE Trans. Power Systems), TOPS (Muñoz-González) |
-| ACM/IEEE conference paper | 4 | HGT (WWW), Sherlock (CODASPY), evasion (ARES), ESWC (R-GCN) |
+| Journal paper | 6 | Cerotti et al. (IEEE Access), pandapower (IEEE Trans. Power Systems), TOPS (Muñoz-González), Jackson & Mudholkar (Technometrics), MacGregor & Kourti (Control Eng. Practice), Rousseeuw & Croux (JASA) |
+| ACM/IEEE conference paper | 5 | HGT (WWW), Sherlock (CODASPY), evasion (ARES), ESWC (R-GCN), Lakhina et al. (SIGCOMM) |
 | arXiv preprint | 2 | GNN FDIA detection (Boyaci et al.), calibration (Guo et al., also ICML) |
 | GitHub software repository | 3 | pandapower, Wattson, stable-baselines3 |
-| Standards / public knowledge base | 1 | MITRE ATT&CK for ICS |
+| Standards / public knowledge base | 2 | MITRE ATT&CK for ICS, IEC 60870-5-104 |
+| Industry technical report | 1 | ESET Industroyer analysis (Cherepanov) |
 
 Per-source detail on what was reused verbatim vs. extended is in each
 section above, not repeated here — this table exists only to show the

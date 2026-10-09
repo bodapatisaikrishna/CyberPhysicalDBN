@@ -693,7 +693,8 @@ amendment, written before any reportable number) in `LAB_NOTEBOOK.md`
   verified. Later (2026-10-03) the remaining ~5 GB of raw captures
   (`raw/*/physical.zip`, `control-center.zip`, big pcaps) were fetched with
   `--all-members`, each member CRC-32 verified (nested zips kept as zips; no
-  whole-zip md5 check was run). exp13 does not read them. Tool:
+  whole-zip md5 check was run). exp13 does not read them; exp14-exp19 do
+  (physical.zip; exp17-19 also the pcaps). Tool:
   `scripts/download_sherlock_parallel.py` (`--essential` or full md5-gated mode).
 - **Data defects, verified**: 02-Semiurban's state export is truncated to ~3 h
   of a 12 h run and ends mid-line (7 of its 29 catalogued test attacks are in
@@ -778,3 +779,10 @@ twin fidelity fixes (7e3831f, b65f1f3); current code is deterministic; canonical
 switch changes + NaN count), per-run causal robust z with self-estimated floor, PCA fit leave-one-scenario-out, adaptive threshold.
 03-Rural (fit on 01+02, never opened before): ROC 0.746, lift 2.48x, arp-spoof 0.94, FPR 7.8%; industroyer 3/8 (missed),
 5% FPR target missed on 02/03 (met on 01). 03 is now SPENT as a test set; no clean, unseen Sherlock data remains.
+
+**Session 13 final state (2026-10-09) -- read this first.** Real-data arc closed. Final detector = exp19
+(`experiments/exp19_sherlock_universal.py`, `configs/sherlock_universal.yaml`): leave-one-network-out, 03-Rural confirmatory
+ROC 0.746 / lift 2.48x / FPR 7.8%; criteria U-1, U-4 met, U-2 (FPR <= 5%), U-3 (industroyer) missed. All three Sherlock
+networks are spent as test sets -- any further real-data change is exploratory unless new data is obtained. README section
+"Final real-data results (Sherlock)" is the canonical summary; summary tables `results/summary/sherlock_*.csv` are pinned
+by run timestamp in scripts/build_summary_tables.py. Figures: 48, all produced by code (orphans removed 2026-10-09).

@@ -39,8 +39,8 @@ scripts/download_sherlock_parallel.py --scenario 02-Semiurban
 ```
 Resumable (`<file>.done`), retries a dropped connection for hours instead of
 aborting, stdlib only. `--essential` skips ~5 GB of raw captures
-(`raw/*/physical.zip`, `raw/*/control-center.zip`, the largest pcaps) that no
-experiment in this repository reads; `--all-members` then fetches every
+(`raw/*/physical.zip`, `raw/*/control-center.zip`, the largest pcaps) -- enough for
+exp07/exp13 (state files only), NOT for exp14-exp19, which read `physical.zip` and the pcaps; `--all-members` then fetches every
 remaining member one at a time, CRC-32 verified, with no whole zip kept. It was
 run for 02 and 03 on 2026-10-03 (exit 0, no mismatches; 02 = 5.6 GB, 03 = 2.3 GB
 on disk). Nested `physical.zip` / `control-center.zip` are stored as zips,
@@ -175,6 +175,25 @@ twin's HGTConv `PerceptionEncoder` pipeline — a stated architectural
 divergence, not a silent downgrade.
 
 
+## What each experiment reads (final, 2026-10-09)
+
+| files | read by | notes |
+|---|---|---|
+| `train.*.state.gz`, `test.*.state.gz` | exp07, exp13 | 1 Hz network-observed state; 02's export truncated (below) |
+| `ipal/<split>/events.json` | exp13-exp19 | attack catalog; labels for every raw-data experiment |
+| `raw/<split>/physical.zip` | exp14-exp19 | ~2 s simulator-side snapshots, full 12 h (`src/perception/sherlock_physical.py`) |
+| `raw/<split>/pcap/switch-*.pcap` | exp17-exp19 | switch mirror captures, classic little-endian Ethernet pcap; parsed by `src/perception/sherlock_network.py` (pure numpy, equal to `tcpdump` on the counts it reports). 01-Basic: 4 captures per split, 02-Semiurban: 6, 03-Rural: 8 (test only) |
+| `raw/<split>/control-center.zip`, `log/`, `docs/` | none | downloaded and CRC-verified, unused |
+
+Parsed features are cached (gitignored) under `data/sherlock/_feature_cache/`:
+`<scenario>__physical_component__<split>__physical.zip.npz` (built on first use by
+exp14/exp17/exp19) and `<scenario>__network__<split>.npz`
+(`python scripts/build_sherlock_network_features.py --scenario <name> [--splits test]`;
+it needs the physical cache first, for the grid start time). Facts found in the raw
+captures: ARP appears only in attack runs (01-Basic 0 train / 4,986 test packets;
+02-Semiurban 4 / 5,372; 03-Rural test 8,013), and IEC-104 I-frames are almost all
+ASDU type 13 (M_ME_NC_1) with rare control-direction commands (types 45-69).
+
 ## Scenarios 02-Semiurban and 03-Rural — what the real files contain (2026-09-28)
 
 Verified by opening the extracted files (LAB_NOTEBOOK.md 2026-09-28,
@@ -201,7 +220,8 @@ site's prose:
    but its labels are 23% attack (28 real attacks, 37 distinct raw labels) and
    the archive carries only `raw/test` and `ipal/test`. It can only be an
    evaluation target, as the dataset paper describes (Sec. 3.2.3: "providing no
-   training data").
+   training data"). exp19 uses it exactly that way: a detector fitted only on
+   01-Basic + 02-Semiurban is scored on 03-Rural's raw test captures.
 - **The state is network-observed, not simulator truth** (paper Sec. 3.6): a
    passive vantage point rebuilds it from intercepted IEC-104 packets. A denial
    of service therefore appears as frozen values and a measurement
