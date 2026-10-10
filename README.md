@@ -210,7 +210,7 @@ not replicate on 01-Basic (1/7 fused); false
 alarms are above 5% on two of three networks; all three networks have now been
 used for testing, so no untouched Sherlock data remains for further tuning.
 
-**Verification (2026-10-09).** `verify_stack` passes; 585 tests pass;
+**Verification (2026-10-09, updated 2026-10-10).** `verify_stack` passes; 585 tests pass (rerun 2026-10-10);
 `verify_reproducibility.py` reproduces exp01 and exp03 bit-for-bit; the exp17
 rerun reproduces every number exactly. A 2026-10-10 rerun of exp04 (C1) did NOT
 reproduce the original 2026-08-02 run (made from an uncommitted tree before the
@@ -396,7 +396,7 @@ ones — a sample, in full detail in [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md):
   [Final real-data results](#final-real-data-results-sherlock).
 - **A reproducibility explanation was wrong and has been corrected.** exp03's
   ±2-slice drift was attributed to BLAS non-determinism in 2026-08; single-
-  threaded reruns and bisection showed the code is deterministic and the drift
+  threaded reruns and bisection showed the twin/DBN code is deterministic and the drift
   came from two documented twin bug fixes made after exp03's original run.
 - **The real dataset has defects worth knowing.** 02-Semiurban's shipped
   state export covers ~3 h of a 12 h run (7 of 29 attacks) and ends mid-line;

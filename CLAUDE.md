@@ -785,7 +785,8 @@ configs/sherlock_network_exp18_{01,02}.yaml (02 = exploratory). Network caches n
 first 23 (`n_network_features`), verified byte-identical, and the exp17 rerun reproduces exactly.
 **Verification 2026-10-09.** verify_stack PASS; 583 tests pass; verify_reproducibility PASS (exp01 + exp03 bit-for-bit).
 exp03's old +-2-slice "BLAS non-determinism" was wrong: bisection shows exp03 output changed with the Session 4 and Session 5
-twin fidelity fixes (7e3831f, b65f1f3); current code is deterministic; canonical repointed to 20261009T151353Z.
+twin fidelity fixes (7e3831f, b65f1f3); the twin/DBN path is deterministic (perception training is NOT -- see 2026-10-10);
+canonical repointed to 20261009T151353Z.
 **Verification 2026-10-10 (deck audit).** exp04 (C1) rerun with current code did NOT reproduce its pinned run
 (2026-08-02, uncommitted tree c63af7e, pre-Session-5 twin). Canonical re-pinned to exp04_*_20261010T073122Z
 (build_summary_tables.py): theta<=0.13 identical (mean lead 8.7); 0.15<=theta<0.71 open loop leads; theta=0.99 closed
@@ -800,6 +801,13 @@ uncommitted trees): exp05 and exp12 zone_aux (now M_KL 0, see Session 12). exp05
 bit-reproducible (same seed, different first-epoch loss); hard-evidence DBN ECE 0.0039 both runs; soft uncalibrated 0.018/0.017,
 calibrated 0.013/0.018 (exp06 DBN arm 0.0047) -- do not rank soft arms from one run; do not cite old 0.0050/0.0046 or
 MeasureCoherence ECE 0.073. Canonical: exp05 154000Z, exp08 100012Z, exp09 075400Z, exp12 101722Z (build_summary_tables.py).
+Making perception training deterministic is open (seeds are set but first-epoch losses differ run to run); fix it and add a
+determinism test before trusting any single-run soft-evidence number.
+**Review deck (2026-10-10).** The Review-1 slides live in Canva (working copy DAHXidtxBfQ; never edit the user's original
+pptx/Canva design). Every slide number was re-checked against the pins above and every data plot pixel-matched to
+results/figures; slide 23's panel is exp10_kl_vs_m.png + summary/figures/gnn_vs_mlp_auc_pr.png side by side. When a pin
+changes, update the matching slide (C1 14-15, C2 16-17, perception 18-19, baselines 20, C3 21-22, ablations 23, exp12 24,
+Sherlock 25-27, summary 28-29).
 **exp19 (2026-10-09): unseen-network confirmation.** Scenario-agnostic 26-feature detector (23 IEC-104 counts + command count +
 switch changes + NaN count), per-run causal robust z with self-estimated floor, PCA fit leave-one-scenario-out, adaptive threshold.
 03-Rural (fit on 01+02, never opened before): ROC 0.746, lift 2.48x, arp-spoof 0.94, FPR 7.8%; industroyer 3/8 (missed),
