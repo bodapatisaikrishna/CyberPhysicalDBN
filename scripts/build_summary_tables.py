@@ -239,7 +239,7 @@ def figure_gnn_vs_mlp() -> None:
     ax.set_xticklabels(targets, rotation=20, ha="right")
     ax.set_ylabel("AUC-PR")
     ax.set_ylim(0, 1.05)
-    ax.set_title(f"GNN vs. per-asset MLP perception encoder (source: {path.name})")
+    ax.set_title(f"GNN vs. per-asset MLP perception encoder\nsource: {path.name}", fontsize=10)
     ax.legend()
     ax.grid(alpha=0.3, axis="y")
     fig.tight_layout()
