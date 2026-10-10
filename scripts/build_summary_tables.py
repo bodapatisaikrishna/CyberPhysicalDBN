@@ -57,20 +57,30 @@ CANONICAL = {
     "exp01_summary": SUMMARIES_DIR / "exp01_summary_20260731T164052Z.csv",
     "exp04_lead_time": RESULTS_DIR / "exp04_lead_time_20261010T073122Z.csv",
     "exp04_calibration": RESULTS_DIR / "exp04_calibration_20261010T073122Z.csv",
-    "exp05_dbn_lead_time": RESULTS_DIR / "exp05_dbn_lead_time_20260802T185037Z.csv",
-    "exp05_dbn_calibration": RESULTS_DIR / "exp05_dbn_calibration_20260802T185037Z.csv",
-    "exp08_transfer_eval": RESULTS_DIR / "exp08_transfer_eval_20260806T044635Z.csv",
-    "exp08_lead_time_summary": RESULTS_DIR / "exp08_lead_time_summary_20260806T044635Z.csv",
+    "exp05_dbn_lead_time": RESULTS_DIR / "exp05_dbn_lead_time_20261010T154000Z.csv",
+    "exp05_dbn_calibration": RESULTS_DIR / "exp05_dbn_calibration_20261010T154000Z.csv",
+    "exp08_transfer_eval": RESULTS_DIR / "exp08_transfer_eval_20261010T100012Z.csv",
+    "exp08_lead_time_summary": RESULTS_DIR / "exp08_lead_time_summary_20261010T100012Z.csv",
     # 2026-08-10: repointed to the post-float32-fix rerun
     # (results/exp09_rerun_20260810T091530Z.log), confirmed to reproduce
     # the original 20260806T070130Z run's numbers exactly (see
     # LAB_NOTEBOOK.md's 2026-08-10 entry) -- this is the more current
     # citation now that both runs are on record, not a value correction.
-    "exp09_robustness_curve": RESULTS_DIR / "exp09_robustness_curve_20260810T091537Z.csv",
-    "exp09_reward_curve": RESULTS_DIR / "exp09_reward_curve_20260810T091537Z.csv",
-    "exp12_cluster_assignment": RESULTS_DIR / "exp12_cluster_assignment_20260813T104934Z.csv",
-    "exp12_observable_kl": RESULTS_DIR / "exp12_observable_kl_20260813T104934Z.csv",
-    "exp12_posterior_kl": RESULTS_DIR / "exp12_posterior_kl_20260813T104934Z.csv",
+    # 2026-10-10: exp05/08/09/12 repointed to current-code reruns
+    # (results/expNN_rerun_20261010T*.log). exp08, exp09 and the exp12
+    # baseline arm reproduce their earlier pinned runs exactly; exp05 and the
+    # exp12 zone_aux arm changed (earlier runs were from uncommitted trees) --
+    # see LAB_NOTEBOOK.md 2026-10-10. exp05 is pinned to its second current-code
+    # run (154000Z, which wrote the exp05 reliability figures); perception
+    # training is not bit-reproducible, so its soft-evidence arms vary by run.
+    "exp09_robustness_curve": RESULTS_DIR / "exp09_robustness_curve_20261010T075400Z.csv",
+    "exp09_reward_curve": RESULTS_DIR / "exp09_reward_curve_20261010T075400Z.csv",
+    "exp12_cluster_assignment": RESULTS_DIR / "exp12_cluster_assignment_baseline_20261010T101722Z.csv",
+    "exp12_observable_kl": RESULTS_DIR / "exp12_observable_kl_baseline_20261010T101722Z.csv",
+    "exp12_posterior_kl": RESULTS_DIR / "exp12_posterior_kl_baseline_20261010T101722Z.csv",
+    "exp12_zone_aux_cluster_assignment": RESULTS_DIR / "exp12_cluster_assignment_zone_aux_20261010T101722Z.csv",
+    "exp12_zone_aux_observable_kl": RESULTS_DIR / "exp12_observable_kl_zone_aux_20261010T101722Z.csv",
+    "exp12_zone_aux_posterior_kl": RESULTS_DIR / "exp12_posterior_kl_zone_aux_20261010T101722Z.csv",
 }
 
 AXES: dict[str, list[tuple[str, Path | None]]] = {
@@ -152,6 +162,11 @@ AXES: dict[str, list[tuple[str, Path | None]]] = {
         ("cluster_assignment", CANONICAL["exp12_cluster_assignment"]),
         ("observable_kl", CANONICAL["exp12_observable_kl"]),
         ("posterior_kl", CANONICAL["exp12_posterior_kl"]),
+    ],
+    "gnn_cluster_vs_heuristic_zone_aux": [
+        ("cluster_assignment", CANONICAL["exp12_zone_aux_cluster_assignment"]),
+        ("observable_kl", CANONICAL["exp12_zone_aux_observable_kl"]),
+        ("posterior_kl", CANONICAL["exp12_zone_aux_posterior_kl"]),
     ],
 }
 

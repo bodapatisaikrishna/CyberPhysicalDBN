@@ -677,10 +677,17 @@ two zonings — not noise. Root cause is the GNN embedding's unsupervised
 clustering finding an imbalanced (31-vs-2) split rather than two electrically
 balanced zones, since nothing in its training objective asks for zone
 recovery. Full Result/Interpretation/Surprised entry in `LAB_NOTEBOOK.md`
-("2026-08-11/13 Experiment: exp12_gnn_cluster_vs_heuristic"). Per-run CSVs
-under `results/exp12_*_20260813T104934Z.csv`; consolidated into
-`results/summary/gnn_cluster_vs_heuristic_*.csv` via
+("2026-08-11/13 Experiment: exp12_gnn_cluster_vs_heuristic"). Canonical CSVs
+(2026-10-10 current-code rerun; baseline arm identical to the 2026-08-13 run):
+`results/exp12_*_{baseline,zone_aux}_20261010T101722Z.csv`; consolidated into
+`results/summary/gnn_cluster_vs_heuristic{,_zone_aux}_*.csv` via
 `scripts/build_summary_tables.py`.
+
+**zone_aux arm (2026-10-10 rerun):** zone-supervised auxiliary loss puts all 14
+heuristic-labelled buses on the correct side, ARI 0.2117, and observable and
+posterior M_KL = 0 in all 30 scenarios. The 2026-08-14 run (uncommitted tree)
+reported KL identical to the baseline arm ("zero effect"); that did not
+reproduce. Do not cite "clustering was not the bottleneck".
 
 ---
 
@@ -786,8 +793,13 @@ twin fidelity fixes (7e3831f, b65f1f3); current code is deterministic; canonical
 no early warning. Do not cite the old +36/-30 numbers. C3 = partial: vs the analytics-aware attacker the DBN never alarms
 before instability and misses all 25 runs at theta>=0.81; LSTM-AE leads longer at every knowledge level. exp06: baselines
 match/beat the DBN on AUC-PR, ECE and lead time (theta=0.49 median: LSTM-AE 54, rule-based 44, DBN 0); the DBN's edge is
-causal explainability. verify_reproducibility covers only exp01/exp03; exp05/06/08/09/10/11/12 have not been rerun with
-current code.
+causal explainability.
+**Verification 2026-10-10 (full rerun).** exp05/06/08/09/10/11/12 rerun with current code (logs results/expNN_rerun_20261010T*.log).
+Exact: exp08, exp09, exp10, exp12 baseline arm. Small drift, no cited number changes: exp06, exp11. Changed (old runs from
+uncommitted trees): exp05 and exp12 zone_aux (now M_KL 0, see Session 12). exp05 ran twice: perception training is NOT
+bit-reproducible (same seed, different first-epoch loss); hard-evidence DBN ECE 0.0039 both runs; soft uncalibrated 0.018/0.017,
+calibrated 0.013/0.018 (exp06 DBN arm 0.0047) -- do not rank soft arms from one run; do not cite old 0.0050/0.0046 or
+MeasureCoherence ECE 0.073. Canonical: exp05 154000Z, exp08 100012Z, exp09 075400Z, exp12 101722Z (build_summary_tables.py).
 **exp19 (2026-10-09): unseen-network confirmation.** Scenario-agnostic 26-feature detector (23 IEC-104 counts + command count +
 switch changes + NaN count), per-run causal robust z with self-estimated floor, PCA fit leave-one-scenario-out, adaptive threshold.
 03-Rural (fit on 01+02, never opened before): ROC 0.746, lift 2.48x, arp-spoof 0.94, FPR 7.8%; industroyer 3/8 (missed),

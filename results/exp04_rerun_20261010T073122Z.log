@@ -1,0 +1,112 @@
+/Users/bodapati/Downloads/CyberPhysicalDBN/.venv/lib/python3.11/site-packages/pgmpy/estimators/__init__.py:4: FutureWarning: `pgmpy.estimators.StructureScore` is deprecated and will be removed in v1.3.0. Use `pgmpy.structure_score` instead.
+  from .StructureScore import (
+stage 0: zone derivation + tau sweep ...
+  dominance_tau=0.6666666666666666 sits in invariant band [0.65, 0.68)
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp04_zones_20261010T073122Z.csv
+
+stage 1: sensor-rate characterization ...
+  a_pos=0.003959276018099547 a_neg=0.9095884413309983 b_pos=0.0 b_neg=0.06512477175897748
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp04_sensor_char_20261010T073122Z.csv
+
+stage 2: paired evaluation, 30 scenarios ...
+  rep 1/30 done
+  rep 2/30 done
+  rep 3/30 done
+  rep 4/30 done
+  rep 5/30 done
+  rep 6/30 done
+  rep 7/30 done
+  rep 8/30 done
+  rep 9/30 done
+  rep 10/30 done
+  rep 11/30 done
+  rep 12/30 done
+  rep 13/30 done
+  rep 14/30 done
+  rep 15/30 done
+  rep 16/30 done
+  rep 17/30 done
+  rep 18/30 done
+  rep 19/30 done
+  rep 20/30 done
+  rep 21/30 done
+  rep 22/30 done
+  rep 23/30 done
+  rep 24/30 done
+  rep 25/30 done
+  rep 26/30 done
+  rep 27/30 done
+  rep 28/30 done
+  rep 29/30 done
+  rep 30/30 done
+
+stage 3a: rate-limited dispatch secondary arm ...
+  rate-limited rep 1/10 done
+  rate-limited rep 2/10 done
+  rate-limited rep 3/10 done
+  rate-limited rep 4/10 done
+  rate-limited rep 5/10 done
+  rate-limited rep 6/10 done
+  rate-limited rep 7/10 done
+  rate-limited rep 8/10 done
+  rate-limited rep 9/10 done
+  rate-limited rep 10/10 done
+
+=== C1: LEAD TIME (primary arms) ===
+
+--- theta=0.5 ---
+Empty DataFrame
+Columns: [arm, detection_rate, false_alarm_rate, n_lead_defined, lead_median_slices, lead_p10_slices, lead_p90_slices]
+Index: []
+
+--- theta=0.9 ---
+Empty DataFrame
+Columns: [arm, detection_rate, false_alarm_rate, n_lead_defined, lead_median_slices, lead_p10_slices, lead_p90_slices]
+Index: []
+
+--- theta=0.99 ---
+                        arm  detection_rate false_alarm_rate  n_lead_defined  lead_median_slices  lead_p10_slices  lead_p90_slices
+                  open_loop             1.0             None              30               -28.0           -232.0             -1.0
+                closed_loop             1.0             None              30                -3.0            -27.0              0.0
+              physical_only             1.0             None              30                -3.0            -27.0              0.0
+closed_loop_sensitivity_1e4             1.0             None              30                -3.0            -27.0              0.0
+
+wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp04_lead_time_20261010T073122Z.csv
+
+=== C1: RATE-LIMITED DISPATCH SECONDARY ARM ===
+
+--- theta=0.5 (rate-limited, n=10) ---
+Empty DataFrame
+Columns: [arm, detection_rate, lead_median_slices]
+Index: []
+
+--- theta=0.9 (rate-limited, n=10) ---
+Empty DataFrame
+Columns: [arm, detection_rate, lead_median_slices]
+Index: []
+
+--- theta=0.99 (rate-limited, n=10) ---
+        arm  detection_rate  lead_median_slices
+  open_loop             1.0              -117.0
+closed_loop             1.0                -3.0
+wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp04_lead_time_rate_limited_20261010T073122Z.csv
+
+=== C1: CALIBRATION ===
+open_loop                    ECE(10,uniform)=0.0115 [0.0049,0.0206]  Brier=0.0104  BSS=+0.8302  n=21660 n_runs=30
+closed_loop                  ECE(10,uniform)=0.0012 [0.0006,0.0028]  Brier=0.0017  BSS=+0.9726  n=21660 n_runs=30
+physical_only                ECE(10,uniform)=0.0080 [0.0036,0.0118]  Brier=0.0080  BSS=+0.8689  n=21660 n_runs=30
+closed_loop_sensitivity_1e4  ECE(10,uniform)=0.0028 [0.0019,0.0037]  Brier=0.0019  BSS=+0.9693  n=21660 n_runs=30
+wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp04_calibration_20261010T073122Z.csv
+wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/figures/exp04_open_vs_closed_posterior.png
+
+=== VALIDATION GATE ===
+(a) precondition ordering + grid_unstable==exceeds_limit  PASS
+(b) zero UNCLASSIFIED physical observations ............. PASS (0)
+(c) open-arm 25-node/23-node posterior equivalence ....... PASS (max|diff|=1.11e-16)
+(d) n_scenarios >= 30 ..................................... PASS (30)
+(e) cyber evidence identical across open/closed arms ..... PASS (by construction: same DiscreteTrace, disjoint evidence-name subsets)
+(f) physical bits consume no rng, sparse-if-unobserved .... PASS (asserted in tests/test_twin.py)
+
+NOTE: lead-time and calibration numbers above are REPORTED, not gated. A closed-loop null does not fail this gate (CLAUDE.md rule 3).
+
+GATE PASSED

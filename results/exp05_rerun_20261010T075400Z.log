@@ -1,0 +1,255 @@
+/Users/bodapati/Downloads/CyberPhysicalDBN/.venv/lib/python3.11/site-packages/pgmpy/estimators/__init__.py:4: FutureWarning: `pgmpy.estimators.StructureScore` is deprecated and will be removed in v1.3.0. Use `pgmpy.structure_score` instead.
+  from .StructureScore import (
+stage 0: asset graph ...
+kind                          type  count  is_empty                                  git_sha
+node                           bus     33     False 89809769b55650797c2d547c175b27eb3b058bb9
+node                          line     37     False 89809769b55650797c2d547c175b27eb3b058bb9
+node                   transformer      0      True 89809769b55650797c2d547c175b27eb3b058bb9
+node                           DER      2     False 89809769b55650797c2d547c175b27eb3b058bb9
+node                           IED      2     False 89809769b55650797c2d547c175b27eb3b058bb9
+node                           RTU      0      True 89809769b55650797c2d547c175b27eb3b058bb9
+node                         relay      0      True 89809769b55650797c2d547c175b27eb3b058bb9
+node                          host      1     False 89809769b55650797c2d547c175b27eb3b058bb9
+edge   bus|electrical_coupling|bus     32     False 89809769b55650797c2d547c175b27eb3b058bb9
+edge  bus|electrical_coupling|line     74     False 89809769b55650797c2d547c175b27eb3b058bb9
+edge   bus|electrical_coupling|DER      2     False 89809769b55650797c2d547c175b27eb3b058bb9
+edge host|network_reachability|IED      2     False 89809769b55650797c2d547c175b27eb3b058bb9
+edge     IED|control_authority|DER      2     False 89809769b55650797c2d547c175b27eb3b058bb9
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp05_asset_graph_20261010T075400Z.csv
+
+stage 1: data generation ...
+  train: 60 scenarios ...
+    train 1/60 done
+    train 2/60 done
+    train 3/60 done
+    train 4/60 done
+    train 5/60 done
+    train 6/60 done
+    train 7/60 done
+    train 8/60 done
+    train 9/60 done
+    train 10/60 done
+    train 11/60 done
+    train 12/60 done
+    train 13/60 done
+    train 14/60 done
+    train 15/60 done
+    train 16/60 done
+    train 17/60 done
+    train 18/60 done
+    train 19/60 done
+    train 20/60 done
+    train 21/60 done
+    train 22/60 done
+    train 23/60 done
+    train 24/60 done
+    train 25/60 done
+    train 26/60 done
+    train 27/60 done
+    train 28/60 done
+    train 29/60 done
+    train 30/60 done
+    train 31/60 done
+    train 32/60 done
+    train 33/60 done
+    train 34/60 done
+    train 35/60 done
+    train 36/60 done
+    train 37/60 done
+    train 38/60 done
+    train 39/60 done
+    train 40/60 done
+    train 41/60 done
+    train 42/60 done
+    train 43/60 done
+    train 44/60 done
+    train 45/60 done
+    train 46/60 done
+    train 47/60 done
+    train 48/60 done
+    train 49/60 done
+    train 50/60 done
+    train 51/60 done
+    train 52/60 done
+    train 53/60 done
+    train 54/60 done
+    train 55/60 done
+    train 56/60 done
+    train 57/60 done
+    train 58/60 done
+    train 59/60 done
+    train 60/60 done
+  val: 20 scenarios ...
+    val 1/20 done
+    val 2/20 done
+    val 3/20 done
+    val 4/20 done
+    val 5/20 done
+    val 6/20 done
+    val 7/20 done
+    val 8/20 done
+    val 9/20 done
+    val 10/20 done
+    val 11/20 done
+    val 12/20 done
+    val 13/20 done
+    val 14/20 done
+    val 15/20 done
+    val 16/20 done
+    val 17/20 done
+    val 18/20 done
+    val 19/20 done
+    val 20/20 done
+  calib: 20 scenarios ...
+    calib 1/20 done
+    calib 2/20 done
+    calib 3/20 done
+    calib 4/20 done
+    calib 5/20 done
+    calib 6/20 done
+    calib 7/20 done
+    calib 8/20 done
+    calib 9/20 done
+    calib 10/20 done
+    calib 11/20 done
+    calib 12/20 done
+    calib 13/20 done
+    calib 14/20 done
+    calib 15/20 done
+    calib 16/20 done
+    calib 17/20 done
+    calib 18/20 done
+    calib 19/20 done
+    calib 20/20 done
+  test: 30 scenarios ...
+    test 1/30 done
+    test 2/30 done
+    test 3/30 done
+    test 4/30 done
+    test 5/30 done
+    test 6/30 done
+    test 7/30 done
+    test 8/30 done
+    test 9/30 done
+    test 10/30 done
+    test 11/30 done
+    test 12/30 done
+    test 13/30 done
+    test 14/30 done
+    test 15/30 done
+    test 16/30 done
+    test 17/30 done
+    test 18/30 done
+    test 19/30 done
+    test 20/30 done
+    test 21/30 done
+    test 22/30 done
+    test 23/30 done
+    test 24/30 done
+    test 25/30 done
+    test 26/30 done
+    test 27/30 done
+    test 28/30 done
+    test 29/30 done
+    test 30/30 done
+  train base rates: {'MeasureCoherence': 0.9064866112650046, 'CommandCoherence': 0.7827562326869806, 'PhysLocalDER': 0.03894275161588181, 'PhysWideArea': 0.8668975069252077}
+
+stage 2: training ...
+    epoch 1/30 train_loss=2.0872 val_loss=0.6436
+    epoch 2/30 train_loss=1.3407 val_loss=0.5353
+    epoch 3/30 train_loss=0.7509 val_loss=0.3296
+    epoch 4/30 train_loss=0.3730 val_loss=0.4227
+    epoch 5/30 train_loss=0.2817 val_loss=0.2138
+    epoch 6/30 train_loss=0.2383 val_loss=0.2301
+    epoch 7/30 train_loss=0.2095 val_loss=0.2050
+    epoch 8/30 train_loss=0.2354 val_loss=0.2529
+    epoch 9/30 train_loss=0.2262 val_loss=0.2179
+    epoch 10/30 train_loss=0.2092 val_loss=0.1658
+    epoch 11/30 train_loss=0.2010 val_loss=0.2085
+    epoch 12/30 train_loss=0.2016 val_loss=0.1837
+    epoch 13/30 train_loss=0.1947 val_loss=0.2396
+    epoch 14/30 train_loss=0.1939 val_loss=0.1753
+    epoch 15/30 train_loss=0.1859 val_loss=0.1910
+    early stopping
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp05_training_20261010T075400Z.csv
+
+stage 3: perception evaluation ...
+  WARNING: temperature for 'PhysLocalDER' hit its bound (T=0.05, n_fit=14440) -- likely an underdetermined fit (too few calib slices or too extreme a base rate), not a meaningful calibration. Reported as-is, not silently trusted.
+  fitted temperatures: {'MeasureCoherence': 1.7518709389754592, 'CommandCoherence': 0.5220043823883938, 'PhysLocalDER': 0.05000000000000001, 'PhysWideArea': 0.4444116959343902}
+  MeasureCoherence  before_temp  AUC-PR=0.9985 (base_rate=0.9101) ECE=0.2464 [0.1545,0.3336]
+  MeasureCoherence  after_temp   AUC-PR=0.9985 (base_rate=0.9101) ECE=0.2695 [0.1960,0.3383]
+  CommandCoherence  before_temp  AUC-PR=0.9734 (base_rate=0.7320) ECE=0.0897 [0.0691,0.1309]
+  CommandCoherence  after_temp   AUC-PR=0.9734 (base_rate=0.7320) ECE=0.0136 [0.0119,0.0637]
+  PhysLocalDER      before_temp  AUC-PR=1.0000 (base_rate=0.0180) ECE=0.0004 [0.0003,0.0004]
+  PhysLocalDER      after_temp   AUC-PR=1.0000 (base_rate=0.0180) ECE=0.0000 [0.0000,0.0000]
+  PhysWideArea      before_temp  AUC-PR=1.0000 (base_rate=0.8634) ECE=0.0037 [0.0032,0.0042]
+  PhysWideArea      after_temp   AUC-PR=1.0000 (base_rate=0.8634) ECE=0.0018 [0.0015,0.0021]
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp05_perception_metrics_20261010T075400Z.csv
+  CommandCoherence AUC-PR conditioned on telemetry-in-RF: 0.6891 (unconditional reported above); frac_positive_slices_unobservable=0.9668
+
+stage 4: sensitivity arms ...
+  se_noise_sigma=0.0    MeasureCoherence AUC-PR=0.9994
+  se_noise_sigma=0.005  MeasureCoherence AUC-PR=0.9982
+  se_noise_sigma=0.01   MeasureCoherence AUC-PR=0.9991
+  se_noise_sigma=0.02   MeasureCoherence AUC-PR=0.9978
+  se_noise_sigma=0.05   MeasureCoherence AUC-PR=0.9974
+  observability=voltage_only     CommandCoherence AUC-PR=0.9966
+  observability=full_telemetry   CommandCoherence AUC-PR=0.9904
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp05_sensitivity_20261010T075400Z.csv
+
+stage 5: DBN ablation ...
+  ablation scenario 1/30 done
+  ablation scenario 2/30 done
+  ablation scenario 3/30 done
+  ablation scenario 4/30 done
+  ablation scenario 5/30 done
+  ablation scenario 6/30 done
+  ablation scenario 7/30 done
+  ablation scenario 8/30 done
+  ablation scenario 9/30 done
+  ablation scenario 10/30 done
+  ablation scenario 11/30 done
+  ablation scenario 12/30 done
+  ablation scenario 13/30 done
+  ablation scenario 14/30 done
+  ablation scenario 15/30 done
+  ablation scenario 16/30 done
+  ablation scenario 17/30 done
+  ablation scenario 18/30 done
+  ablation scenario 19/30 done
+  ablation scenario 20/30 done
+  ablation scenario 21/30 done
+  ablation scenario 22/30 done
+  ablation scenario 23/30 done
+  ablation scenario 24/30 done
+  ablation scenario 25/30 done
+  ablation scenario 26/30 done
+  ablation scenario 27/30 done
+  ablation scenario 28/30 done
+  ablation scenario 29/30 done
+  ablation scenario 30/30 done
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp05_dbn_lead_time_20261010T075400Z.csv
+  hard                         ECE=0.0039 Brier=0.0018 BSS=+0.9831
+  soft_uncalibrated            ECE=0.0182 Brier=0.0122 BSS=+0.8829
+  soft_calibrated              ECE=0.0128 Brier=0.0096 BSS=+0.9081
+  soft_calibrated_naive_lik    ECE=0.0079 Brier=0.0047 BSS=+0.9549
+  hard_thresholded_perception  ECE=0.0062 Brier=0.0034 BSS=+0.9674
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp05_dbn_calibration_20261010T075400Z.csv
+
+=== VALIDATION GATE ===
+(a) leak guard ............................ PASS (asserted in tests/test_perception_features.py)
+(b) TCN causality .......................... PASS (asserted in tests/test_perception_encoder.py)
+(c) uniform likelihood is a no-op .......... PASS (asserted in tests/test_soft_evidence.py)
+(d) degenerate likelihood == hard evidence . PASS (asserted in tests/test_soft_evidence.py)
+(e) splits pairwise disjoint (spawn keys) .. PASS ([(0,), (1,), (2,), (3,)])
+(f) temperature fit on calib only .......... PASS (fit_split='calib')
+(g) cyber evidence identical across arms ... PASS
+(h) every q finite in (0,1); n_clip_events=45139 .. PASS
+(i) asset graph endpoints observed; zero counts printed .. PASS (empty types: ('transformer', 'RTU', 'relay'))
+(j) base-rate provenance recomputed ........ PASS
+(k) inference object not mutated ........... PASS (asserted in tests/test_inference.py)
+(l) n_test >= 30 ........................... PASS (n=30)
+
+NOTE: AUC-PR, ECE, and the DBN ablation ordering above are REPORTED, not gated. Soft evidence losing to hard, or a calibration regression, does NOT fail this gate (CLAUDE.md rule 3).
+
+GATE PASSED

@@ -1,0 +1,28 @@
+/Users/bodapati/Downloads/CyberPhysicalDBN/.venv/lib/python3.11/site-packages/pgmpy/estimators/__init__.py:4: FutureWarning: `pgmpy.estimators.StructureScore` is deprecated and will be removed in v1.3.0. Use `pgmpy.structure_score` instead.
+  from .StructureScore import (
+min TTC across 11 timed nodes: 0.333333 time units
+
+m=0.333333 delta_t=0.205315 n_slices=974 max_p_s=0.6159
+  running FF ...
+    mean_latency=0.1944s peak_tracemalloc=204.63MB rss_delta=-68.30MB
+  running EX ...
+    mean_latency=0.2258s peak_tracemalloc=204.07MB rss_delta=49.81MB
+
+m=1.000000 delta_t=0.068438 n_slices=2922 max_p_s=0.2053
+  running FF ...
+    mean_latency=0.1788s peak_tracemalloc=205.70MB rss_delta=-134.22MB
+  running EX ...
+    mean_latency=0.2144s peak_tracemalloc=206.01MB rss_delta=44.45MB
+
+wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp10_m_sweep_perf_20261010T151043Z.csv
+wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp10_m_sweep_kl_20261010T151043Z.csv
+wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/summaries/exp10_m_sweep_summary_20261010T151043Z.csv
+
+=== VALIDATION GATE ===
+(a) every swept m produces a valid CPT (max_p_s<=1) PASS
+(b) every KL/latency/memory value is finite ......... PASS
+(c) EX latency/memory increase with m (1/3 -> 1), REPORTED not gated: latency NON-MONOTONIC (real finding, see LAB_NOTEBOOK), memory monotonic
+
+NOTE: this experiment does not reproduce Table 5's absolute MB/seconds figures (documented ~4x delta_t-scale gap, see module docstring). The m-dependence trend above is the deliverable, not the absolute numbers.
+
+GATE PASSED

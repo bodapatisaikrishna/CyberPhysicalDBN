@@ -152,7 +152,7 @@ M_KL      = max over time t ∈ [0,T] of D_KL at t
 | **C3 — adversarial robustness** | Partial support. For θ < 0.71 the DBN detects every run that reaches instability and its mean lead does not shrink from blind to full-DBN attacker (7.9 → 15.2 slices) — but it is short: against the analytics-aware attacker it never alarms before the instability, and for θ ≥ 0.81 it misses all 25 of those runs. LSTM-AE has a longer lead at every level (23–136 slices); the rule-based IDS is evaded by the analytics-aware attacker for θ > 0.25 | [`exp09_robustness_full_sweep.png`](results/figures/exp09_robustness_full_sweep.png) |
 | **External baselines** | Baselines match or beat the DBN on raw AUC-PR (all ≥0.986), calibration (GBM, GNN ECE < 0.001 vs. DBN 0.005) and lead time (θ = 0.49 median: LSTM-AE 54, rule-based 44, DBN 0 slices). The DBN's remaining edge is causal explainability — stated plainly, not buried | [`exp06_pr_curve.png`](results/figures/exp06_pr_curve.png) |
 | **Real-data grounding** | Final detector (exp19): label-free, scenario-agnostic (IEC-104 traffic counts + physical event counts), fitted on two real networks and tested on the third. On the never-opened 03-Rural network: ROC-AUC 0.75, 2.5× AUC-PR lift, arp-spoof AUROC 0.94, every attack alarmed at least once, 7.8% false alarms. Industroyer and the 5% false-alarm target remain unmet — see [Final real-data results](#final-real-data-results-sherlock) | [`exp19_universal_loso.png`](results/figures/exp19_universal_loso.png), [`exp17_19_pr_curves.png`](results/figures/exp17_19_pr_curves.png), [`exp19_03rural_timeline.png`](results/figures/exp19_03rural_timeline.png) |
-| **GNN clustering vs. heuristic zoning** *(faculty-requested KL-divergence analysis)* | Unsupervised GNN clustering barely agrees with a hand-built heuristic zoning (Adjusted Rand Index = 0.09, a degenerate 31-vs-2 split). A zone-supervised auxiliary loss fixes the partition (ARI → 0.22, balanced) but has **zero** measurable effect on downstream detection KL — the clustering wasn't the actual bottleneck | [`exp12_spatial_zone_map.png`](results/figures/exp12_spatial_zone_map.png) |
+| **GNN clustering vs. heuristic zoning** *(faculty-requested KL-divergence analysis)* | Unsupervised GNN clustering barely agrees with a hand-built heuristic zoning (Adjusted Rand Index = 0.09, a degenerate 31-vs-2 split). A zone-supervised auxiliary loss fixes the partition (ARI → 0.21; all 14 heuristic-labelled buses on the correct side) and, in the 2026-10-10 current-code rerun, removes the downstream KL entirely (M_KL 0 in all 30 scenarios). The earlier "zero effect" result came from an uncommitted tree and did not reproduce | [`exp12_spatial_zone_map.png`](results/figures/exp12_spatial_zone_map.png) |
 
 Every number above traces to a logged experiment run stamped with a git
 SHA and random seed. Full hypothesis → result → interpretation record:
@@ -214,7 +214,12 @@ used for testing, so no untouched Sherlock data remains for further tuning.
 `verify_reproducibility.py` reproduces exp01 and exp03 bit-for-bit; the exp17
 rerun reproduces every number exactly. A 2026-10-10 rerun of exp04 (C1) did NOT
 reproduce the original 2026-08-02 run (made from an uncommitted tree before the
-Session 5 twin changes); exp04 was re-pinned to the rerun and README numbers updated. An earlier ±2-slice exp03 drift,
+Session 5 twin changes); exp04 was re-pinned to the rerun and README numbers updated.
+The same day exp05, 06, 08, 09, 10, 11 and 12 were rerun with current code: exp08 (C2),
+exp09 (C3), exp10 and the exp12 baseline arm reproduce exactly; exp06 and exp11 drift
+only slightly (no cited number changes); exp05 and the exp12 zone-supervised arm changed
+(both earlier runs came from uncommitted trees) and were re-pinned. Perception-layer
+training is not bit-reproducible, so exp05's soft-evidence numbers vary between runs. An earlier ±2-slice exp03 drift,
 previously blamed on BLAS non-determinism, was traced by bisection to two
 documented twin bug fixes (Sessions 4 and 5); the reference run was updated.
 
@@ -374,6 +379,13 @@ ones — a sample, in full detail in [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md):
   calibration and lead time. What the DBN still offers is causal
   explainability and a lead time that does not shrink as the attacker
   learns more (C3) — stated as such, not disguised as an accuracy win.
+- **Learned soft evidence does not beat hard evidence in the DBN.** In two
+  current-code runs of exp05, the DBN posterior is best calibrated with hard
+  evidence (ECE 0.0039) and worse with the perception layer's soft evidence
+  (0.013–0.018), which also alarms later at high θ. Temperature scaling fixes
+  CommandCoherence (ECE ≈0.09 → ≈0.02) but not MeasureCoherence (≈0.22–0.27);
+  whether it lowers the DBN's ECE differs between runs. An earlier run from an
+  uncommitted tree had shown a small calibration benefit; it did not reproduce.
 - **Real data took seven attempts, and the physical state alone was not
   enough.** exp07's "Sherlock→twin ≈ 0.99 AUC-PR" was uninformative (the twin's
   base rate is 0.9992). Every physical-state view tried (aggregates, 5,731
@@ -392,11 +404,12 @@ ones — a sample, in full detail in [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md):
 - **The GNN-vs-heuristic clustering gap is real and diagnosed, not just
   measured.** Root cause: unsupervised `KMeans(k=2)` on embeddings never
   trained for a clustering objective produces a degenerate 31-vs-2 split.
-  A follow-up zone-supervised auxiliary loss *does* fix the partition
-  (ARI 0.09 → 0.22) but this improvement has **zero** measurable effect on
-  downstream detection KL — evidence that the clustering degeneracy was
-  never the actual bottleneck for detection fidelity, a more specific and
-  more useful finding than either "it's broken" or "it's fixed."
+  A follow-up zone-supervised auxiliary loss fixes the partition (ARI
+  0.09 → 0.21, every heuristic-labelled bus on the correct side). The first
+  run of that ablation (2026-08-14, uncommitted tree) reported **zero**
+  effect on downstream KL; the 2026-10-10 rerun with current code instead
+  gives M_KL = 0 in all 30 scenarios — zone supervision removes the gap. The
+  earlier "clustering was not the bottleneck" conclusion is withdrawn.
 - **A real float32-overflow bug** was found and fixed during a full
   codebase debugging pass (`src/baselines/lstm_ae.py`,
   `src/perception/calibration.py`) — verified to have zero effect on

@@ -1,0 +1,95 @@
+/Users/bodapati/Downloads/CyberPhysicalDBN/.venv/lib/python3.11/site-packages/pgmpy/estimators/__init__.py:4: FutureWarning: `pgmpy.estimators.StructureScore` is deprecated and will be removed in v1.3.0. Use `pgmpy.structure_score` instead.
+  from .StructureScore import (
+stage 1: twin TTC-measurement sweep ...
+  twin sweep: 888 realized-TTC rows, 3 node-runs never completed (per-combo horizon ranged 100.0-1600.0)
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp08_twin_ttc_dataset_20261010T100012Z.csv
+
+stage 2: family graph generation ...
+  generated 60 graphs (30/5/25 train/val/test); structural smoke-check failures: 0
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp08_family_graph_nodes_20261010T100012Z.csv
+
+stage 3: amortized model training ...
+  train rows: 888 twin + 268 family_train = 1156
+  val rows: 36 (family_val only)
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp08_amortized_training_20261010T100012Z.csv (300 epochs, final val_mae_log_ttc=0.4377)
+  constant-prior ratio (grand mean realized/table3): 2.5499
+
+stage 4: zero-shot evaluation on test graphs ...
+  family_035: n_slices=100 done
+  family_036: n_slices=100 done
+  family_037: n_slices=100 done
+  family_038: n_slices=100 done
+  family_039: n_slices=100 done
+  family_040: n_slices=100 done
+  family_041: n_slices=37 done
+  family_042: n_slices=100 done
+  family_043: n_slices=100 done
+  family_044: n_slices=100 done
+  family_045: n_slices=100 done
+  family_046: n_slices=15 done
+  family_047: n_slices=100 done
+  family_048: n_slices=100 done
+  family_049: n_slices=100 done
+  family_050: n_slices=100 done
+  family_051: n_slices=100 done
+  family_052: n_slices=100 done
+  family_053: n_slices=100 done
+  family_054: n_slices=100 done
+  family_055: n_slices=100 done
+  family_056: n_slices=100 done
+  family_057: n_slices=100 done
+  family_058: n_slices=100 done
+  family_059: n_slices=100 done
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp08_transfer_eval_20261010T100012Z.csv
+
+  *** per-arm summary across all test graphs/thresholds (REPORTED, not gated) ***
+  amortized        mean M_KL over test graphs = 0.2260
+    theta=0.5   detection_rate=1.0 lead_median_slices=0.0 n_missed=0
+    theta=0.9   detection_rate=0.8 lead_median_slices=0.0 n_missed=2
+    theta=0.99  detection_rate=0.7 lead_median_slices=0.0 n_missed=3
+  table3           mean M_KL over test graphs = 0.2964
+    theta=0.5   detection_rate=0.8 lead_median_slices=0.0 n_missed=2
+    theta=0.9   detection_rate=0.7 lead_median_slices=0.0 n_missed=3
+    theta=0.99  detection_rate=0.6 lead_median_slices=0.0 n_missed=4
+  constant_prior   mean M_KL over test graphs = 0.2964
+    theta=0.5   detection_rate=0.8 lead_median_slices=0.0 n_missed=2
+    theta=0.9   detection_rate=0.7 lead_median_slices=0.0 n_missed=3
+    theta=0.99  detection_rate=0.6 lead_median_slices=0.0 n_missed=4
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp08_lead_time_summary_20261010T100012Z.csv
+
+stage 5: feature-transfer diagnostic ...
+               axis                        bucket  n  mean_log_abs_error                                        git_sha
+          technique             Man-in-the-middle 25            0.404674 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+          technique       Manipulation of Control 18            0.754193 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+          technique                  Masquerading 23            0.327499 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+          technique                Modify Program 20            0.368212 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+          technique Modify authentication process 32            0.386449 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+          technique       Spoof Reporting Message 25            0.381096 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+          technique  Unauthorized Command Message 25            1.019798 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+          technique         Unsecured Credentials 33            0.442688 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+      asset_context                            q0 51            0.492236 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+      asset_context                            q1 50            0.464887 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+      asset_context                            q2 50            0.542352 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+      asset_context                            q3 50            0.502409 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+  defensive_posture                            q0 51            0.326240 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+  defensive_posture                            q1 50            0.585615 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+  defensive_posture                            q2 50            0.587510 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+  defensive_posture                            q3 50            0.505840 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+attacker_capability                            q0 51            0.589103 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+attacker_capability                            q1 50            0.447182 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+attacker_capability                            q2 50            0.473861 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+attacker_capability                            q3 50            0.489802 89809769b55650797c2d547c175b27eb3b058bb9-dirty
+  wrote /Users/bodapati/Downloads/CyberPhysicalDBN/results/exp08_transfer_error_breakdown_20261010T100012Z.csv
+
+=== VALIDATION GATE ===
+(a) leak-barrier re-check .................. PASS
+(b) graph-level split disjointness .......... PASS
+(c) no retraining occurred on test graphs ... PASS
+(d) every arm's delta_t > 0 .................. PASS
+(e) CSV row-count/provenance ................. PASS (rows=225, expected=225)
+(f) oracle trajectories structurally valid ... PASS (violations on: [])
+(g) every family graph compiles/infers ....... PASS (failures: [])
+
+NOTE: mean M_KL / detection lead time per arm above are REPORTED, not gated. A C2 transfer failure is exactly as valid an experimental outcome as a success (CLAUDE.md rule 3) -- see LAB_NOTEBOOK.md's H1-H5 and the stage-5 diagnostic above for WHICH features (if any) failed to transfer.
+
+GATE PASSED
