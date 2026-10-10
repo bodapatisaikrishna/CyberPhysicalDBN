@@ -1,6 +1,10 @@
 # Claude Code Prompt Pack
 ## Cyber-Physical DBN with Learned Perception — Build Guide
 
+> **New machine / new Claude account? Read `CONTEXT.md` first** — project status,
+> user preferences (concise replies; no Claude co-author trailer on commits),
+> setup steps, and what is not in git.
+
 **How to use this document:**
 
 1. Create your project directory, then save **Part 1** as `CLAUDE.md` at the repo root. Claude Code reads this automatically every session — it is the single most important file in the pack.
@@ -775,6 +779,15 @@ first 23 (`n_network_features`), verified byte-identical, and the exp17 rerun re
 **Verification 2026-10-09.** verify_stack PASS; 583 tests pass; verify_reproducibility PASS (exp01 + exp03 bit-for-bit).
 exp03's old +-2-slice "BLAS non-determinism" was wrong: bisection shows exp03 output changed with the Session 4 and Session 5
 twin fidelity fixes (7e3831f, b65f1f3); current code is deterministic; canonical repointed to 20261009T151353Z.
+**Verification 2026-10-10 (deck audit).** exp04 (C1) rerun with current code did NOT reproduce its pinned run
+(2026-08-02, uncommitted tree c63af7e, pre-Session-5 twin). Canonical re-pinned to exp04_*_20261010T073122Z
+(build_summary_tables.py): theta<=0.13 identical (mean lead 8.7); 0.15<=theta<0.71 open loop leads; theta=0.99 closed
+-5.8 vs open -68.2 slices (median -3 vs -28); Brier 0.0017 vs 0.0104. C1 = partial: calibration + less late at high theta,
+no early warning. Do not cite the old +36/-30 numbers. C3 = partial: vs the analytics-aware attacker the DBN never alarms
+before instability and misses all 25 runs at theta>=0.81; LSTM-AE leads longer at every knowledge level. exp06: baselines
+match/beat the DBN on AUC-PR, ECE and lead time (theta=0.49 median: LSTM-AE 54, rule-based 44, DBN 0); the DBN's edge is
+causal explainability. verify_reproducibility covers only exp01/exp03; exp05/06/08/09/10/11/12 have not been rerun with
+current code.
 **exp19 (2026-10-09): unseen-network confirmation.** Scenario-agnostic 26-feature detector (23 IEC-104 counts + command count +
 switch changes + NaN count), per-run causal robust z with self-estimated floor, PCA fit leave-one-scenario-out, adaptive threshold.
 03-Rural (fit on 01+02, never opened before): ROC 0.746, lift 2.48x, arp-spoof 0.94, FPR 7.8%; industroyer 3/8 (missed),

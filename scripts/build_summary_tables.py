@@ -55,8 +55,8 @@ EXP13_PHYSICAL_TS = "20261003T093637Z"
 
 CANONICAL = {
     "exp01_summary": SUMMARIES_DIR / "exp01_summary_20260731T164052Z.csv",
-    "exp04_lead_time": RESULTS_DIR / "exp04_lead_time_20260802T042212Z.csv",
-    "exp04_calibration": RESULTS_DIR / "exp04_calibration_20260802T042212Z.csv",
+    "exp04_lead_time": RESULTS_DIR / "exp04_lead_time_20261010T073122Z.csv",
+    "exp04_calibration": RESULTS_DIR / "exp04_calibration_20261010T073122Z.csv",
     "exp05_dbn_lead_time": RESULTS_DIR / "exp05_dbn_lead_time_20260802T185037Z.csv",
     "exp05_dbn_calibration": RESULTS_DIR / "exp05_dbn_calibration_20260802T185037Z.csv",
     "exp08_transfer_eval": RESULTS_DIR / "exp08_transfer_eval_20260806T044635Z.csv",

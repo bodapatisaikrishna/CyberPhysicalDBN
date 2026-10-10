@@ -30,7 +30,9 @@ clustering strategies: exact (EX), heuristic-clustered (CL), and fully
 factorized (FF).
 
 The source paper's causal formalism is preserved **exactly** — same 2TBN
-structure, same uniformization equation, same three inference strategies —
+structure, same uniformization equation, same BK clustered-inference engine
+(run in its EX and FF configurations; the paper's heuristic CL clustering was not
+re-run, since the paper itself reports FF ≈ CL) —
 and reproduced against its own published reference numbers *before* any
 extension work began (`experiments/exp01_reproduce_paper.py`, gate result
 below). What this project changes is **everything feeding that
@@ -144,11 +146,11 @@ M_KL      = max over time t ∈ [0,T] of D_KL at t
 
 | Claim | Finding | Evidence |
 |---|---|---|
-| **Paper reproduction** | Measured FF-vs-EX KL orders of magnitude below the paper's own `2×10⁻²` target; EX/FF latency close to its reference numbers | [`exp01_reproduction_gate.png`](results/figures/exp01_reproduction_gate.png) |
-| **C1 — closed loop** | Closed-loop wins at high detection thresholds (θ≥0.7), and the gap widens as θ rises; open-loop has longer raw lead time at low θ — reported both ways, not cherry-picked | [`claims_c1_c2_c3_summary.png`](results/figures/claims_c1_c2_c3_summary.png) |
-| **C2 — learned TTC** | `amortized` model, zero expert input, matches or beats expert-elicited TTCs on 25 held-out test graphs (detection rate 1.0 vs. 0.8 at θ=0.5) | [`exp08_ttc_fit_scatter.png`](results/figures/exp08_ttc_fit_scatter.png) |
-| **C3 — adversarial robustness** | At θ = 0.49 the DBN's mean lead stays within 0–15 slices across attacker-knowledge levels and it detects 30/30 runs; LSTM-AE swings from 23 to 136 slices, and the rule-based IDS is fully evaded by the analytics-aware attacker (θ > 0.25) and falls to −80 / −105 slices at high θ. At θ ≥ 0.95 the DBN's lead also turns negative | [`exp09_robustness_full_sweep.png`](results/figures/exp09_robustness_full_sweep.png) |
-| **External baselines** | Several baselines (GBM, rule-based) match or beat the DBN on raw AUC-PR — the DBN's edge is lead time and calibration, not detection accuracy, and that's stated plainly, not buried | [`exp06_pr_curve.png`](results/figures/exp06_pr_curve.png) |
+| **Paper reproduction** | FF-vs-EX `M_KL` (worst node) 3.5×10⁻² in Scenario 1 — the paper's own order (~2×10⁻²) — and 5.6×10⁻¹⁰ in Scenario 2; EX/FF per-slice latency 0.24 / 0.20 s (S1); 6 of 7 posterior checks pass (UnstablePS@t=31 is 0.81 vs. the text's 0.85, which the paper's own Fig. 7b shows as ≈0.81) | [`exp01_reproduction_gate.png`](results/figures/exp01_reproduction_gate.png) |
+| **C1 — closed loop** | Partial support (exp04 rerun 2026-10-10, current code). Closed loop is better calibrated (Brier 0.0017 vs. 0.0104) and far less late at high thresholds (θ = 0.99: −5.8 vs. −68.2 slices); for 0.15 ≤ θ < 0.71 the open loop leads (8.7 vs. ≤1.4 slices). At high θ both arms alarm *after* the instability — no early-warning win | [`claims_c1_c2_c3_summary.png`](results/figures/claims_c1_c2_c3_summary.png) |
+| **C2 — learned TTC** | `amortized` model, zero expert input, beats expert-elicited TTCs on 25 held-out test graphs: mean `M_KL` 0.226 vs. 0.296 (medians ≈0), detection 10/10 vs. 8/10 of the graphs with an event at θ=0.5 — almost all detections are at or after the instability | [`exp08_ttc_fit_scatter.png`](results/figures/exp08_ttc_fit_scatter.png) |
+| **C3 — adversarial robustness** | Partial support. For θ < 0.71 the DBN detects every run that reaches instability and its mean lead does not shrink from blind to full-DBN attacker (7.9 → 15.2 slices) — but it is short: against the analytics-aware attacker it never alarms before the instability, and for θ ≥ 0.81 it misses all 25 of those runs. LSTM-AE has a longer lead at every level (23–136 slices); the rule-based IDS is evaded by the analytics-aware attacker for θ > 0.25 | [`exp09_robustness_full_sweep.png`](results/figures/exp09_robustness_full_sweep.png) |
+| **External baselines** | Baselines match or beat the DBN on raw AUC-PR (all ≥0.986), calibration (GBM, GNN ECE < 0.001 vs. DBN 0.005) and lead time (θ = 0.49 median: LSTM-AE 54, rule-based 44, DBN 0 slices). The DBN's remaining edge is causal explainability — stated plainly, not buried | [`exp06_pr_curve.png`](results/figures/exp06_pr_curve.png) |
 | **Real-data grounding** | Final detector (exp19): label-free, scenario-agnostic (IEC-104 traffic counts + physical event counts), fitted on two real networks and tested on the third. On the never-opened 03-Rural network: ROC-AUC 0.75, 2.5× AUC-PR lift, arp-spoof AUROC 0.94, every attack alarmed at least once, 7.8% false alarms. Industroyer and the 5% false-alarm target remain unmet — see [Final real-data results](#final-real-data-results-sherlock) | [`exp19_universal_loso.png`](results/figures/exp19_universal_loso.png), [`exp17_19_pr_curves.png`](results/figures/exp17_19_pr_curves.png), [`exp19_03rural_timeline.png`](results/figures/exp19_03rural_timeline.png) |
 | **GNN clustering vs. heuristic zoning** *(faculty-requested KL-divergence analysis)* | Unsupervised GNN clustering barely agrees with a hand-built heuristic zoning (Adjusted Rand Index = 0.09, a degenerate 31-vs-2 split). A zone-supervised auxiliary loss fixes the partition (ARI → 0.22, balanced) but has **zero** measurable effect on downstream detection KL — the clustering wasn't the actual bottleneck | [`exp12_spatial_zone_map.png`](results/figures/exp12_spatial_zone_map.png) |
 
@@ -210,7 +212,9 @@ used for testing, so no untouched Sherlock data remains for further tuning.
 
 **Verification (2026-10-09).** `verify_stack` passes; 585 tests pass;
 `verify_reproducibility.py` reproduces exp01 and exp03 bit-for-bit; the exp17
-rerun reproduces every number exactly. An earlier ±2-slice exp03 drift,
+rerun reproduces every number exactly. A 2026-10-10 rerun of exp04 (C1) did NOT
+reproduce the original 2026-08-02 run (made from an uncommitted tree before the
+Session 5 twin changes); exp04 was re-pinned to the rerun and README numbers updated. An earlier ±2-slice exp03 drift,
 previously blamed on BLAS non-determinism, was traced by bisection to two
 documented twin bug fixes (Sessions 4 and 5); the reference run was updated.
 
@@ -360,13 +364,16 @@ print unconditionally, whether or not they favor the proposed system.
 Negative and mixed results are kept and reported exactly like positive
 ones — a sample, in full detail in [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md):
 
-- **C1 is not a clean win.** Closed-loop beats open-loop only above a
-  detection-threshold crossover point; below it, open-loop has longer raw
-  lead time. Both regimes are reported.
-- **exp06's baselines beat the proposed system on raw AUC-PR.** The
-  project's actual argument — lead time, calibration, explainability,
-  robustness under adversarial adaptation — is stated as such, not
-  disguised as a raw-accuracy win.
+- **C1 is not a clean win, and its first headline did not reproduce.** The
+  original exp04 run (2026-08-02, uncommitted tree) reported +36 vs. −30
+  slices at θ = 0.99; a 2026-10-10 rerun with current code gives −5.8 vs.
+  −68.2 — the closed loop is still far less late and better calibrated, but
+  neither arm warns early at high θ. Below θ ≈ 0.71 the open loop leads.
+  The canonical run was re-pinned and the change logged.
+- **exp06's baselines match or beat the proposed system** on raw AUC-PR,
+  calibration and lead time. What the DBN still offers is causal
+  explainability and a lead time that does not shrink as the attacker
+  learns more (C3) — stated as such, not disguised as an accuracy win.
 - **Real data took seven attempts, and the physical state alone was not
   enough.** exp07's "Sherlock→twin ≈ 0.99 AUC-PR" was uninformative (the twin's
   base rate is 0.9992). Every physical-state view tried (aggregates, 5,731
