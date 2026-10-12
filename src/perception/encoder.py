@@ -96,12 +96,17 @@ def stack_scenarios(per_scenario: Sequence[Mapping[str, torch.Tensor]]) -> dict[
     """`[{"bus": [S,N,F], ...}, ...]` (one dict per scenario, all sharing the
     SAME topology/N since the asset graph is one feeder) -> `{"bus": [B,S,N,F],
     ...}`. Raises if scenarios disagree on N or F for any type (a topology
-    mismatch would silently corrupt the block-diagonal graph replication)."""
+    mismatch would silently corrupt the block-diagonal graph replication).
+
+    Output keys follow scenario 0's insertion order, NOT a set's: HGTConv
+    (in_channels=-1) lazily initializes per-type weights in x_dict order on
+    its first forward, so a set-ordered dict made the initial weights depend
+    on PYTHONHASHSEED (LAB_NOTEBOOK.md 2026-10-10, perception nondeterminism)."""
     if not per_scenario:
         raise ValueError("per_scenario must not be empty")
-    types = set(per_scenario[0])
+    types = list(per_scenario[0])
     for i, scenario in enumerate(per_scenario[1:], start=1):
-        if set(scenario) != types:
+        if set(scenario) != set(types):
             raise ValueError(f"scenario {i} has a different node-type set than scenario 0")
     out = {}
     for t in types:

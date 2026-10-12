@@ -4093,3 +4093,28 @@ pinned to run 2 (it wrote the current exp05 reliability figures); both runs are 
 **Surprised?** Yes. Checked: hard-evidence arm identical across all three runs (it uses no perception model), so the
 DBN/twin path is deterministic and the spread comes from perception training. Not investigated here: the source of
 the training nondeterminism (seeds are set via set_all_seeds; likely torch CPU kernels or thread scheduling).
+
+## 2026-10-10 Debug: source of the perception-training nondeterminism
+Not an experiment (no reportable number); follows up the "not investigated" note in the exp05 repeat entry above.
+
+**Finding:** `src/perception/encoder.py::stack_scenarios` built its output dict by iterating `set(per_scenario[0])`.
+Node-type keys are strings, so the order depended on PYTHONHASHSEED, which Python randomizes per process. HGTConv is
+built with `in_channels=-1` and lazily initializes its per-type weights on the first forward, in x_dict order, so
+each process drew different initial weights from the same torch seed. Seeds, shuffling (numpy Generator), torch CPU
+kernels and PyG scatter were not the cause: with the order fixed, training is bit-identical across processes.
+
+**Evidence:** (1) a single eval-mode forward of a seeded model through `stack_scenarios` gave output sums
+9.654 / 10.632 / 13.434 / 11.725 under PYTHONHASHSEED=0..3; with fixed key order, 8.932 for all four. (2) exp05
+stages 0-2 on real twin data (3 train + 1 val scenarios, 2 epochs, scratch script, no files written): feature hash
+identical under PYTHONHASHSEED=0 and 1 both before and after the fix; train loss epoch 1 was 3.4026 vs 3.5530 before
+the fix and 3.3525649905 under both seeds after it (val and epoch-2 losses also identical to 10 decimals).
+
+**Fix:** `stack_scenarios` keeps scenario 0's insertion order (`list(...)`, set used only for the equality check).
+Test `tests/test_perception_training_determinism.py` trains 2 epochs through exp05's `train_model` in two
+subprocesses with PYTHONHASHSEED 0 and 1 and asserts identical losses; it fails on the old code and passes on the
+new. Full suite: 584 passed, 2 skipped.
+
+**Consequence (not acted on):** exp05 and exp06 perception arms were trained with a hash-seed-dependent init, so the
+soft-evidence spread (DBN ECE 0.0047-0.0175) is init variance across three random inits. The fixed code gives one
+deterministic init per seed, which is not the same as either pinned run; the pinned exp05/exp06 results have not
+been rerun or changed.

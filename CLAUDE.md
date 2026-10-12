@@ -785,7 +785,7 @@ configs/sherlock_network_exp18_{01,02}.yaml (02 = exploratory). Network caches n
 first 23 (`n_network_features`), verified byte-identical, and the exp17 rerun reproduces exactly.
 **Verification 2026-10-09.** verify_stack PASS; 583 tests pass; verify_reproducibility PASS (exp01 + exp03 bit-for-bit).
 exp03's old +-2-slice "BLAS non-determinism" was wrong: bisection shows exp03 output changed with the Session 4 and Session 5
-twin fidelity fixes (7e3831f, b65f1f3); the twin/DBN path is deterministic (perception training is NOT -- see 2026-10-10);
+twin fidelity fixes (7e3831f, b65f1f3); the twin/DBN path is deterministic (perception training was not until the 2026-10-12 fix, below);
 canonical repointed to 20261009T151353Z.
 **Verification 2026-10-10 (deck audit).** exp04 (C1) rerun with current code did NOT reproduce its pinned run
 (2026-08-02, uncommitted tree c63af7e, pre-Session-5 twin). Canonical re-pinned to exp04_*_20261010T073122Z
@@ -801,8 +801,12 @@ uncommitted trees): exp05 and exp12 zone_aux (now M_KL 0, see Session 12). exp05
 bit-reproducible (same seed, different first-epoch loss); hard-evidence DBN ECE 0.0039 both runs; soft uncalibrated 0.018/0.017,
 calibrated 0.013/0.018 (exp06 DBN arm 0.0047) -- do not rank soft arms from one run; do not cite old 0.0050/0.0046 or
 MeasureCoherence ECE 0.073. Canonical: exp05 154000Z, exp08 100012Z, exp09 075400Z, exp12 101722Z (build_summary_tables.py).
-Making perception training deterministic is open (seeds are set but first-epoch losses differ run to run); fix it and add a
-determinism test before trusting any single-run soft-evidence number.
+**Perception determinism fixed (2026-10-12, code only).** Cause: `stack_scenarios` (src/perception/encoder.py) ordered
+node types via a `set`, so key order followed PYTHONHASHSEED and HGTConv's lazy per-type weight init differed per process.
+Fix keeps scenario 0's insertion order; tests/test_perception_training_determinism.py trains in two processes with different
+hash seeds and asserts identical losses. Training is now bit-identical across processes. NOT rerun (user decision): every
+pinned perception result (exp05/06/11/12) predates the fix and came from a hash-seed-dependent init; the soft-evidence spread
+above is init variance. A rerun on fixed code gives new numbers that will match none of the pinned runs.
 **Review deck (2026-10-10).** The Review-1 slides live in Canva (working copy DAHXidtxBfQ; never edit the user's original
 pptx/Canva design). Every slide number was re-checked against the pins above and every data plot pixel-matched to
 results/figures; slide 23's panel is exp10_kl_vs_m.png + summary/figures/gnn_vs_mlp_auc_pr.png side by side. When a pin

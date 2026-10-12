@@ -219,7 +219,9 @@ The same day exp05, 06, 08, 09, 10, 11 and 12 were rerun with current code: exp0
 exp09 (C3), exp10 and the exp12 baseline arm reproduce exactly; exp06 and exp11 drift
 only slightly (no cited number changes); exp05 and the exp12 zone-supervised arm changed
 (both earlier runs came from uncommitted trees) and were re-pinned. Perception-layer
-training is not bit-reproducible, so exp05's soft-evidence numbers vary between runs. An earlier ±2-slice exp03 drift,
+training was not bit-reproducible, so exp05's soft-evidence numbers vary between runs. The cause (node-type order
+depended on Python's per-process hash seed, changing the GNN's initial weights) was fixed on 2026-10-12 and is covered
+by a test; the pinned perception results predate the fix and have not been rerun. An earlier ±2-slice exp03 drift,
 previously blamed on BLAS non-determinism, was traced by bisection to two
 documented twin bug fixes (Sessions 4 and 5); the reference run was updated.
 
@@ -386,6 +388,8 @@ ones — a sample, in full detail in [`LAB_NOTEBOOK.md`](LAB_NOTEBOOK.md):
   CommandCoherence (ECE ≈0.09 → ≈0.02) but not MeasureCoherence (≈0.22–0.27);
   whether it lowers the DBN's ECE differs between runs. An earlier run from an
   uncommitted tree had shown a small calibration benefit; it did not reproduce.
+  The run-to-run spread came from a hash-seed-dependent weight initialisation,
+  fixed 2026-10-12 (not yet rerun).
 - **Real data took seven attempts, and the physical state alone was not
   enough.** exp07's "Sherlock→twin ≈ 0.99 AUC-PR" was uninformative (the twin's
   base rate is 0.9992). Every physical-state view tried (aggregates, 5,731
