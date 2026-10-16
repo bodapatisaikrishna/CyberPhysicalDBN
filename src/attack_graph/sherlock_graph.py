@@ -73,8 +73,14 @@ def step_labels(families: list[str | None]) -> dict[str, np.ndarray]:
     return out
 
 
-def step_transition_rates(seqs: list[dict[str, np.ndarray]]) -> dict[str, tuple[float, float]]:
+def step_transition_rates(seqs: list[dict[str, np.ndarray]], *, parent_same_slice: bool = False
+                          ) -> dict[str, tuple[float, float]]:
     """Maximum-likelihood (p_s, p_end) per attack step from labelled step-activity sequences.
+
+    parent_same_slice=False (exp20, pre-registered): a child's precondition is its parents at t-1,
+    matching inter-slice step->step arcs. parent_same_slice=True (exp20b, POST-HOC fix): the
+    precondition is the parents at t, matching same-slice arcs -- needed because in Sherlock's
+    labels a child step starts in the same 2 s slice as its parent (LAB_NOTEBOOK.md 2026-10-16).
 
     p_s   = onsets / slices where the step was inactive and its precondition held at t-1
             (roots: precondition always holds; children: some parent active at t-1, matching the
@@ -90,7 +96,7 @@ def step_transition_rates(seqs: list[dict[str, np.ndarray]]) -> dict[str, tuple[
             x = seq[s].astype(bool)
             pre = np.ones_like(x) if s in ROOTS else np.logical_or.reduce([seq[p].astype(bool) for p in STEP_PARENTS[s]])
             prev, cur, pre_prev, pre_cur = x[:-1], x[1:], pre[:-1], pre[1:]
-            elig_on = ~prev & pre_prev
+            elig_on = ~prev & (pre_cur if parent_same_slice else pre_prev)
             el_on += int(elig_on.sum()); on += int((elig_on & cur).sum())
             elig_end = prev & pre_cur
             el_end += int(elig_end.sum()); end += int((elig_end & ~cur).sum())
@@ -101,7 +107,8 @@ def step_transition_rates(seqs: list[dict[str, np.ndarray]]) -> dict[str, tuple[
 
 
 def build_sherlock_attack_graph(rates: Mapping[str, tuple[float, float]], *, bin_s: float,
-                                analytic_error: tuple[float, float], source: str) -> nx.DiGraph:
+                                analytic_error: tuple[float, float], source: str,
+                                same_slice_steps: bool = False) -> nx.DiGraph:
     """The exp20 graph. `rates[step] = (p_s, p_end)` per slice; each step's `ttc` is set to
     bin_s / p_s so that Eq. 3's p_s = delta_t / T_bar with delta_t = bin_s returns p_s exactly.
     `analytic_error = (p_pos, p_neg)` for every analytic, with `source` saying where it came from."""
@@ -128,4 +135,6 @@ def build_sherlock_attack_graph(rates: Mapping[str, tuple[float, float]], *, bin
         g.add_edge(s, s, edge_type="precondition")
     for u, v, d in g.edges(data=True):
         d["inter_slice"] = g.nodes[u]["self_loop"] and g.nodes[v]["self_loop"]
+        if same_slice_steps and u != v and d["edge_type"] == "precondition" and v in STEP_PARENTS:
+            d["inter_slice"] = False  # exp20b: child step depends on its parent at the SAME slice
     return g

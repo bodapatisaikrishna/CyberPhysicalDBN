@@ -1,0 +1,25 @@
+# exp20b: POST-HOC fix of exp20 (LAB_NOTEBOOK.md 2026-10-16): child attack steps depend on their parent at the SAME slice.
+# All three networks are already spent as test sets -> every result is EXPLORATORY.
+grid:
+  bin_seconds: 2.0
+targets: ["01-Basic", "02-Semiurban", "03-Rural"]   # leave-one-network-out over the three labelled TEST files
+pca_folds:   # exp19's own folds for the recomputed PCA arm (fit on clean TRAIN files, label-free)
+  "01-Basic": ["02-Semiurban"]
+  "02-Semiurban": ["01-Basic"]
+  "03-Rural": ["01-Basic", "02-Semiurban"]
+rolling_baseline:      # identical to exp19 (configs/sherlock_universal.yaml)
+  window: 450
+  min_history: 30
+  z_clip: 10.0
+analytic_error: [0.01, 0.01]   # (p_pos, p_neg) on every analytic CPT; evidence strength comes from the calibrated likelihood
+soft_q_clip: 1.0e-4            # q clipped to [clip, 1-clip] before the likelihood ratio
+threshold_percentile: 99.0     # DBN / FLAT alarm threshold: this percentile of the FIT files' non-attack slices
+pca:                           # exp19 settings, needed to recompute its arm
+  block_slices: 900
+  pattern: [fit, fit, fit, val, calib]
+  standardizer_eps: 1.0e-6
+  explained_variance_target: 0.99
+  top_k: 3
+  percentile: 99.0
+experiment: exp20b
+step_arcs: same_slice   # exp20 used inter_slice (pre-registered); see LAB_NOTEBOOK.md

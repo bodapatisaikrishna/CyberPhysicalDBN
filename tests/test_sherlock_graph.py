@@ -68,3 +68,26 @@ def test_sherlock_graph_compiles_and_runs():
     r = inf.step(r.next_belief, {"ARPAnomaly": 1, "MeasureAnomaly": 1})
     assert r.marginals["ARPSpoof"] > 0.5
     assert 0.0 <= r.marginals[GOAL] <= 1.0
+
+
+def test_same_slice_rates_hand_computed():
+    # industroyer at slices 2-4 of 8: child UnauthCommand starts in the SAME slice as RogueClient
+    seq = step_labels([None, None, "industroyer", "industroyer", "industroyer", None, None, None])
+    r = step_transition_rates([seq], parent_same_slice=True)
+    # eligible onsets: Unauth inactive at t-1 and RogueClient active at t -> only pair (1,2); 1 onset
+    # eligible ends: Unauth active at t-1 and RogueClient active at t -> pairs (2,3),(3,4); 0 ends -> floor 1/3
+    assert r["UnauthCommand"] == pytest.approx((1.0, 1 / 3))
+    assert r["RogueClient"] == step_transition_rates([seq])["RogueClient"]  # roots unaffected
+
+
+def test_same_slice_graph_compiles_with_ulterior_step_arcs():
+    rates = {s: (1e-3, 1e-2) for s in STEPS}
+    g = build_sherlock_attack_graph(rates, bin_s=2.0, analytic_error=(0.01, 0.01), source="test", same_slice_steps=True)
+    dbn = compile_to_2tbn(g)
+    assert (("ARPSpoof", 1), ("SpoofReporting", 1)) in dbn.edges()
+    assert (("ARPSpoof", 0), ("SpoofReporting", 1)) not in dbn.edges()
+    assert (("ARPSpoof", 0), ("ARPSpoof", 1)) in dbn.edges()  # persistence arcs unchanged
+    inf = DBNInference(g, InferenceConfig(clustering=exact_clustering(_interface_nodes(g)), m=1.0, p_pos=0.01,
+                                          p_neg=0.01, delta_t_override=2.0))
+    r = inf.step(inf.initial_belief(), {"ARPAnomaly": 1, "MeasureAnomaly": 1})
+    assert 0.0 <= r.marginals["SpoofReporting"] <= 1.0

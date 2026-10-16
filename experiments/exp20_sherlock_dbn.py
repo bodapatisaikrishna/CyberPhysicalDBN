@@ -151,7 +151,8 @@ def main() -> int:
     ts_run = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     sha = git_sha(REPO_ROOT)
     bin_s = float(cfg["grid"]["bin_seconds"])
-    print(f"exp20 seed={seed} git_sha={sha} smoke={args.smoke}; EXPLORATORY (all Sherlock networks already spent)", flush=True)
+    tag = cfg.get("experiment", "exp20")
+    print(f"{tag} step_arcs={cfg.get('step_arcs', 'inter_slice')} seed={seed} git_sha={sha} smoke={args.smoke}; EXPLORATORY (all Sherlock networks already spent)", flush=True)
 
     data = {}
     for sc in cfg["targets"]:
@@ -171,7 +172,8 @@ def main() -> int:
         fit = [sc for sc in cfg["targets"] if sc != target]
         assert target not in fit
         # --- learn transition rates and evidence calibration on the OTHER files only
-        rates = step_transition_rates([data[sc]["steps"] for sc in fit])
+        same = cfg.get("step_arcs", "inter_slice") == "same_slice"
+        rates = step_transition_rates([data[sc]["steps"] for sc in fit], parent_same_slice=same)
         G = np.concatenate([data[sc]["groups"] for sc in fit])
         calib, base_rates = {}, {}
         for j, a in enumerate(an_names):
@@ -193,7 +195,8 @@ def main() -> int:
               f"{ {s: (round(a, 6), round(b, 5)) for s, (a, b) in rates.items()} }", flush=True)
 
         ag = build_sherlock_attack_graph(rates, bin_s=bin_s, analytic_error=tuple(cfg["analytic_error"]),
-                                         source=f"configs/sherlock_dbn.yaml analytic_error; fold {target}")
+                                         source=f"{Path(args.config).name} analytic_error; fold {target}",
+                                         same_slice_steps=same)
         icfg = InferenceConfig(clustering=exact_clustering(_interface_nodes(ag)), m=1.0, p_pos=cfg["analytic_error"][0],
                                p_neg=cfg["analytic_error"][1], delta_t_override=bin_s,
                                soft_evidence=SoftEvidenceConfig(targets=tuple(an_names), mode="prior_corrected",
@@ -269,13 +272,13 @@ def main() -> int:
         return 0
 
     def out(name: str) -> Path:
-        return RESULTS_DIR / f"exp20_{name}_{ts_run}.csv"
+        return RESULTS_DIR / f"{tag}_{name}_{ts_run}.csv"
     met = pd.DataFrame(metric_rows); met.to_csv(out("metrics"), index=False)
     pd.concat(ev_rows).to_csv(out("events"), index=False)
     ben = pd.DataFrame(benign_rows); ben.to_csv(out("benign"), index=False)
     att = pd.DataFrame(attr_rows); att.to_csv(out("attribution"), index=False)
     pd.DataFrame(param_rows).to_csv(out("params"), index=False)
-    np.savez_compressed(RESULTS_DIR / f"exp20_raw_scores_{ts_run}.npz", **raw)
+    np.savez_compressed(RESULTS_DIR / f"{tag}_raw_scores_{ts_run}.npz", **raw)
 
     print("\n=== PRE-REGISTERED CRITERIA (reported, not gated; EXPLORATORY) ===")
     for t in cfg["targets"]:
@@ -296,7 +299,7 @@ def main() -> int:
     print(f" D-2 overall: DBN beats FLAT on {n_d2}/3 targets (criterion >= 2): {'MET' if n_d2 >= 2 else 'MISSED'}")
     pin = met[(met.target == "03-Rural") & (met.detector == "pca_spe")].roc_auc.iloc[0]
     print(f"\nreproducibility: recomputed PCA 03-Rural ROC {pin:.4f} (exp19 pinned 0.7462)")
-    print(f"wrote exp20_*_{ts_run}.csv")
+    print(f"wrote {tag}_*_{ts_run}.csv")
     ok = met.roc_auc.notna().all() and all(np.isfinite(v).all() for v in raw.values())
     print(f"\n=== VALIDATION GATE (structural only) ===\n  fit files exclude the target; all scores finite ... {'PASS' if ok else 'FAIL'}")
     return 0 if ok else 1

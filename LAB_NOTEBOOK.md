@@ -4171,3 +4171,54 @@ ROC 0.746).
   RogueClient = industroyer) for >= 50% of events (chance = 25%).
 I expect D-1 and D-3 to hold and D-2 to be close (the same features feed both), and D-4 to be the clearest
 DBN-only result, because PCA and FLAT output a single score with no attack-step breakdown.
+
+**Result (exp20_*_20261016T092142Z, git 1f59880, log results/exp20_full_run_20261016T092133Z.log; EXPLORATORY):**
+Gate PASS. Recomputed PCA reproduces exp19 exactly (03-Rural ROC 0.7462).
+
+| target | DBN ROC / AUC-PR | FLAT ROC / AUC-PR | PCA ROC / AUC-PR | TPR at 1% FPR (DBN / FLAT / PCA) | attacks alarmed (DBN / FLAT / PCA) |
+|---|---|---|---|---|---|
+| 01-Basic | 0.845 / 0.607 | 0.789 / 0.672 | 0.793 / 0.597 | 0.27 / 0.53 / 0.47 | 10/18 / 18/18 / 18/18 |
+| 02-Semiurban | 0.740 / 0.539 | 0.704 / 0.621 | 0.717 / 0.536 | 0.14 / 0.40 / 0.12 | 8/29 / 25/29 / 29/29 |
+| 03-Rural | 0.740 / 0.651 | 0.814 / 0.753 | 0.746 / 0.577 | 0.17 / 0.53 / 0.19 | 10/28 / 28/28 / 28/28 |
+
+(TPR at 1% FPR is a post-hoc, threshold-free comparison added after the run; the alarm counts use each arm's own
+pre-registered threshold: DBN/FLAT at 1% of the fit files' non-attack slices, PCA at exp19's.) Non-attack FPR at those
+thresholds: DBN 0.011 / 0.014 / 0.007, FLAT 0.011 / 0.023 / 0.004, PCA 0.145 / 0.242 / 0.076.
+- D-1 MET on all three (DBN ROC >= PCA - 0.05; DBN higher on 01 and 02, -0.006 on 03).
+- D-2 MET formally (DBN ROC > FLAT on 01 and 02) but FLAT has the higher AUC-PR on all three and roughly 2-4x the
+  DBN's recall at 1% FPR: the structure does NOT improve detection at useful operating points.
+- D-3 MET on 01 and 03, MISSED on 02 (DBN mean score during benign events 0.60 vs 0.24 during attacks). Cause, per
+  benign event: "Transformer Maintenance" (196 slices), "Cable Maintenance" and "Open Ring" drive RogueClient and
+  UnauthCommand posteriors to 0.85-0.93 -- legitimate maintenance opens new connections and issues commands that flip
+  switches, i.e. it looks exactly like industroyer to these features. The DBN's benign-event alarm rate is still
+  below PCA's on all three networks (0.076 / 0.124 / 0.014 vs 0.188 / 0.323 / 0.075).
+- D-4 MET on all three: of the attack events the DBN alarms on, 8/10, 6/8 and 9/10 are assigned to the right
+  family (chance 25%); over all events 12/18, 14/29, 16/28.
+- Per family (events alarmed / mean event AUROC, DBN vs PCA): industroyer 17/24, 0.85 vs 24/24, 0.69;
+  control-and-freeze 10/15, 0.82 vs 15/15, 0.77; drift-off 0/22, 0.78 vs 22/22, 0.75; arp-spoof 1/14, 0.57 vs 14/14, 0.95.
+
+**Interpretation:** the DBN now runs on real data, separates attacks from normal traffic about as well as the best
+label-free detector (ROC 0.74-0.85), keeps false alarms near 1%, and is the only arm that says WHICH attack it is
+seeing. But it is too conservative: at its threshold it misses every drift-off and nearly every arp-spoof event.
+
+**Surprised?** Yes -- arp-spoof AUROC 0.57 when the ARP features alone give FLAT 0.97. Checked the learned rates:
+child steps get p_s of 1e-4 to 2e-3 (e.g. BlockReporting 1.3e-4). Diagnosis: a DESIGN FLAW in the estimator, not in
+the data. The compiler makes step -> step arcs inter-slice (child at t depends on parent at t-1), but in the labels a
+child step starts in the SAME slice as its parent, so the estimator almost never sees an "eligible" onset and the
+child's onset hazard collapses towards the floor. With BlockReporting and SpoofReporting nearly unable to start,
+AttackImpact (their OR) stays low for arp-spoof and drift-off whatever the evidence says. A fix (estimate child
+onsets with the parent at the same slice, or shift child onsets by one slice to match the inter-slice arc) would be
+a POST-HOC change and must be reported as such (exp20b), not substituted for this run.
+
+## 2026-10-16 Experiment: exp20b — POST-HOC fix of exp20's child-step timing (written before running)
+
+**What changes (only this):** step -> step precondition arcs become same-slice (child at t depends on its parent at
+t, compiled as an ulterior-layer arc; canonical form still holds), and child onset rates are estimated with the
+parent at the same slice (`step_transition_rates(parent_same_slice=True)`). Everything else -- features, folds,
+evidence calibration, thresholds, metrics, comparison arms -- is identical to exp20 (config
+configs/sherlock_dbn_b.yaml = sherlock_dbn.yaml + `step_arcs: same_slice`).
+**Status:** post-hoc (motivated by exp20's result) AND exploratory (spent data). exp20 stays the pre-registered
+result of record; exp20b is reported next to it, never instead of it.
+**Hypothesis:** child onset rates rise from ~1e-4 to O(0.01-1), so SpoofReporting and BlockReporting can switch on
+with their evidence: drift-off and arp-spoof events alarmed rise well above exp20's 0/22 and 1/14, DBN TPR at 1% FPR
+moves toward FLAT's, and attribution stays >= 50%. Risk: benign-event false alarms may rise with the looser model.
