@@ -4118,3 +4118,56 @@ new. Full suite: 584 passed, 2 skipped.
 soft-evidence spread (DBN ECE 0.0047-0.0175) is init variance across three random inits. The fixed code gives one
 deterministic init per seed, which is not the same as either pinned run; the pinned exp05/exp06 results have not
 been rerun or changed.
+
+## 2026-10-16 Experiment: exp20 — the DBN itself on real data (Sherlock), pre-registration
+
+**Why:** until now no Sherlock result came from the DBN. exp13-19 used anomaly detectors (LSTM-AE, mean-|z|, PCA);
+exp19's PCA detector is the real-data headline. A reviewer can fairly say "the DBN never touched real data".
+
+**Status of the data:** all three networks are already spent as test sets (CLAUDE.md, exp19). Every exp20 number is
+therefore EXPLORATORY, whatever it shows. Labelled attacks exist only in the three TEST files (train files hold only
+benign "control center" maintenance events), so parameters are learned leave-one-network-out on the other two TEST
+files; the target network's labels are used only for scoring.
+
+**Model (fixed before looking at any exp20 output).** A Sherlock-specific attack graph, built from the attack
+descriptions in Wagner et al. 2025, Table 2 (final-phase attacks only; Sherlock has no credential stage):
+- roots (attack steps): ARPSpoof (MITRE ICS T0830 adversary-in-the-middle), RogueClient (T0848 rogue master);
+- steps: BlockReporting (T0804) <- ARPSpoof; SpoofReporting (T0856) <- ARPSpoof; UnauthCommand (T0855) <- ARPSpoof or RogueClient;
+- goal: AttackImpact = OR(BlockReporting, SpoofReporting, UnauthCommand) -- the query node;
+- analytics (soft evidence), each the max signed causal robust z (exp19's per-run z, no clean data of the target)
+  over a feature group chosen from the attack descriptions, not from exp20 results:
+  ARPAnomaly <- ARPSpoof {n_arp, n_arp_reply, arp_ip_multi_mac}; NewClient <- RogueClient {n_distinct_ip_pairs,
+  n_distinct_src_ip, n_syn}; ReportingGap <- BlockReporting {-n_iec104_pkts, -n_iec104_i, n_rst};
+  MeasureAnomaly <- SpoofReporting {n_iec104_measurements, n_iec104_unchanged_measurements, iec104_payload_bytes};
+  CommandBurst <- UnauthCommand {n_iec104_commands}; GridEvent <- UnauthCommand {n_switch_changes, nonfinite_total}.
+- family -> active steps (used only to build step labels for learning): arp-spoof-dos {ARPSpoof, BlockReporting};
+  drift-off {ARPSpoof, SpoofReporting}; control-and-freeze {ARPSpoof, SpoofReporting, UnauthCommand};
+  industroyer {RogueClient, UnauthCommand}. UNCERTAIN: Table 2 says drift-off and control-and-freeze act "as MitM";
+  that the MitM is established by ARP spoofing is an assumption (exp17 saw ARP features move for those families).
+
+**One modelling extension, stated openly:** Sherlock attacks END and the grid recovers before the next one. The
+base paper's attack steps persist forever once achieved, which on a 12 h run would latch the posterior on after
+the first attack. exp20 adds an optional per-node episode-end probability p_end (rule "already active -> stays
+active" becomes "-> stays active with 1 - p_end"). Default 0 keeps every existing model bit-identical (tested).
+
+**Parameters, all learned from the two fit networks' labels (no expert numbers):** Delta t fixed at the 2 s grid;
+p_s and p_end per step = maximum-likelihood rates of the step-activity Markov chain (onsets / eligible slices,
+ends / active slices); evidence: per analytic, logistic regression of step-active on its group score, entered as
+prior-corrected virtual evidence (src/dbn/soft_evidence.py) with p_pos = p_neg = 0.01 on the analytic CPT.
+Inference: exact (EX) forward filtering (5 interface nodes, 32 joint states).
+
+**Arms on identical LOSO folds:** (a) DBN P(AttackImpact); (b) FLAT = logistic regression on the same 6 group
+scores with the same fit data and labels (isolates what the causal structure adds); (c) exp19 PCA detector,
+recomputed in exp20 from exp19's code (label-free; also a reproducibility check against exp19's pinned 03-Rural
+ROC 0.746).
+
+**Hypotheses / criteria (reported, never gated):**
+- D-1 (detection, non-inferiority): DBN pooled ROC-AUC >= PCA's - 0.05 on each target network.
+- D-2 (structure helps): DBN ROC-AUC > FLAT ROC-AUC on at least 2 of 3 targets.
+- D-3 (preconditions suppress false alarms): during benign maintenance events, the DBN's mean P(AttackImpact) is
+  lower than its mean during attacks AND its alarm rate there (at the fit networks' 1%-FPR threshold) is <= PCA's.
+- D-4 (explainability): for attack events the DBN alarms on, the step with the highest mean posterior matches the
+  event's family signature (ARP-only = arp-spoof; Spoof = drift-off; Spoof+Command = control-and-freeze;
+  RogueClient = industroyer) for >= 50% of events (chance = 25%).
+I expect D-1 and D-3 to hold and D-2 to be close (the same features feed both), and D-4 to be the clearest
+DBN-only result, because PCA and FLAT output a single score with no attack-step breakdown.

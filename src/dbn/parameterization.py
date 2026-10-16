@@ -90,6 +90,7 @@ def build_attack_step_cpt(
     parents: list[str],
     p_s: float,
     ag: nx.DiGraph,
+    p_end: float = 0.0,
 ) -> TabularCPD:
     """CPT of an attack step or reaction (Cerotti et al. Table 1, generalized).
 
@@ -116,7 +117,15 @@ def build_attack_step_cpt(
 
     Evidence is ordered parents-then-self, matching Table 1's column order under
     pgmpy's product ordering over evidence.
+
+    p_end (exp20, LAB_NOTEBOOK.md 2026-10-16) is an EXTENSION, not in the paper:
+    rule 2 becomes "already active -> stays active with probability 1 - p_end",
+    i.e. an attack episode can end (Sherlock's attacks stop and the grid
+    recovers). The default 0.0 is the paper's persistence and leaves every
+    existing CPT bit-identical.
     """
+    if not 0.0 <= p_end <= 1.0:
+        raise ValueError(f"p_end must be in [0, 1], got {p_end}")
     ordered_parents = sorted(parents)
     evidence: list[DBNNode] = [
         (parent, _parent_slice(ag, parent, node)) for parent in ordered_parents
@@ -131,7 +140,7 @@ def build_attack_step_cpt(
         if not precondition_met:
             p_activate = 0.0
         elif self_previously_active:
-            p_activate = 1.0
+            p_activate = 1.0 - p_end
         else:
             p_activate = p_s
 
@@ -445,7 +454,7 @@ def attach_cpds(
                 )
         else:
             p_s = compute_ps(float(data["ttc"]), delta_t)
-            cpds.append(build_attack_step_cpt(node, parents, p_s, ag))
+            cpds.append(build_attack_step_cpt(node, parents, p_s, ag, p_end=float(data.get("p_end", 0.0))))
 
     dbn.add_cpds(*cpds)
     return dbn
