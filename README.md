@@ -210,7 +210,7 @@ not replicate on 01-Basic (1/7 fused); false
 alarms are above 5% on two of three networks; all three networks have now been
 used for testing, so no untouched Sherlock data remains for further tuning.
 
-**Verification (2026-10-09, updated 2026-10-10).** `verify_stack` passes; 585 tests pass (rerun 2026-10-10);
+**Verification (2026-10-09, updated 2026-10-10).** `verify_stack` passes; 594 tests pass (rerun 2026-10-16);
 `verify_reproducibility.py` reproduces exp01 and exp03 bit-for-bit; the exp17
 rerun reproduces every number exactly. A 2026-10-10 rerun of exp04 (C1) did NOT
 reproduce the original 2026-08-02 run (made from an uncommitted tree before the
@@ -260,7 +260,7 @@ see [Research integrity principles](#research-integrity-principles)).
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
 python scripts/verify_stack.py          # smoke-tests every dependency
-pytest tests/ -q                        # 585 tests
+pytest tests/ -q                        # 594 tests
 ```
 
 Run any experiment — each writes seeded, git-SHA-stamped CSVs to `results/`:
@@ -453,7 +453,7 @@ is never committed.
 | [`networkx`](https://networkx.org/) | Attack-graph representation before DBN compilation |
 | [`scikit-learn`](https://scikit-learn.org/) | Calibration, PR curves, KMeans, Adjusted Rand Index |
 | [`stable-baselines3`](https://github.com/DLR-RM/stable-baselines3) | PPO for the adversarial RL attacker (C3) |
-| [`pytest`](https://pytest.org/) | 585 tests, one per numerical component |
+| [`pytest`](https://pytest.org/) | 594 tests, one per numerical component |
 
 ## Project structure
 
@@ -462,7 +462,7 @@ src/                    see Module map above
 experiments/             exp01-exp19 (17 scripts; exp15 = exp14 + configs/sherlock_baseline.yaml, exp18 = exp17 + configs/sherlock_network_exp18_*.yaml)
 results/                CSV outputs (git-SHA + seed logged), figures/, summary/
 configs/                 YAML experiment configs — no magic numbers in source
-tests/                   585 tests, one per numerical component
+tests/                   594 tests, one per numerical component
 scripts/                 cross-experiment consolidation and figure-generation scripts
 webapp/                  Streamlit demo dashboard
 docs/                    Sherlock dataset download notes, literature review
