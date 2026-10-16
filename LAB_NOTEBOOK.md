@@ -4280,3 +4280,12 @@ real. On real data the DBN's distinct contributions are its low false-alarm rate
 better separation.
 **Surprised?** Yes, by C2 -- checked the per-graph differences directly (listed above); the result stands.
 Gap: C1 (exp04) per-run data was never saved; its interval needs a rerun that writes per-run output.
+
+## 2026-10-16 Experiment: rerun the perception experiments on deterministic code (fix #5)
+
+**Hypothesis:** with bb28184 (node-type order no longer depends on PYTHONHASHSEED), exp05/06/11/12 give one fixed
+answer per seed. Every arm that does not use the trained perception model is unchanged (exp05 hard-evidence DBN ECE
+0.0039; exp12 baseline-arm KMeans clusters if unchanged init). Soft-evidence numbers will move to a single new value,
+expected inside the range already seen across the old random inits (exp05 calibrated-soft DBN ECE 0.0047-0.0175).
+Determinism itself is covered by tests/test_perception_training_determinism.py; this run produces the new pins.
+Code at b3fa7d9 (clean tree); runs: exp05, exp06, exp11, exp12, 3 in parallel.
