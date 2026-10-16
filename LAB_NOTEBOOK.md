@@ -4289,3 +4289,6 @@ answer per seed. Every arm that does not use the trained perception model is unc
 expected inside the range already seen across the old random inits (exp05 calibrated-soft DBN ECE 0.0047-0.0175).
 Determinism itself is covered by tests/test_perception_training_determinism.py; this run produces the new pins.
 Code at b3fa7d9 (clean tree); runs: exp05, exp06, exp11, exp12, 3 in parallel.
+**Stopped by the user at 15:18 UTC (about 3 min in, during data generation). No results.** The only file written is
+the stage-0 artifact results/exp05_asset_graph_20261016T151545Z.csv (not pinned anywhere). The pinned exp05/06/11/12
+results are therefore still the pre-fix runs.
