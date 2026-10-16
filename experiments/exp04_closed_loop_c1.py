@@ -471,6 +471,17 @@ def main() -> int:
     lt_df["seed"] = seed
     lt_path = RESULTS_DIR / f"exp04_lead_time_{timestamp}.csv"
     lt_df.to_csv(lt_path, index=False)
+    # per-run output (2026-10-16, for scripts/statistics_report.py): output only, no computation changed
+    pd.DataFrame([
+        {"arm": arm, "run": rep, "threshold": r.threshold, "outcome": r.outcome.value,
+         "lead_time_slices": r.lead_time_slices, "git_sha": sha, "seed": seed}
+        for arm, reps in lead_results.items() for rep, rs in enumerate(reps) for r in rs
+    ]).to_csv(RESULTS_DIR / f"exp04_per_run_{timestamp}.csv", index=False)
+    np.savez_compressed(
+        RESULTS_DIR / f"exp04_raw_posteriors_{timestamp}.npz",
+        **{f"{arm}__{k}": np.asarray(v[arm]) for arm in lead_results
+           for k, v in (("y_true", calib_y_true), ("y_prob", calib_y_prob), ("run_id", calib_run_ids))},
+    )
     for theta in (0.5, 0.9, 0.99):
         sub = lt_df[np.isclose(lt_df["threshold"], theta)]
         print(f"\n--- theta={theta} ---")
