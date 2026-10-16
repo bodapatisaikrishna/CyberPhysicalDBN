@@ -4239,3 +4239,44 @@ ARP signature appears when the MitM is set up rather than on every slice of a lo
 **Surprised?** Partly. Checked: rates and arcs behave as designed (tests; learned values above). Not done, on
 purpose: redesigning the evidence groups on these three already-spent files would be tuning on the test data. A
 credible next step needs either new Sherlock-like data or evidence designed and validated on train-only data.
+
+## 2026-10-16 Analysis plan: uncertainty and significance for the pinned results (fix #4; no new runs)
+
+Written before computing. Script: scripts/statistics_report.py, reads only the pinned CSVs/raw-score files named in
+scripts/build_summary_tables.py CANONICAL (plus exp20/exp20b), seed from configs/base.yaml, B = 2000 bootstrap reps.
+Each point estimate is first recomputed and must equal the pinned value (self-check), then:
+- C2 (exp08, 25 held-out graphs): paired Wilcoxon signed-rank on per-graph M_KL, learned vs expert, with a
+  graph-resampling 95% CI of the mean difference; detection at theta=0.5 on the event graphs: exact McNemar.
+- Baselines (exp06, 30 runs): run-cluster bootstrap 95% CIs for pooled AUC-PR and ECE (10-bin uniform) per system;
+  per-run lead time at theta=0.49 (src/eval/lead_time.evaluate_run, as exp06 does), paired Wilcoxon DBN vs each baseline.
+- C3 (exp09): per-run lead at theta=0.49 per system and attacker level; bootstrap CI of the mean; DBN vs LSTM-AE per
+  level (paired by run id, which is the same scenario seed across systems); DBN blind vs full-DBN (unpaired: different
+  attackers) by bootstrap CI of the difference.
+- Real data (exp20, exp20b): moving-block bootstrap (450-slice = 15 min blocks) CIs for ROC-AUC per arm per network
+  and for the paired differences DBN - PCA and DBN - FLAT.
+- Multiple comparisons: Holm correction within each family (baselines; C3 levels; real-data networks). Alpha 0.05.
+- C1 (exp04) is NOT covered: exp04 saved only threshold-level aggregates, not per-run results, so a paired test
+  needs exp04 to write per-run output and be rerun (deterministic twin/DBN path). Logged as a gap, not estimated.
+
+**Result (scripts/statistics_report.py -> results/summary/stats_{c2,baselines,c3,real_data}.csv; seed 42, B=2000).**
+All recomputed point estimates equal the pinned values (asserted in the script).
+- **C2 is NOT statistically supported.** Mean M_KL learned - expert = -0.070, 95% CI [-0.185, +0.016]; Wilcoxon
+  signed-rank p = 1.0. Per graph: 10 ties, learned better on 5 (-1.167, -0.439, -0.427, -0.199, -0.001), worse on 10
+  (mostly tiny; largest +0.310, +0.133). The "24% lower mean" is carried by 4 graphs. Detection at theta=0.5: 2
+  discordant event graphs, both in favour of learned timing (10/10 vs 8/10); exact McNemar p = 0.5.
+- **Baselines (30 runs):** DBN ECE 0.0047 [0.0030, 0.0065]; GNN classifier 0.0009 [0.0006, 0.0012]; GBM ~0; LSTM-AE
+  0.100 [0.064, 0.148]; rule-based 0.152 [0.135, 0.181]. Lead vs DBN at theta=0.49 (paired, Holm): LSTM-AE +86.6
+  slices [59.3, 119.8], p_holm < 1e-4; rule-based +74.8 [47.8, 106.1], p_holm < 1e-4; GBM +0.93 [0.43, 1.50],
+  p_holm = 0.020; GNN +0.50 [-0.13, 1.20], p_holm = 0.30. So the baselines' longer lead is significant.
+- **C3:** DBN mean lead blind 7.9 [2.0, 16.2], analytics-aware 0.0 [0, 0] (5 of 30 runs without a defined lead),
+  full-DBN 15.2 [4.4, 28.4]; full-DBN minus blind +7.3 [-6.0, +21.4] -- consistent with "does not shrink", not a
+  significant increase. LSTM-AE leads the DBN at every level (paired, p_holm < 1e-4): +21.5, +136.4, +16.4 slices.
+- **Real data (exp20 / exp20b):** ROC-AUC CIs are wide (15-min block bootstrap), e.g. exp20 01-Basic DBN 0.845
+  [0.735, 0.939]. No DBN - PCA or DBN - FLAT difference is significant on any network (all CIs include 0; smallest
+  p_holm 0.36). The DBN is statistically indistinguishable from PCA and FLAT on separation.
+**Interpretation:** the uncertainty analysis weakens two claims and confirms the negative ones. C2 must be reported
+as "suggestive, not significant" (a few hard graphs, 2 discordant detections). The baselines' lead-time advantage is
+real. On real data the DBN's distinct contributions are its low false-alarm rate and attack-family attribution, not
+better separation.
+**Surprised?** Yes, by C2 -- checked the per-graph differences directly (listed above); the result stands.
+Gap: C1 (exp04) per-run data was never saved; its interval needs a rerun that writes per-run output.

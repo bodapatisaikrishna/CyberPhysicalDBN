@@ -807,6 +807,13 @@ Fix keeps scenario 0's insertion order; tests/test_perception_training_determini
 hash seeds and asserts identical losses. Training is now bit-identical across processes. NOT rerun (user decision): every
 pinned perception result (exp05/06/11/12) predates the fix and came from a hash-seed-dependent init; the soft-evidence spread
 above is init variance. A rerun on fixed code gives new numbers that will match none of the pinned runs.
+**Statistics + real-data DBN (2026-10-16).** scripts/statistics_report.py -> results/summary/stats_*.csv (no reruns):
+C2 NOT significant (M_KL diff -0.070 [-0.185, 0.016], Wilcoxon p=1.0; detection McNemar p=0.5) -- cite as suggestive only.
+Baselines' longer lead is significant (LSTM-AE +86.6, rule-based +74.8 slices, p_holm<1e-4). C3: LSTM-AE leads DBN at every
+level (p_holm<1e-4); DBN full-DBN - blind +7.3 [-6.0, 21.4]. exp20/exp20b ran the DBN itself on Sherlock (src/attack_graph/
+sherlock_graph.py; optional p_end episode-end, default 0): ROC 0.845/0.740/0.740, ~1% FPR, names the attack family for 75-92% of
+alarmed events, misses drift-off and arp-spoof; no ROC difference vs PCA or FLAT is significant. Bottleneck = evidence features
+(measurement/new-client groups carry no signal), not the DBN. Exploratory (Sherlock spent); do not redesign features on these files.
 **Review deck (2026-10-10).** The Review-1 slides live in Canva (working copy DAHXidtxBfQ; never edit the user's original
 pptx/Canva design). Every slide number was re-checked against the pins above and every data plot pixel-matched to
 results/figures; slide 23's panel is exp10_kl_vs_m.png + summary/figures/gnn_vs_mlp_auc_pr.png side by side. When a pin

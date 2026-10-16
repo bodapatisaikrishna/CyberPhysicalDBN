@@ -1,0 +1,20 @@
+claim,metric,estimate,ci_lo,ci_hi,test,p,n,note,p_holm,bootstrap_reps,seed
+C3,"dbn_hard_evidence / analytics mean lead (slices), theta=0.49",0.0,0.0,0.0,bootstrap over runs,,25,5 runs without a defined lead,,2000,42
+C3,"dbn_hard_evidence / blind mean lead (slices), theta=0.49",7.9,2.033333333333333,16.168333333333326,bootstrap over runs,,30,0 runs without a defined lead,,2000,42
+C3,"dbn_hard_evidence / full_dbn mean lead (slices), theta=0.49",15.233333333333333,4.4,28.4,bootstrap over runs,,30,0 runs without a defined lead,,2000,42
+C3,"gbm / analytics mean lead (slices), theta=0.49",0.0,0.0,0.0,bootstrap over runs,,25,5 runs without a defined lead,,2000,42
+C3,"gbm / blind mean lead (slices), theta=0.49",0.0,0.0,0.0,bootstrap over runs,,30,0 runs without a defined lead,,2000,42
+C3,"gbm / full_dbn mean lead (slices), theta=0.49",0.0,0.0,0.0,bootstrap over runs,,30,0 runs without a defined lead,,2000,42
+C3,"gnn_classifier / analytics mean lead (slices), theta=0.49",-3.16,-3.44,-2.84,bootstrap over runs,,25,5 runs without a defined lead,,2000,42
+C3,"gnn_classifier / blind mean lead (slices), theta=0.49",-2.3,-2.566666666666667,-2.066666666666667,bootstrap over runs,,30,0 runs without a defined lead,,2000,42
+C3,"gnn_classifier / full_dbn mean lead (slices), theta=0.49",-2.2666666666666666,-2.533333333333333,-2.033333333333333,bootstrap over runs,,30,0 runs without a defined lead,,2000,42
+C3,"lstm_ae / analytics mean lead (slices), theta=0.49",136.44,94.88,178.64399999999998,bootstrap over runs,,25,5 runs without a defined lead,,2000,42
+C3,"lstm_ae / blind mean lead (slices), theta=0.49",29.366666666666667,20.633333333333333,39.469999999999985,bootstrap over runs,,30,0 runs without a defined lead,,2000,42
+C3,"lstm_ae / full_dbn mean lead (slices), theta=0.49",31.666666666666668,19.466666666666665,47.035833333333315,bootstrap over runs,,30,0 runs without a defined lead,,2000,42
+C3,"rule_based / analytics mean lead (slices), theta=0.49",,,,bootstrap over runs,,0,30 runs without a defined lead,,2000,42
+C3,"rule_based / blind mean lead (slices), theta=0.49",26.133333333333333,17.53166666666667,36.47249999999997,bootstrap over runs,,30,0 runs without a defined lead,,2000,42
+C3,"rule_based / full_dbn mean lead (slices), theta=0.49",26.5,13.8,41.93499999999999,bootstrap over runs,,30,0 runs without a defined lead,,2000,42
+C3,"lead LSTM-AE - DBN, blind attacker",21.466666666666665,15.6,28.534999999999993,paired Wilcoxon (same run ids),1.724599381815356e-06,30,,5.125115097131204e-06,2000,42
+C3,"lead LSTM-AE - DBN, analytics attacker",136.44,93.633,182.53299999999993,paired Wilcoxon (same run ids),1.8179489321282244e-05,25,,1.8179489321282244e-05,2000,42
+C3,"lead LSTM-AE - DBN, full_dbn attacker",16.433333333333334,12.3,21.10083333333333,paired Wilcoxon (same run ids),1.7083716990437346e-06,30,,5.125115097131204e-06,2000,42
+C3,DBN lead full-DBN attacker - blind attacker,7.333333333333332,-6.0008333333333335,21.368333333333325,unpaired bootstrap,,60,different attackers -> unpaired,,2000,42
