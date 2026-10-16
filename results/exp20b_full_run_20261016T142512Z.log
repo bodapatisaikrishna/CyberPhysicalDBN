@@ -1,0 +1,51 @@
+/Users/bodapati/Downloads/CyberPhysicalDBN/.venv/lib/python3.11/site-packages/pgmpy/estimators/__init__.py:4: FutureWarning: `pgmpy.estimators.StructureScore` is deprecated and will be removed in v1.3.0. Use `pgmpy.structure_score` instead.
+  from .StructureScore import (
+exp20b step_arcs=same_slice seed=42 git_sha=77e6dc9856862945a3d9789da836985e12af237b smoke=False; EXPLORATORY (all Sherlock networks already spent)
+  01-Basic/test: 21615 slices, attack base rate 0.1328, benign-event slices 223
+  02-Semiurban/test: 21652 slices, attack base rate 0.2308, benign-event slices 362
+  03-Rural/test: 21638 slices, attack base rate 0.2327, benign-event slices 147
+
+[01-Basic] fit on ['02-Semiurban', '03-Rural']; rates (p_s, p_end): {'ARPSpoof': (0.001149, 0.00473), 'RogueClient': (0.000407, 0.01084), 'BlockReporting': (0.001555, 0.00134), 'SpoofReporting': (0.035533, 0.00013), 'UnauthCommand': (0.004569, 0.00024)}
+  DBN filtered 21615 slices in 63 s
+  dbn      ROC-AUC 0.848  AUC-PR 0.619 (lift 4.66x)  FPR 0.014  recall 0.282
+  flat     ROC-AUC 0.789  AUC-PR 0.672 (lift 5.06x)  FPR 0.011  recall 0.533
+  pca_spe  ROC-AUC 0.793  AUC-PR 0.597 (lift 4.50x)  FPR 0.145  recall 0.609
+  attribution: 8/10 alarmed events assigned to the right family (all events: 12/18)
+
+[02-Semiurban] fit on ['01-Basic', '03-Rural']; rates (p_s, p_end): {'ARPSpoof': (0.000845, 0.00473), 'RogueClient': (0.000358, 0.01105), 'BlockReporting': (0.001322, 0.00202), 'SpoofReporting': (0.04381, 0.00017), 'UnauthCommand': (0.00603, 0.00027)}
+  DBN filtered 21652 slices in 62 s
+  dbn      ROC-AUC 0.737  AUC-PR 0.546 (lift 2.36x)  FPR 0.013  recall 0.148
+  flat     ROC-AUC 0.704  AUC-PR 0.621 (lift 2.69x)  FPR 0.023  recall 0.412
+  pca_spe  ROC-AUC 0.717  AUC-PR 0.536 (lift 2.32x)  FPR 0.242  recall 0.578
+  attribution: 7/8 alarmed events assigned to the right family (all events: 15/29)
+
+[03-Rural] fit on ['01-Basic', '02-Semiurban']; rates (p_s, p_end): {'ARPSpoof': (0.000841, 0.00483), 'RogueClient': (0.000383, 0.011), 'BlockReporting': (0.001354, 0.00198), 'SpoofReporting': (0.042991, 0.00017), 'UnauthCommand': (0.006311, 0.00027)}
+  DBN filtered 21638 slices in 66 s
+  dbn      ROC-AUC 0.734  AUC-PR 0.672 (lift 2.89x)  FPR 0.006  recall 0.175
+  flat     ROC-AUC 0.814  AUC-PR 0.753 (lift 3.24x)  FPR 0.004  recall 0.526
+  pca_spe  ROC-AUC 0.746  AUC-PR 0.577 (lift 2.48x)  FPR 0.076  recall 0.513
+  attribution: 11/12 alarmed events assigned to the right family (all events: 16/28)
+
+=== PRE-REGISTERED CRITERIA (reported, not gated; EXPLORATORY) ===
+ [01-Basic]
+   D-1 DBN ROC 0.848 >= PCA 0.793 - 0.05: MET
+   D-2 DBN ROC 0.848 > FLAT 0.789: yes
+   D-3 benign alarm rate DBN 0.085 vs PCA 0.188; DBN mean score benign 0.367 vs attack 0.576: MET
+   D-4 attribution 8/10 = 0.80 (>= 0.50): MET
+ [02-Semiurban]
+   D-1 DBN ROC 0.737 >= PCA 0.717 - 0.05: MET
+   D-2 DBN ROC 0.737 > FLAT 0.704: yes
+   D-3 benign alarm rate DBN 0.124 vs PCA 0.323; DBN mean score benign 0.639 vs attack 0.390: MISSED
+   D-4 attribution 7/8 = 0.88 (>= 0.50): MET
+ [03-Rural]
+   D-1 DBN ROC 0.734 >= PCA 0.746 - 0.05: MET
+   D-2 DBN ROC 0.734 > FLAT 0.814: no
+   D-3 benign alarm rate DBN 0.007 vs PCA 0.075; DBN mean score benign 0.177 vs attack 0.538: MET
+   D-4 attribution 11/12 = 0.92 (>= 0.50): MET
+ D-2 overall: DBN beats FLAT on 2/3 targets (criterion >= 2): MET
+
+reproducibility: recomputed PCA 03-Rural ROC 0.7462 (exp19 pinned 0.7462)
+wrote exp20b_*_20261016T142515Z.csv
+
+=== VALIDATION GATE (structural only) ===
+  fit files exclude the target; all scores finite ... PASS

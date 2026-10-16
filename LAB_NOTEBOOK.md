@@ -4222,3 +4222,20 @@ result of record; exp20b is reported next to it, never instead of it.
 **Hypothesis:** child onset rates rise from ~1e-4 to O(0.01-1), so SpoofReporting and BlockReporting can switch on
 with their evidence: drift-off and arp-spoof events alarmed rise well above exp20's 0/22 and 1/14, DBN TPR at 1% FPR
 moves toward FLAT's, and attribution stays >= 50%. Risk: benign-event false alarms may rise with the looser model.
+
+**Result (exp20b_*_20261016T142515Z, git 77e6dc9, log results/exp20b_full_run_20261016T142512Z.log; POST-HOC + EXPLORATORY):** gate PASS; PCA again
+reproduces exp19 (0.7462). Child onset rates rose as intended (SpoofReporting 1.3e-3 -> 0.036-0.044, UnauthCommand
+1.7e-4 -> 0.005-0.006, BlockReporting 1.3e-4 -> 1.3e-3-1.6e-3), but detection barely moved:
+DBN ROC 0.848 / 0.737 / 0.734 (exp20: 0.845 / 0.740 / 0.740); TPR at 1% FPR 0.27 / 0.15 / 0.19 (exp20 0.27 / 0.14 / 0.17);
+events alarmed: drift-off 2/22 (0), arp-spoof 1/14 (1), control-and-freeze 10/15 (10), industroyer 17/24 (17);
+attribution of alarmed events 8/10, 7/8, 11/12; D-1, D-2 (2/3), D-4 met, D-3 missed on 02 (maintenance again).
+**Interpretation:** the hypothesis is largely REFUTED -- the inter-slice timing was a real flaw but not the
+bottleneck. The per-analytic calibrations (exp20b params, 03-Rural fold) show why: MeasureAnomaly (coef -0.020) and
+NewClient (-0.017) carry NO per-slice signal, ARPAnomaly is weak (0.71), ReportingGap 0.35; only CommandBurst (0.48)
+and GridEvent (0.24) move. So drift-off (needs MeasureAnomaly) and arp-spoof (ARP + ReportingGap) cannot be
+evidenced, while industroyer and control-and-freeze (commands, switch changes) can. The a-priori feature groups,
+not the DBN machinery, limit detection: IEC-104 message COUNTS do not reflect a drift in measurement VALUES, and the
+ARP signature appears when the MitM is set up rather than on every slice of a long attack.
+**Surprised?** Partly. Checked: rates and arcs behave as designed (tests; learned values above). Not done, on
+purpose: redesigning the evidence groups on these three already-spent files would be tuning on the test data. A
+credible next step needs either new Sherlock-like data or evidence designed and validated on train-only data.
