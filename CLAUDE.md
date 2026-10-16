@@ -800,7 +800,7 @@ Exact: exp08, exp09, exp10, exp12 baseline arm. Small drift, no cited number cha
 uncommitted trees): exp05 and exp12 zone_aux (now M_KL 0, see Session 12). exp05 ran twice: perception training is NOT
 bit-reproducible (same seed, different first-epoch loss); hard-evidence DBN ECE 0.0039 both runs; soft uncalibrated 0.018/0.017,
 calibrated 0.013/0.018 (exp06 DBN arm 0.0047) -- do not rank soft arms from one run; do not cite old 0.0050/0.0046 or
-MeasureCoherence ECE 0.073. Canonical: exp05 154000Z, exp08 100012Z, exp09 075400Z, exp12 101722Z (build_summary_tables.py).
+MeasureCoherence ECE 0.073. Canonical: exp04 20261016T155202Z, exp05 154000Z, exp08 100012Z, exp09 075400Z, exp12 101722Z (build_summary_tables.py).
 **Perception determinism fixed (2026-10-12, code only).** Cause: `stack_scenarios` (src/perception/encoder.py) ordered
 node types via a `set`, so key order followed PYTHONHASHSEED and HGTConv's lazy per-type weight init differed per process.
 Fix keeps scenario 0's insertion order; tests/test_perception_training_determinism.py trains in two processes with different
@@ -808,9 +808,11 @@ hash seeds and asserts identical losses. Training is now bit-identical across pr
 pinned perception result (exp05/06/11/12) predates the fix and came from a hash-seed-dependent init; the soft-evidence spread
 above is init variance. A rerun on fixed code gives new numbers that will match none of the pinned runs.
 **Statistics + real-data DBN (2026-10-16).** scripts/statistics_report.py -> results/summary/stats_*.csv (no reruns):
-C2 NOT significant (M_KL diff -0.070 [-0.185, 0.016], Wilcoxon p=1.0; detection McNemar p=0.5) -- cite as suggestive only.
+C1 (exp04 re-pinned to 20261016T155202Z, identical aggregates + per-run output): theta=0.99 closed +62.4 slices [33.7, 95.3]
+(24/30 better, 0 worse), Brier -0.0087 [-0.0148, -0.0038], theta=0.49 open leads by 9.9 [3.1, 18.9], all p<=0.0004.
+C2 NOT significant (M_KL diff -0.070 [-0.195, 0.020], Wilcoxon p=1.0; detection McNemar p=0.5) -- cite as suggestive only.
 Baselines' longer lead is significant (LSTM-AE +86.6, rule-based +74.8 slices, p_holm<1e-4). C3: LSTM-AE leads DBN at every
-level (p_holm<1e-4); DBN full-DBN - blind +7.3 [-6.0, 21.4]. exp20/exp20b ran the DBN itself on Sherlock (src/attack_graph/
+level (p_holm<1e-4); DBN full-DBN - blind +7.3 [-6.1, 22.5]. exp20/exp20b ran the DBN itself on Sherlock (src/attack_graph/
 sherlock_graph.py; optional p_end episode-end, default 0): ROC 0.845/0.740/0.740, ~1% FPR, names the attack family for 75-92% of
 alarmed events, misses drift-off and arp-spoof; no ROC difference vs PCA or FLAT is significant. Bottleneck = evidence features
 (measurement/new-client groups carry no signal), not the DBN. Exploratory (Sherlock spent); do not redesign features on these files.

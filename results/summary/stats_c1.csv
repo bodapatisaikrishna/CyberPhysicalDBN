@@ -1,0 +1,4 @@
+claim,metric,estimate,ci_lo,ci_hi,test,p,n,note,p_holm,bootstrap_reps,seed
+C1,"lead closed - open loop (slices), theta=0.49",-9.866666666666667,-18.933333333333334,-3.1333333333333333,paired Wilcoxon (same scenarios),0.00042246757669391977,30,"closed better in 0, worse in 16, tied 14",0.00042246757669391977,2000,42
+C1,"lead closed - open loop (slices), theta=0.99",62.4,33.725,95.30083333333333,paired Wilcoxon (same scenarios),1.6147763626437213e-05,30,"closed better in 24, worse in 0, tied 6",3.2295527252874426e-05,2000,42
+C1,Brier closed - open loop,-0.008719782846087251,-0.014763652058077987,-0.0038102040577207416,run-cluster bootstrap (paired scenarios),0.0,30,"open 0.0104, closed 0.0017",0.0,2000,42

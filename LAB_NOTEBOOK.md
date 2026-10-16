@@ -4292,3 +4292,17 @@ Code at b3fa7d9 (clean tree); runs: exp05, exp06, exp11, exp12, 3 in parallel.
 **Stopped by the user at 15:18 UTC (about 3 min in, during data generation). No results.** The only file written is
 the stage-0 artifact results/exp05_asset_graph_20261016T151545Z.csv (not pinned anywhere). The pinned exp05/06/11/12
 results are therefore still the pre-fix runs.
+
+## 2026-10-16 C1 statistics (exp04 rerun with per-run output) and final interval values
+
+exp04 now also writes per-run lead times and raw posteriors (output only, b93a7f0). Rerun
+exp04_*_20261016T155202Z (log results/exp04_rerun_20261016T155158Z.log, GATE PASSED): lead_time, rate-limited,
+calibration, zones and sensor_char CSVs are IDENTICAL to the pinned 20261010T073122Z run (git_sha column excluded),
+confirming exp04 is deterministic; canonical re-pinned to the new run so per-run and aggregate files share a run.
+**C1, 30 paired scenarios:** theta=0.99 closed - open lead +62.4 slices [33.7, 95.3], closed better in 24, worse in 0,
+tied 6, Wilcoxon p < 1e-4; Brier closed - open -0.0087 [-0.0148, -0.0038], p < 1e-4; theta=0.49 closed - open -9.9
+[-18.9, -3.1], p = 0.0004 (open loop leads). C1's partial support is now statistically solid in both directions.
+**Final interval values:** statistics_report.py now gives each section its own seeded stream ([seed, section index]),
+so adding the C1 section moved earlier bootstrap bounds slightly; the CSVs in results/summary/stats_*.csv are the
+values of record (e.g. C2 mean M_KL difference CI [-0.195, +0.020]; LSTM-AE - DBN lead [58.4, 117.8]). Point
+estimates and p-values from the Wilcoxon/McNemar tests are unchanged.

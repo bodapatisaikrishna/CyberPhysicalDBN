@@ -1,20 +1,20 @@
 claim,metric,estimate,ci_lo,ci_hi,test,p,n,note,p_holm,bootstrap_reps,seed
 baselines,dbn_soft_calibrated AUC-PR,1.0,1.0,1.0,run-cluster bootstrap,,30,,,2000,42
-baselines,dbn_soft_calibrated ECE (10-bin),0.0046551669130513035,0.003002357528197106,0.006491896619755822,run-cluster bootstrap,,30,,,2000,42
+baselines,dbn_soft_calibrated ECE (10-bin),0.0046551669130513035,0.0030143182470816826,0.006416536916407891,run-cluster bootstrap,,30,,,2000,42
 baselines,"dbn_soft_calibrated median lead (slices), theta=0.49",0.0,,,,,30,mean -0.933,,2000,42
 baselines,gbm AUC-PR,1.0,1.0,1.0,run-cluster bootstrap,,30,,,2000,42
-baselines,gbm ECE (10-bin),5.835165497153791e-06,5.835158396984017e-06,5.8351733169958175e-06,run-cluster bootstrap,,30,,,2000,42
+baselines,gbm ECE (10-bin),5.835165497153791e-06,5.835158920415019e-06,5.835172727474839e-06,run-cluster bootstrap,,30,,,2000,42
 baselines,"gbm median lead (slices), theta=0.49",0.0,,,,,30,mean 0.000,,2000,42
 baselines,gnn_classifier AUC-PR,1.0,1.0,1.0,run-cluster bootstrap,,30,,,2000,42
-baselines,gnn_classifier ECE (10-bin),0.0009065907138267998,0.0006068313432167786,0.0012088766272075721,run-cluster bootstrap,,30,,,2000,42
+baselines,gnn_classifier ECE (10-bin),0.0009065907138267998,0.0006107811165429304,0.00120468379160316,run-cluster bootstrap,,30,,,2000,42
 baselines,"gnn_classifier median lead (slices), theta=0.49",0.0,,,,,30,mean -0.433,,2000,42
-baselines,lstm_ae AUC-PR,0.9855577969946058,0.972473819151229,0.9943123931835395,run-cluster bootstrap,,30,,,2000,42
-baselines,lstm_ae ECE (10-bin),0.09993563462349249,0.06376561401839413,0.14789353497542285,run-cluster bootstrap,,30,,,2000,42
+baselines,lstm_ae AUC-PR,0.9855577969946058,0.9706165296926277,0.9942543733445495,run-cluster bootstrap,,30,,,2000,42
+baselines,lstm_ae ECE (10-bin),0.09993563462349249,0.06549450303711656,0.1525521246272944,run-cluster bootstrap,,30,,,2000,42
 baselines,"lstm_ae median lead (slices), theta=0.49",54.0,,,,,30,mean 85.667,,2000,42
-baselines,rule_based AUC-PR,0.9991575069015322,0.9981049623551399,0.999871288391493,run-cluster bootstrap,,30,,,2000,42
-baselines,rule_based ECE (10-bin),0.15174976915974125,0.13485918744228975,0.1810839104339795,run-cluster bootstrap,,30,,,2000,42
+baselines,rule_based AUC-PR,0.9991575069015322,0.9980841103001304,0.999864371673616,run-cluster bootstrap,,30,,,2000,42
+baselines,rule_based ECE (10-bin),0.15174976915974125,0.13421860572483826,0.17974469067405346,run-cluster bootstrap,,30,,,2000,42
 baselines,"rule_based median lead (slices), theta=0.49",44.0,,,,,30,mean 73.833,,2000,42
-baselines,"lead gbm - DBN (slices), theta=0.49",0.9333333333333333,0.43250000000000005,1.5008333333333288,paired Wilcoxon,0.009747807101173898,30,,0.019495614202347796,2000,42
-baselines,"lead gnn_classifier - DBN (slices), theta=0.49",0.5,-0.13333333333333333,1.2,paired Wilcoxon,0.3031322625953058,30,,0.3031322625953058,2000,42
-baselines,"lead lstm_ae - DBN (slices), theta=0.49",86.6,59.333333333333336,119.80083333333333,paired Wilcoxon,1.7322162331441138e-06,30,,6.928864932576455e-06,2000,42
-baselines,"lead rule_based - DBN (slices), theta=0.49",74.76666666666667,47.765,106.10166666666665,paired Wilcoxon,4.280689837859019e-06,30,,1.2842069513577057e-05,2000,42
+baselines,"lead gbm - DBN (slices), theta=0.49",0.9333333333333333,0.43333333333333335,1.5333333333333334,paired Wilcoxon,0.009747807101173898,30,,0.019495614202347796,2000,42
+baselines,"lead gnn_classifier - DBN (slices), theta=0.49",0.5,-0.13333333333333333,1.1666666666666667,paired Wilcoxon,0.3031322625953058,30,,0.3031322625953058,2000,42
+baselines,"lead lstm_ae - DBN (slices), theta=0.49",86.6,58.36333333333334,117.77166666666663,paired Wilcoxon,1.7322162331441138e-06,30,,6.928864932576455e-06,2000,42
+baselines,"lead rule_based - DBN (slices), theta=0.49",74.76666666666667,45.9325,106.66666666666667,paired Wilcoxon,4.280689837859019e-06,30,,1.2842069513577057e-05,2000,42

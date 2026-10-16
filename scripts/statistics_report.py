@@ -31,6 +31,7 @@ EXP06_SUMMARY = RESULTS_DIR / "exp06_comparison_summary_20261010T075400Z.csv"
 EXP09 = RESULTS_DIR / "exp09_raw_eval_scores_20261010T075400Z.csv"
 EXP20 = {"exp20": "20261016T092142Z", "exp20b": "20261016T142515Z"}
 BLOCK = 450  # 15 min of 2 s slices
+EXP04 = "20261016T155202Z"  # exp04 rerun that also wrote per-run output (identical aggregates to 20261010T073122Z)
 
 
 def holm(p: list[float]) -> list[float]:
@@ -61,6 +62,44 @@ def per_run_leads(df: pd.DataFrame) -> dict[int, float]:
         r = evaluate_run(g["y_prob"].to_numpy(), g["y_true"].to_numpy().astype(bool), THETA, 1.0)
         out[int(rid)] = float(r.lead_time_slices) if r.lead_time_slices is not None else np.nan
     return out
+
+
+def c1(rng) -> pd.DataFrame:
+    pr = pd.read_csv(RESULTS_DIR / f"exp04_per_run_{EXP04}.csv")
+    pinned = pd.read_csv(RESULTS_DIR / f"exp04_lead_time_{EXP04}.csv")
+    raw = np.load(RESULTS_DIR / f"exp04_raw_posteriors_{EXP04}.npz")
+    rows, tests = [], []
+    for th in (0.49, 0.99):
+        sub = pr[np.isclose(pr.threshold, th)].pivot(index="run", columns="arm", values="lead_time_slices")
+        for arm in ("open_loop", "closed_loop"):
+            v = sub[arm].to_numpy(dtype=float)
+            pin = pinned[(pinned.arm == arm) & np.isclose(pinned.threshold, th)]
+            assert abs(np.nanmean(v) - pin.lead_mean_slices.iloc[0]) < 1e-9 and lower_median(v) == pin.lead_median_slices.iloc[0]
+        a, b = sub["closed_loop"].to_numpy(dtype=float), sub["open_loop"].to_numpy(dtype=float)
+        ok = np.isfinite(a) & np.isfinite(b); d = a[ok] - b[ok]
+        p = wilcoxon(a[ok], b[ok]).pvalue if np.any(d != 0) else 1.0
+        boot = [d[rng.integers(0, len(d), len(d))].mean() for _ in range(B)]
+        tests.append({"claim": "C1", "metric": f"lead closed - open loop (slices), theta={th}", "estimate": float(d.mean()),
+                      "ci_lo": ci(np.array(boot))[0], "ci_hi": ci(np.array(boot))[1], "test": "paired Wilcoxon (same scenarios)",
+                      "p": float(p), "n": int(ok.sum()), "note": f"closed better in {int((d > 0).sum())}, worse in {int((d < 0).sum())}, tied {int((d == 0).sum())}"})
+    runs = np.unique(raw["open_loop__run_id"]); bri = {}
+    for arm in ("open_loop", "closed_loop"):
+        y, q, r = raw[f"{arm}__y_true"], raw[f"{arm}__y_prob"], raw[f"{arm}__run_id"]
+        bri[arm] = (y, q, r, float(np.mean((q - y) ** 2)))
+    est = bri["closed_loop"][3] - bri["open_loop"][3]; idx_by = {k: [np.flatnonzero(bri[k][2] == u) for u in runs] for k in bri}
+    boot = []
+    for _ in range(B):
+        pick = rng.integers(0, len(runs), len(runs)); val = {}
+        for k in bri:
+            ii = np.concatenate([idx_by[k][j] for j in pick]); val[k] = np.mean((bri[k][1][ii] - bri[k][0][ii]) ** 2)
+        boot.append(val["closed_loop"] - val["open_loop"])
+    boot = np.array(boot)
+    tests.append({"claim": "C1", "metric": "Brier closed - open loop", "estimate": est, "ci_lo": ci(boot)[0], "ci_hi": ci(boot)[1],
+                  "test": "run-cluster bootstrap (paired scenarios)", "p": float(min(1.0, 2 * min((boot <= 0).mean(), (boot >= 0).mean()))),
+                  "n": len(runs), "note": f"open {bri['open_loop'][3]:.4f}, closed {bri['closed_loop'][3]:.4f}"})
+    for t, padj in zip(tests, holm([t["p"] for t in tests])):
+        t["p_holm"] = padj
+    return pd.DataFrame(rows + tests)
 
 
 def c2(rng) -> pd.DataFrame:
@@ -199,8 +238,9 @@ def real_data(rng) -> pd.DataFrame:
 
 def main() -> int:
     seed = int(yaml.safe_load((REPO_ROOT / "configs" / "base.yaml").read_text())["seed"])
-    rng = np.random.default_rng(seed)
-    parts = {"c2": c2(rng), "baselines": baselines(rng), "c3": c3(rng), "real_data": real_data(rng)}
+    # one independent, seeded stream per section, so adding a section never moves another section's intervals
+    fns = {"c1": c1, "c2": c2, "baselines": baselines, "c3": c3, "real_data": real_data}
+    parts = {k: f(np.random.default_rng([seed, i])) for i, (k, f) in enumerate(fns.items())}
     for name, df in parts.items():
         df["bootstrap_reps"] = B; df["seed"] = seed
         df.to_csv(SUMMARY_DIR / f"stats_{name}.csv", index=False)
